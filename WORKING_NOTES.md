@@ -1,0 +1,223 @@
+# CardCoach Working Notes
+
+**The only file that churns.** What's unresolved, who owns it, what unblocks it, what's
+next. Update freely. When an item closes, **delete it** — closed items don't belong here.
+Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
+
+Last updated: 2026-07-08 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+
+> For a future session: this is where you look to find what needs doing next. Don't
+> re-propose items already listed here unless you have new information.
+
+## Status index (added 2026-07-04, housekeeping sweep 2 — derived from the dated entries below; the entries stay authoritative)
+
+- **#1** Scotia dry run — CLOSED 2026-07-04 (overtaken by the 2026-06-10 Scotia SQL handoff)
+- **#2** Apply-delta helper script — not started (needs the SQL format from Alex)
+- **#3** French-language URL pass (324 blank FR-CA rows) — not started (deferred post-V1)
+- **#4** "Uncertain" registry entries (~10 landing-page rows) — not started
+- **#16** Blue Rewards tier successors (BMO) — CLOSED 2026-07-02
+- **#5** Welcome-bonus data pipeline — design approved 2026-07-03; DB-side implementation pending
+- **#6** Air Miles CPP (Blue Rewards) — DONE 2026-07-03 (delta filed)
+- **#7** More Rewards CPP — not started
+- **#8** Rogers cohort-differentiated rates — CLOSED 2026-07-04 (date-gated 2026-08-04 delta pre-staged; August confirmations remain; August-cycle fetcher/registry prep done 2026-07-05)
+- **#9** PC Financial post-EQB — in progress (F2 post-close CMA, F3 standard-card income still open)
+- **#10** Per-litre rate_unit enum — blocked (Alex, engineering backlog)
+- **#11** Legal review of affiliate disclosure — not started
+- **#12** Commission-blind policy publication — not started
+- **#13** Live-site hold-back claims — not started
+- **#14** Point Valuations xlsx disposition — not started (awaiting Alex)
+- **#15** File-for-Alex pack confirmation — not started (awaiting Alex)
+- **#17** Waitlist endpoint (site v2 funnel) — OPEN (Mike, ~5 min; scaffold shipped 2026-07-05, see section below)
+- **#18** Email routing on cardcoach.ca — not started (Mike, ~10 min; gates the domain-flip push)
+- **#19** Site git wiring / deploy-channel cutover — wiring DONE 2026-07-05; G3 domain move pending (was a duplicate #16, renumbered 2026-07-08)
+
+---
+
+## #1 — Unblock the first real pipeline run (Scotia Momentum dry run)
+
+- **Status:** CLOSED 2026-07-04 (Mike): overtaken by the 2026-06-10 Scotia SQL handoff.
+- **Owner:** Mike + Alex
+- **Blocker:** Alex needs to confirm the SQL file format he wants for approved deltas.
+- **Next action:** Mike pings Alex to confirm the handoff format, then runs Stage 2 + Stage 3 for **Scotia Momentum Visa Infinite only**, produces a mock SQL delta, and walks through it with Alex.
+- **Context:** Single-card dry run to prove the loop works end-to-end before committing to a monthly cadence. Scotia Momentum chosen because its earn structure is well-known, its Revolving Credit Agreement pattern is typical, and it's not mid-change. Low-stakes proof.
+- **Also note:** `stage2_fetcher.py` is now recovered and compile-checked (it had been trapped inside `stage2_fetcher.pdf`). Before the run, `pip install requests pdfplumber beautifulsoup4`, then validate with `--dry-run`, then a one-issuer smoke test (`--issuer Amex`). It has never been executed against the live registry, so treat the first real run as a test of the script too, not just the data.
+
+## #2 — Apply-delta helper script
+
+- **Status:** not started
+- **Owner:** Mike
+- **Blocker:** Needs the Scotia dry run to reveal the SQL format Alex wants.
+- **Next action:** Build after the first dry run — ~100 lines of Python that turns Stage 3's JSON output into the exact SQL file Alex can run.
+- **Context:** Stage 3 currently outputs structured JSON; converting to ready-to-run SQL is a gap. Not worth building until the target format is known.
+
+---
+
+## Data coverage gaps
+
+### #3 — French-language URL pass (324 blank FR-CA rows)
+- **Status:** not started
+- **Owner:** Mike
+- **Blocker:** None — scope only. Deferred to post-V1 per the 2026-04-22 decision.
+- **Next action:** When V1 stabilizes, run a dedicated French research session like the April 2026 English enrichment. ~3 hours focused.
+- **Context:** Quebec is a distinct launch channel, not a translation target. FR pages diverge from EN (Desjardins Bonidollars classification, National Bank product tier names). Needs its own review.
+- **Watch:** reconcile the "French in V1" wording with the Operating Model — French is a V1 *market* commitment; French *source reverification* is the deferred piece. Say it once, in one place.
+
+### #4 — "Uncertain" registry entries — ~10 landing-page rows
+- **Status:** not started
+- **Owner:** Mike
+- **Blocker:** None.
+- **Next action:** Visit each landing page, find the direct per-card PDF, update the registry row.
+- **Context:** CIBC Aeroplan benefits guides, MBNA Mastercard Benefits, and Rogers per-card benefits guides are linked from landing pages but the direct PDFs weren't captured in April. These rows point at the landing page with `confidence = uncertain`. The fetcher still works, just with noisier diffs.
+
+### #16 — Blue Rewards tier successors (BMO)
+- **Status:** CLOSED 2026-07-02
+- **Owner:** Mike
+- **Blocker:** None.
+- **Next action:** None — no remaining BMO capture items. BMO's only standing item is the manual monthly fetch (bot block), noted in the infrastructure section.
+- **Context:** **World Elite RESOLVED** — captured + delta filed (`2026-07-02__bmo__blue-rewards-world-elite.sql`); **fee + income resolved 2026-07-02** (product page captured: fee $150 waived yr 1 with chequing rebate; income $80K/$150K — fee delta filed). **World tier RESOLVED as no-successor** — closure delta filed (`2026-07-02__bmo__air-miles-world-closure.sql`): application_status closed, earn rows expired without replacement.
+
+### #5 — Welcome bonus data pipeline
+- **Status:** design approved (Mike, 2026-07-03 — PROPOSAL_welcome_bonus_schema_2026-07-03, all seven open questions resolved)
+- **Owner:** Mike
+- **Blocker:** None — flagged as a "significant gap" in data governance.
+- **Next action:** DB-side implementation sits documented until picked up; capture flow may begin populating offer records as drafts once tables exist.
+- **Context:** Welcome bonuses drive applications, and therefore affiliate revenue. Currently not in the verified dataset at all. Separate from the monthly loop but shares source material.
+- **Example data for the schema decision (verified 2026-07-02, note-only):** PCF no-fee stream — 50,000 pts on $100 qualifying spend at named banners within 60 days, apply by 2026-07-31. PCF Insiders — 50,000 pts after $3,000 in 3 months + $120 first-year credit. Standard PC Mastercard: 20,000-point special offer (Silver product chart, seen 2026-07-02) — distinct from the 50K stream offer. All time-bounded and offer-specific — supports the separate-table option. Welcome bonuses remain outside the verified dataset.
+- **Example #5 (added 2026-07-03):** Scotia Gold Amex offer rollover caught live 2026-07-03: page still displayed the 45K offer (window ended 2026-07-01) while the current offer is 50K (2026-07-02 → 2026-11-01, two-instalment structure). Proof case for offer-reverification cadence faster than the monthly loop.
+- **Example #6 (added 2026-07-04, Rogers gate-3):** Rogers limited-time +1% cash back at eligible Rogers-POS/Clover small-business merchants (compare_cards fn14) — note-only, outside verified dataset; another time-bounded, merchant-scoped offer shape for the schema.
+- **Example #7 (added 2026-07-05, Blue Rewards):** "Card Offers" targeted-offer layer — targeted, opt-in, time/quantity-limited (Blue Rewards Program Agreement, bluerewards.ca/en/terms.html, captured 2026-07-05). Offer-pile, note-only.
+
+---
+
+## Point valuation (CPP) verification
+
+- **PC Optimum (verified 2026-07-02):** redemption floor 10,000 pts = $10 (0.1¢/pt), issuer-stated on the earning-rates legal page — input for the `point_programs` dataset.
+- **Blue Rewards expiry [VERIFY] — CLOSED 2026-07-05:** 24-month Member-Account inactivity clause LIVE-VERIFIED (Program Agreement, bluerewards.ca/en/terms.html, captured 2026-07-05; Quebec notice/cure variant). Ledgered in post-06 + BLOG_OPERATIONS 2026-07-05. The gap lived in post-09 FLAG-4 / post-06 pre-draft inventory — no numbered item existed here; closure recorded so the trail resolves.
+
+### #6 — Air Miles CPP (Blue Rewards SHIPPED)
+- **Status:** DONE 2026-07-03 — entry filed; provisional Air Miles CPP retired for BMO cards
+- **Owner:** Mike + Claude
+- **Blocker:** None.
+- **Next action:** None here — the `blue_rewards` entry is filed as a delta (`01_CORE/data/deltas/2026-07-03/2026-07-03__bmo__point-programs-blue-rewards.sql`, 0.667¢/pt issuer-anchored). One open question rides in its audit notes: whether the air_miles valuation row can be expired program-wide (Alex).
+- **Context:** **Blue Rewards SHIPPED** — BMO Blue Rewards Mastercard live at bmo.com/en-ca/main/personal/credit-cards/bmo-blue-rewards-mastercard/ ("Blue Rewards (formerly AIR MILES)"), verified 2026-07-02. **Blue Points base redemption is now issuer-stated: 1,500 pts = $10 (0.667¢/pt), product page 2026-07-02.** Old AIR MILES card URLs are dead (Mike, 2026-07-02). Prior provisional AIR MILES CPP values are invalidated as expected. Standard-card conversion delta filed (`2026-07-02__bmo__blue-rewards-mastercard.sql`); tier successors tracked in #16.
+
+### #7 — More Rewards CPP (low confidence)
+- **Status:** not started
+- **Owner:** Mike + Claude
+- **Blocker:** None.
+- **Next action:** Dedicated verification session against the official BCAA More Rewards redemption catalog.
+- **Context:** Flagged low-confidence in the `point_programs` dataset. Not blocking, but tighten before V1 launch.
+
+---
+
+## Material issuer changes to watch
+
+### #8 — Rogers rewards — cohort-differentiated rates
+- **Status:** CLOSED 2026-07-04 — Stage-3 completed from the 2026-07-02 snapshots (supplied in `01_CORE/CardCoach/Reverify Script/snapshots/`)
+- **Owner:** Mike (data)
+- **Blocker:** None.
+- **Next action:** GATE-3 RIDER APPLIED 2026-07-04 — **Aug-4 watch RESOLVED AHEAD OF SCHEDULE** (notification.pdf captured: amounts $16K/$26K/$61K + verbatim amended clause text in hand; WL explicitly uncapped). Remaining actions: (1) apply the pre-staged `2026-08-04__rogers__tiered-caps.sql` on/after Aug 4 (date-gated, APPLY_CHECKLIST §0); (2) August fetch confirms live pages match the notice (and whether the issuer fixes the WE amended-s.4 typo); (3) capture the per-card Rewards T&C docs referenced in notification.pdf (registry rows note this). Resolved at gate-3: fee table (WL $495/$95 AU; $0 all others incl. Fido — Disclosure 02/2026), WL conditional earn (1.5%/2% definitive) + no-cap + 0% FX + redemption-bonus participation, Red World full spec (net-new: fee $0, income $50K/$80K page-confirmed, 1%/2% USD/2% subscriber, Aug-4 $26K) + registry rows added, Fido application_status → closed (delta filed), Platinum closed noted. **WL income remains the sole Rogers [VERIFY].** **August-cycle prep DONE 2026-07-05:** registry + fetcher synced into `Reverify Script/` — the August Stage-2 run now fetches the current 98-card / 717-line world (20 Rogers rows incl. Red World; PC Silver + Blue Rewards URL fixes live); Jun-10 versions archived at `99_ARCHIVE/registry-versions/`; redundant snapshot copies removed (canonical `snapshots/` is the sole set).
+- **Context:** **Decision settled 2026-06-10** (new-cardholder Feb 26, 2026 representation; Fido `scoring_status = load_only`) — applied 2026-07-04. Representation rule applied: earn_rates stores unconditional rates; subscriber uplift + verbatim qualifying-service definition (FAQ version, incl. Comwave) live in condition_text; account_bundle rows expired. NEW at 2026-07-02: both Red support pages pre-announce annual limits on subscriber-uplift rates effective 2026-08-04, amounts not stated.
+
+### #9 — PC Financial post-EQB acquisition
+- **Status:** in progress — watching for CMA publication
+- **Owner:** Mike
+- **Blocker:** New post-close Cardholder Agreement not yet published/captured (F2).
+- **Next action:** Watch for the post-close CMA URL; capture it and the hosted 07/2026 Disclosure Summary URL, and pin down the standard card's own income threshold (F3 — [VERIFY: issuer-verified data needed]).
+- **Context:** Close confirmed 2026-07-01. Post-close Disclosure Summary (07/2026, references EQ Bank) verified in hand. **Full four-tier reverification completed 2026-07-02** — see BLOG_OPERATIONS.md log and `01_CORE/data/deltas/2026-07-02/`. **F1 RESOLVED 2026-07-02: pc-silver-mastercard = standard card's new product page, no product or rate change; registry updated.** Remaining scope: F2 (post-close CMA URL — watching) and F3 (standard-card income threshold). The June 2025 CMA in the registry is confirmed pre-close/stale.
+
+---
+
+## Infrastructure / tooling
+
+### #10 — Per-litre `rate_unit` enum extension
+- **Status:** blocked
+- **Owner:** Alex (engineering)
+- **Blocker:** Engineering backlog priority.
+- **Next action:** Mike raises with Alex when other blockers clear. Not urgent while the Unsupported_Benefits pattern holds the data.
+- **Context:** Canadian Tire (cents/litre) and PC Financial (points/litre) gas rewards are captured but parked. Unblocks when the enum gains `cents_per_litre` and `points_per_litre`.
+- **Update 2026-07-02:** PCF gas rates now fully verified and waiting on the enum — World ≥30 pts/L; Insiders ≥50 pts/L (+20 bonus pts/L in months with ≥150L at Esso/Mobil → 70), loyalty-inclusive, price-dependent. Strengthens the case when Mike raises this with Alex.
+
+### BMO Stage-2 fetch is manual until further notice
+- **Note (2026-07-02):** bmo.com bot protection resets the fetcher's connections (confirmed 2026-07-02: script fails, browser loads fine). Monthly loop for BMO = manual browser capture of the 13 registry URLs, Stage-3 from captures.
+
+### Capture methods
+- **Note (2026-07-05):** bluerewards.ca blocks HTML save — capture via print-to-PDF (method of record for the 2026-07-05 Program Agreement capture).
+
+### Open schema questions (for Alex — consolidates the 2026-07-02 delta audit notes)
+- From the PCF deltas: no income-eligibility columns on `card_products`; no documented `source_url` column on `earn_rates`; no `Unsupported_Benefits` table in SCHEMA.md; Joe Fresh category mapping unresolved.
+- Appended 2026-07-02 (late, BMO passes): `categories` enum may lack `alcohol` and `gas_ev` (needed by Blue Rewards accelerators); `point_programs` needs a `blue_rewards` entry; eclipse VI shows a fifth 5x tile "Takeout & food delivery" with no workbook row (cap/category [VERIFY: issuer-verified data needed]); eclipse VI eligibility offers an income OR $15,000-annual-spend alternative — first spend-based eligibility seen, representation open.
+- Appended 2026-07-02 (close): partner cap differs by tier (standard $500 vs WE $1,000 combined per statement cycle) — scorer must key partner caps per card, not per program.
+
+### Blue Rewards banking bundle (note-only)
+- **Note (2026-07-02):** 500 bonus pts/month with WE card + Blue Rewards Chequing (landing page fn16); debit earn 1 pt/$2. Bundle/offer-stacking territory: captured-not-active.
+
+---
+
+## Revenue / trust (shares stakeholders with the pipeline, not blocked by it)
+
+### #11 — Legal review of affiliate disclosure copy (EN + FR)
+- **Status:** not started
+- **Owner:** Mike
+- **Blocker:** Needs external Canadian financial-services-literate legal counsel.
+- **Next action:** Identify and engage counsel for bilingual disclosure review.
+- **Context:** This is the highest-leverage unblocking decision in the broader revenue work — and it's been cold since well before this cleanup. Affiliate revenue is the primary V1 path and it can't activate without this. Listed here because it shares the pipeline's trust posture.
+
+### #12 — External publication of the commission-blind integrity policy
+- **Status:** not started
+- **Owner:** Mike
+- **Blocker:** None.
+- **Next action:** Decide whether to publish the commission-blind architecture externally (blog, about page, partner docs). Marketing/brand call, not a data call.
+- **Context:** The architecture is defensible and trust-building. Parked here because it's tied to this pipeline's credibility.
+
+---
+
+## Live-site compliance (flagged, needs legal before copy changes)
+
+### #13 — Resolve hold-back claims currently live on the site
+- **Status:** not started
+- **Owner:** Mike
+- **Blocker:** Likely needs the same legal review as #11.
+- **Next action:** Reconcile what's published against the "holding back until cleared" list — "we don't sell your data" wording, any fabricated testimonial, the draft legal note on the Terms page, and any FAQ marketing a deferred Pro tier as imminent.
+- **Context:** Surfaced in a prior audit. Grouped here so it isn't lost; specifics should be confirmed against the live site before editing, and most changes wait on legal.
+
+### #17 — Waitlist endpoint (site v2 funnel completion)
+- **Status:** OPEN — the only human step left from the 2026-07-05 site build.
+- **Owner:** Mike
+- **Next action:** create a form endpoint (Formspree / Buttondown / any POST-able list), paste its URL into `FORM_ENDPOINT` at the top of `01_CORE/site/scripts.js`, flip the download-section variant per the marked `WAITLIST VARIANT` comments (5 pages), link `waitlist.html`, and remove its `noindex`. ~5 minutes.
+- **Context:** waitlist.html + compact form variants shipped 2026-07-05 but parked: while `FORM_ENDPOINT` is the placeholder, the page is unlinked/noindexed/out of sitemap and the forms render disabled — no dead form ships. Copy is a bare email field + one neutral sentence per #13; anything more waits on #11/#12 legal review.
+
+## Folder / data housekeeping
+
+### #14 — Point Valuations xlsx disposition
+- **Status:** not started
+- **Owner:** Mike → Alex
+- **Blocker:** Needs Alex's answer.
+- **Next action:** Ask Alex whether `CardCoach Point Valuations v1.3 2026-03-14.xlsx` (in `00_COWORK/_TRIAGE/`) is a live engine input or superseded by the DB; file to Core or archive on his answer.
+- **Context:** Surfaced in the 2026-07-02 folder reorg; the only remaining data file whose currency can't be determined from the folder itself.
+
+### #15 — File-for-Alex pack confirmation
+- **Status:** not started
+- **Owner:** Mike → Alex
+- **Blocker:** Needs Alex's confirmation.
+- **Next action:** Ask Alex whether the `…v1.4_ONEFILE_ALEXTESTED.pdf` acquisition pack (in `00_COWORK/_TRIAGE/File for Alex/`) was consumed; archive the folder on his confirmation.
+- **Context:** Jan 2026 handoff artifacts; everything else from the handoff era is archived.
+
+### #19 — Site git wiring / deploy-channel cutover *(renumbered from a duplicate #16, 2026-07-08 — Blue Rewards keeps #16; it's cited by post-09's ledger)*
+- **Status:** git wiring DONE (2026-07-05) — pending Mike's G3 domain move.
+- **Owner:** Mike (G3 next).
+- **Blocker:** None on wiring. Retirement of the old channel waits on the domain move.
+- **Next action:** Mike does G3 (point the domain at the new Cloudflare Pages project fed by `cardcoach-site`). The old direct-upload Pages project retires **+7 days after the domain move** (grace window; keep it live until then as fallback).
+- **2026-07-08 note:** canonical flipped (see PIPELINE_AND_DECISIONS 2026-07-08) — G3's target domain is now **cardcoach.ca**, with card.coach getting the reverse 301 (path + query preserved). Repo-side cutover is done in the worktree, uncommitted; the Cloudflare-side move is unchanged in scope, just pointed at the other domain.
+- **Context:** `01_CORE/site/` is now a git working tree pushed to `github.com/mjross05-del/cardcoach-site` (first commit `b0bd3d6`, 56 deployables + `.gitignore`). Deploy is now push-to-`main` → Cloudflare auto-deploy; drag-and-drop retired. Convention logged in LAUNCH_TRACKER + BLOG_OPERATIONS.
+
+### #18 — Email routing on cardcoach.ca (gates the domain-flip push)
+- **Status:** not started — repo already publishes hello@cardcoach.ca (swap executed 2026-07-08, Mike-approved).
+- **Owner:** Mike.
+- **Blocker:** None — ~10 min in the Cloudflare dashboard.
+- **Next action:** Cloudflare Email Routing on cardcoach.ca: create hello@cardcoach.ca → forward to Mike's inbox (Cloudflare writes the MX records). **Must exist before the domain-flip commit is pushed** — otherwise the live site publishes a dead contact address. Keep hello@card.coach receiving as a legacy forward (it's on the currently-live site; the web 301 does not carry mail). Send-as for replies from the new address = separate, optional, later.
+- **Context:** Follows the 2026-07-08 canonical-domain flip (PIPELINE_AND_DECISIONS 2026-07-08 ×2). All 58 site occurrences flipped in the worktree, uncommitted.
+
+---
+
+*Add new open items above this line. Close = delete. Settled = move to the decisions log.*
