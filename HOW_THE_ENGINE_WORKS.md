@@ -1,5 +1,7 @@
 # How CardCoach's Recommendation Engine Works
 
+Last updated: 2026-07-16 · Owner: Mike
+
 This document explains in plain English how CardCoach decides which credit card you should use for any purchase.
 
 ---
@@ -94,23 +96,37 @@ Some cards earn points instead of cashback. The engine converts points to a doll
 
 **How point values are determined:**
 
-Each point program has a single `cents_per_point` valuation representing a fair estimate of what the points are worth. Valuations are time-windowed (`valid_from` / `valid_to`) so we can update them as programs change without losing historical data.
+Each point program carries up to three active `cents_per_point` valuations — one per valuation
+tier (`conservative`, `realistic`, `aggressive`), added in migration `0038_valuation_tiers`. The
+tier a user is scored at comes from `user_preferences.valuation_tier`, defaulting to `realistic`.
+Valuations are time-windowed (`valid_from` / `valid_to`) so we can update them as programs change
+without losing historical data.
+
+Values are issuer-sourced (Tier 1 / Tier 1b) wherever an issuer publishes a rate. For dynamic award
+travel — Aeroplan, Avios, Bonvoy — no issuer publishes a cents-per-point value at all, so those
+programs use **Tier 2: triangulated industry consensus**, which requires three or more independent
+sources agreeing, the stored value inside the observed range, and `confidence` capped at
+`medium-high`. Tier 2 applies to `point_valuations` only and never displaces an available issuer
+value. If a tier row is absent, the engine falls back to `realistic` and emits a warning naming the
+program. The spread rule per program type and the full Tier 2 conditions are in
+`proposals/PROPOSAL_point_valuation_governance.md`.
 
 **Example:**
-- Aeroplan points valued at 1.5¢ per point
-- A card earning 2 points/dollar = 3¢ per dollar = 3% effective return
+- Scene+ points valued at 1.0¢ per point (issuer-stated, fixed, identical across all three tiers)
+- A card earning 2 points/dollar = 2¢ per dollar = 2% effective return
 
-**Where it comes from:** The `point_valuations` table (one active row per program at any time, filtered via the `v_active_point_valuations` view)
+**Where it comes from:** The `point_valuations` table (up to three active rows per program, one
+per tier, filtered via the `v_active_point_valuations` view)
 
 ---
 
 ### 5. Promotional Offers
 
-Cards sometimes have limited-time bonus offers. The engine factors these in automatically.
+Cards sometimes have limited-time bonus offers. Offer stacking (`solveOfferStack`) exists in code but is **not wired into the V2 production path** — the engine does not apply stacking today.
 
 **Types of offers:**
 - **Stackable:** Can combine with other stackable offers (all bonuses add up)
-- **Non-stackable:** Can't combine; the engine picks the best one
+- **Non-stackable:** Can't combine; offer stacking (`solveOfferStack`) exists in code but is **not wired into the V2 production path** — the engine does not apply stacking today
 
 **How stacking works:**
 1. Add up all stackable bonuses
@@ -164,7 +180,7 @@ Here's exactly what happens when you ask "which card should I use?":
    c) Check if there's a category bonus for this purchase type
    d) If the card earns points, convert to dollar value
    e) Check your spending this month against any caps
-   f) Look for applicable promotional offers
+   f) Offer stacking (`solveOfferStack`) exists in code but is **not wired into the V2 production path** — the engine does not apply stacking today
    g) Calculate the total value you'd earn
          ↓
 4. Sort cards from highest value to lowest
@@ -378,12 +394,16 @@ Database triggers maintain spend snapshots. You don't have to do anything—just
 
 ## Engine Evolution: V1 → V2
 
+**V1 is dead (final, 2026-07-16).** V2 is the only engine. There are not two engines
+and nothing coexists; V1 appears below only as history. Any doc or copy claiming
+V1/V2 coexistence or an operative V1 is an error — correct it on sight.
+
 The engine has gone through two major versions:
 
-- **V1** (`packages/engine/src/index.ts`) — The original scoring engine with `rankCardsForPurchase`. Still in use via the `recommend-card` edge function.
+- **V1** (`packages/engine/src/index.ts`) — The original scoring engine with `rankCardsForPurchase`. Was in use via the `recommend-card` edge function; no longer live.
 - **V2** (`packages/engine/src/v2/earnMath.ts`) — Rewritten earn math with `computeEarnMathV2`. Uses the updated schema (single point valuations, card_caps, card_exclusions) and produces structured explanations via `buildStructuredExplanationV2`. Served by the `recommend-card-v2` edge function.
 
-An offer stacking solver (`solveOfferStack`) has been implemented but is not yet wired into the v2 production path. Both versions coexist — the v2 engine is the direction of travel.
+An offer stacking solver (`solveOfferStack`) has been implemented but is not yet wired into the v2 production path. Both versions coexisted during the transition — the v2 engine was the direction of travel.
 
 ---
 
@@ -394,8 +414,21 @@ CardCoach's recommendation engine is a sophisticated but straightforward system:
 1. **It knows your cards** and their earn rates (base + category bonuses)
 2. **It tracks your spending** to account for monthly/annual caps
 3. **It values points fairly** using conservative baseline estimates
-4. **It stacks promotions correctly** when offers can combine
+4. Offer stacking (`solveOfferStack`) exists in code but is **not wired into the V2 production path** — the engine does not apply stacking today
 5. **It ranks cards honestly** by actual dollar value earned
 6. **It explains its reasoning** so you understand why one card beats another
 
 The result: You always know which card to use, and exactly why.
+
+---
+
+## What is NOT live (governance guardrails — carried from the 2026-06-02 governance doc, 2026-07-16)
+
+*Carried from the 2026-06-02 governance doc; welcome-bonus and MCC items updated 2026-07-16.*
+
+- **Offer stacking** — `stack_rules` and `offer_incompatibilities` tables exist; the logic is designed/passed-through but **not wired into the V2 production scoring path.**
+- **Channel-aware scoring** — designed, not active.
+- MCC-based routing — captured in data, not enforced at runtime (the payment vendor doesn't expose MCC codes; see the 2026-04-16 decision in PIPELINE_AND_DECISIONS.md).
+- **Live/real-time point values** — `point_valuations` is a dated snapshot. Use "current" or "as of," never "live."
+- **French source verification** — the i18n infrastructure exists, but FR-CA source rows are blank placeholders, not verified data.
+- Welcome bonuses — NOT live. Separate offers + components tables decided 2026-07-02, schema approved 2026-07-03; build pending Alex's answers on the open items; `load_only` at launch.

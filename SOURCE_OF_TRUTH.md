@@ -1,7 +1,7 @@
 # CardCoach — Source of Truth
 
 **Open this file first. Always.**
-Last updated: 2026-07-08 · Owner: Mike
+Last updated: 2026-07-16 · Owner: Mike
 
 This is the only file that tells you what to trust. If any other document points you
 at a filename, check it against the lists below before you go looking for it. Most of
@@ -50,6 +50,7 @@ it belongs inside one of these instead.
 - Live Supabase instance — 48 tables, 18 views, 43 migrations (as of 2026-04-15 schema generation).
 - `SCHEMA.md` — human-readable schema reference. **Real, on disk, trustworthy.**
 - `README.md` — schema handoff notes. **Real, on disk.**
+- `schema.public.sql` lives in Alex's repo at `docs/schema-handoff/2026-04-15/`; regenerable via `supabase db dump`.
 
 **Brand**
 - Warm Logic brand (palette, type, voice, the Chip logo) — now in `BRAND.md`.
@@ -96,8 +97,12 @@ them from memory. Do not cite them as if they're here.
 | Stage 3 prompt PDFs (`stage3_reverify_prompt`, v1.1) | Full prompt now in `STAGE3_PROMPT.md`. |
 | Phase 4 PDFs (`Revenue_Model`, `Revenue_Summary_v2`) | Both were renders of the v2 model. Consolidated into `REVENUE.md`. |
 | `CardCoach_Phase4_Revenue_Model_v2.xlsx` | The live revenue model (866 formulas). **Not in this folder.** Needed to flex assumptions — the PDFs were just renders of it. |
-| "audit workbook" (.xlsx) | **Does not exist in this project.** Card-level facts can't be verified from docs without it. |
+| "audit workbook" (.xlsx) | **Does not exist in this project.** Card-level facts can't be verified from docs without it. → recovered 2026-07-16; superseded by the workbook block above. |
 | reverification "SQL files" (in old rules) | No `.sql` files exist here. Reverification exists as a *prompt*, not executable SQL. |
+
+Retired 2026-06-10 to `_archive/files/`: `CARDCOACH.md`, `pipeline/DECISIONS.md`, `pipeline/OPEN_ITEMS.md`.
+
+The four issuer reverification `.sql` files are pipeline *outputs*, not recoverable artifacts.
 
 **The rule:** if it's not in "What's real on disk" above, treat it as not-here until
 someone produces it. The content is good; the file trail was broken. This list is the fix.
@@ -107,7 +112,7 @@ someone produces it. The content is good; the file trail was broken. This list i
 ## Lanes (who owns what)
 
 - **Mike** — data integrity, the reverification pipeline, governance, brand, ops.
-- **Alex** — the app build, the scoring engine, the Supabase database deployment. SQL deltas get handed to him; he runs them. Don't push code/DB changes on Mike's side.
+- **Alex** — the app build, the scoring engine, the Supabase database deployment. **AMENDED 2026-07-29 (Mike): "We can do anything Alex can. This is our lane now."** Data writes to Supabase no longer route through Alex — Mike's side applies them directly under the four standing conditions in PROJECT_RULES.md rule 9 (snapshot, delta file, expire-then-insert, transaction guards). Delta files are still cut for every change; they are now a record rather than a handoff. Alex retains the app build, App Store, and — pending Mike's confirmation — schema/DDL/RLS.
 - **Mikayla** — marketing assets, Canva, social. Executes under Mike's direct review; does not ship independently.
 
 ---
@@ -115,7 +120,7 @@ someone produces it. The content is good; the file trail was broken. This list i
 ## The few hard truths to never lose again
 
 - **Canada-only.** Every record carries Canada applicability evidence.
-- **Issuer-verified only.** Tier 1 (legal/disclosure) or Tier 1b (product page). Blogs/aggregators are review triggers, never truth.
+- **Issuer-verified only.** Tier 1 (legal/disclosure) or Tier 1b (product page). Blogs/aggregators are review triggers, never truth. **One narrow exception, `point_valuations` only (Mike, 2026-07-29): Tier 2 — triangulated industry consensus.** Where a programme publishes no cents-per-point value at all — dynamic award travel is the whole of this category — a consensus value is permitted, because diverging from an aligned industry view without a verifiable reason is itself a defensibility risk. It is not a general licence to cite aggregators. All six conditions bind: (1) no issuer-published value exists for that redemption path; (2) three or more independent recognised sources agree within a stated tolerance; (3) the stored value falls **inside** the observed range, never above it; (4) `confidence` capped at `medium-high`; (5) every source named with its access date in `source_notes`; (6) any deliberate divergence from consensus documented with its reason. Tier 2 never overrides an available Tier 1/1b value. Full rule: `proposals/PROPOSAL_point_valuation_governance.md` §2.
 - **Commission-blind** — enforced at the data layer, not just as policy. The pipeline never touches affiliate/commission data.
 - **V1 is dead.** Production reads only the V2 tables (`card_products`, `earn_rates`, `card_caps`, `card_exclusions`). The old `cards` / `card_earn_rates` tables are not in any read path. (See decision 2026-04-16.)
 - **French is V1 scope, but not yet done.** The FR-CA source rows are still blank — placeholder, not verified.
@@ -130,8 +135,13 @@ someone produces it. The content is good; the file trail was broken. This list i
 Files the ghost list above said were absent that turned out to exist, found during
 the 2026-07-02 folder recovery, and where each now lives:
 
-- audit workbook → `01_CORE/data/cardcoach_initial_load_audit_pack_canada_2026-03-13_v23_patchready.xlsx` → recovered; current card-fact reference.
-- `CardCoach_Phase4_Revenue_Model_v2.xlsx` → `01_CORE/data/CardCoach_Phase4_Revenue_Model_v2.xlsx` → recovered; the live 866-formula model.
+- **Audit workbook:** `cardcoach_initial_load_audit_pack_canada_2026-06-07_v24_cleaned.xlsx`
+  at repo root is canonical (re-designated 2026-07-16; verified: 95 unique cards, 15
+  issuers, v22→v23→v24 lineage sheets intact). v23 patchready is superseded — archived
+  2026-06-10 to `_archive/files/`.
+- **Revenue model:** `01_CORE/data/CardCoach_Phase4_Revenue_Model_v2.xlsx` (materialized 2026-06-09;
+  verified 2026-07-16 — 7 tabs, 866 formulas). Current summary output:
+  `CardCoach_Phase4_Sensitivity_OnePager.md` (generated 2026-06-10).
 - `schema copy.txt` → `99_ARCHIVE/superseded-governance/` → existed after all; consolidated DDL through migration 0037, superseded by SCHEMA.md (43 migrations).
 - `schema.public.sql` → `01_CORE/data/` → recovered; 2026-04-15 dump, Alex's repo authoritative.
 - `card_sources_ddl.sql` → `01_CORE/data/card_sources_ddl.sql` → recovered; dated 2026-04-25, Alex's repo authoritative.
@@ -140,6 +150,16 @@ the 2026-07-02 folder recovery, and where each now lives:
 - 2026-07-02 (second pass): filenames normalized to docs-canonical underscore names; naming drift closed.
 
 Where this addendum conflicts with the ghost list above, this addendum governs.
+
+---
+
+**2026-07-16 — Domain cutover complete.** `cardcoach.ca` serves the site directly
+(Worker custom domain); `card.coach` 301s to `cardcoach.ca` with path+query
+preserved. The two stacked defensive redirects on cardcoach.ca were removed.
+`hello@cardcoach.ca` routes via Email Routing. Deploy: push to `main` auto-deploys
+via Cloudflare Workers Builds (active since 2026-07-05, verified 2026-07-16) —
+anything committed to `main` ships live within ~1 minute. Open: `www.cardcoach.ca`
+dead-ends and needs a www→apex redirect (WORKING_NOTES #21).
 
 ---
 
