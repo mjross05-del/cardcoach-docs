@@ -243,9 +243,44 @@ Applied 2026-07-29 under this rule:
 then voided before application (`.VOID` file retained in the run folder). Tier 2 removed its
 justification. No aggressive row was ever expired; the snapshot confirms it.
 
-Outstanding. Values needing **Tier 1/1b issuer verification** cannot be filled without one. Values
-needing **Tier 2 completion** already have a defensible number — what they lack is the three-source
-evidence trail §2 now demands. Those are documentation work, not re-valuation.
+> **SUPERSEDED 2026-07-31 — the table below is the state BEFORE the spread-rule-v2 pass, and
+> most of it is closed.** It was never updated after the values moved on 2026-07-29, so it
+> reads as outstanding work that is already done. Verified against live on 2026-07-31:
+>
+> | Row below claims | Live now |
+> |---|---|
+> | `amex-mr` aggressive **defect**, 2.50 above its own range | **2.0000**, inside the 1.70–2.00 band — closed |
+> | `aeroplan` realistic/aggressive unsourced, all three `high` | 1.20 / 1.27 / 2.00 at `medium-high` — re-sourced |
+> | `rbc-avion` realistic 1.50 / aggressive 2.00 unsourced | 1.00 / 1.00 / 2.30, Tier 1b issuer-published |
+> | `marriott`, `avios`, `national-bank`, `cibc` gaps | all re-sourced during the v2 pass |
+> | `airmiles`, `desjardins-odyssey`, `triangle` | retired to inert — no active valuation |
+>
+> All 57 active rows now carry a `source_tier` (11 `tier2`, 46 `tier1`/`tier1b`, 0 NULL) and a
+> `sources_verified_at`. See §11 for the current values and
+> `card_coach_business_docs/01_CORE/data/deltas/2026-07-31/` for the layer-2 backfill.
+>
+> **What is genuinely outstanding is now three rows, not eleven** — and the constraint layer,
+> not this prose, is what holds the line on them:
+>
+> | Programme | Open item | Blocks |
+> |---|---|---|
+> | `avios-points` | Only **two** identifiable sources (1.20, 2.00). §2 condition 2 needs three. Values sit inside the band; the defect is count alone | `pv_tier2_needs_three_sources` |
+> | `marriott-bonvoy-points` | Two **attributable** sources (0.80, 0.90). The third figure on file, 0.70, is a band low-end, not a named publisher. If a genuine third is found, note that realistic 0.7000 would then sit below a 0.80 floor and breach §2 condition 3 as well | same, plus `pv_within_observed_floor` |
+> | `aeroplan-points` | Five genuine sources exist (band 1.44–2.00) but were **not** recorded: realistic 1.2700 sits below the 1.44 floor and is not `conservative`, so inserting them fails the row. Re-anchor realistic, extend condition 6's documented-divergence allowance beyond the conservative tier, or leave unsourced | `pv_within_observed_floor` |
+>
+> Each is a decision for Mike per §2 — find a genuine source, retire the value, or leave the
+> constraint unvalidated. None may be resolved by inventing a source (rule 7).
+>
+> Also open, and not a valuation question: the four `load_only` legacy RBC cards remain
+> unclassified (`ca_rbc_rewards_plus_standard_visa`, `ca_rbc_rewards_visa_preferred_standard_visa`,
+> `ca_rbc_signature_rewards_standard_visa`, `ca_rbc_us_dollar_visa_gold_visa`). They do not score,
+> so there is no live impact, but their redemption tier is unverified and needs issuer
+> confirmation before any of them is made `scoreable`.
+
+Outstanding **as of 2026-07-29, retained for history**. Values needing **Tier 1/1b issuer
+verification** cannot be filled without one. Values needing **Tier 2 completion** already have a
+defensible number — what they lack is the three-source evidence trail §2 now demands. Those are
+documentation work, not re-valuation.
 
 | Program | Gap | Type | Cards / scoreable |
 |---|---|---|---|
