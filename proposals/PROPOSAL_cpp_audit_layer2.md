@@ -1,6 +1,36 @@
 # PROPOSAL — CPP audit layer 2: structured evidence and scheduled re-verification
 
-**Status:** PROPOSED 2026-07-29 · Owner: Mike · Requires DDL, so Alex's eyes before it runs
+**Status:** **DECIDED 2026-07-29** (Mike, all four questions) · Migration written:
+`mobile_app_codebase/supabase/migrations/0057_cpp_structured_evidence.sql`, not yet applied
+
+## Decisions (Mike, 2026-07-29)
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | `redemption_tier` labelling | **Issuer's own labels**, verbatim. The invariant only needs equality within a programme; a normalisation layer would be a new place to be wrong |
+| 2 | SLA gating | **Split by failure type.** Correctness (CPP-01→12) blocks CI. Staleness and drift (CPP-13/14/15) report in CI, fail on a weekly `--strict` run. Gate commits on what a commit could break; gate schedules on what time breaks |
+| 3 | `source_urls` shape | **Child table** `point_valuation_sources`, carrying each source's own `observed_value`. `observed_low`/`observed_high`/`source_count` become derived, never hand-typed |
+| 4 | Change-control gate | **Yes, enforced as a check** — not a convention. A rule in a document will not survive multi-session work |
+
+### Consequence of decision 3 that changed the design
+
+**A CHECK constraint cannot reference another table.** Putting sources in a child table means
+the band is not readable at constraint-evaluation time, so `cents_per_point <= observed_high`
+cannot be a plain CHECK against child rows.
+
+Resolution: `observed_low` / `observed_high` / `source_count` are **columns on
+`point_valuations`, maintained by an AFTER trigger on `point_valuation_sources`**. The
+constraints read the columns; the trigger keeps the columns honest. Both properties survive —
+the numbers are derived rather than typed, *and* the database still refuses a row priced above
+its own evidence.
+
+Ordering follows from this: insert the valuation first (band NULL, constraints pass
+vacuously), then its sources. The trigger recomputes and the CHECK re-evaluates on that
+UPDATE, so an out-of-band value fails at the moment the source exposing it is added.
+
+---
+
+**Original proposal follows.** Owner: Mike · Requires DDL, so Alex's eyes before it runs
 **Depends on:** `PROPOSAL_point_valuation_governance.md` (the rules) ·
 `mobile_app_codebase/scripts/verify_cpp_invariants.mjs` (layer 1, built and registered as `pnpm verify:cpp`)
 
