@@ -1,16 +1,17 @@
 # CardCoach Stage 3 — Reverification Extraction Prompt
 
-**Version 1.2 · Last updated 2026-06-10**
+**Version 1.3 · Last updated 2026-07-16**
 
 This is the complete, ready-to-paste prompt for Stage 3 of the reverification pipeline.
 When the Stage 2 fetcher flags a meaningful change on a card, paste this prompt into
 Claude along with the card's current DB rows and the fresh source snapshot. It produces a
-structured, field-level delta, delivered to Alex as one SQL file per changed card (see
-"Handoff format" below).
+structured, field-level delta. After human approval, each changed card's delta is
+converted (`apply_delta.py`) into one SQL file for Alex to execute — see rule 8.
 
 > **How this file relates to the others:** `PIPELINE_AND_DECISIONS.md` explains *when and
-> why* Stage 3 runs. This file *is* the prompt you actually use. The open questions at the
-> bottom are mirrored in `WORKING_NOTES.md` (#1).
+> why* Stage 3 runs. This file *is* the prompt you actually use. The five open questions
+> that gated v1.1 were resolved 2026-06-10 — answers at the bottom, decisions logged in
+> `PIPELINE_AND_DECISIONS.md`.
 
 ---
 
@@ -41,9 +42,11 @@ audit note: `SOURCE_REJECTED: not Tier 1 or Tier 1b`. Every row you emit must ca
 `source_url`, `source_date_accessed`, `source_language`, and where applicable
 `source_clause_reference`.
 
-**2. V2 tables only.** Target tables: `card_products`, `earn_rates`, `card_caps`,
-`card_exclusions`. Never emit changes to the legacy V1 `cards` or `card_earn_rates` tables.
-They are not in any production read path (confirmed with engineering 2026-04-16).
+**2. V2 tables only — V1 is dead.** Target tables: `card_products`, `earn_rates`,
+`card_caps`, `card_exclusions`. Never emit changes to the legacy V1 `cards` or
+`card_earn_rates` tables. They are not in any production read path (confirmed with
+engineering 2026-04-16; restated as final 2026-07-16 — there is one engine, not two). If an
+input or doc frames V1 as live or coexisting, flag it in Audit Notes as an error to correct.
 
 **3. `card_caps` and `earn_rates` use expire-then-insert, never delete-and-replace.** When
 a cap or earn rate changes, emit two SQL statements per affected row:
@@ -76,6 +79,14 @@ them. Ambiguity is a signal, not a defect.
 **7. One card, one delta.** Your output covers exactly the card named in the input. Do not
 bleed into sibling products even if the same CMA covers several cards. A universal CMA
 becomes N separate deltas (one per affected card), driven by one human reviewer at a time.
+
+**8. Approved deltas hand off as SQL, one file per changed card.** (Settled 2026-06-10,
+logged in `PIPELINE_AND_DECISIONS.md`.) Your output here is still the six-section delta —
+conversion happens after human approval via `apply_delta.py`. The spec the conversion
+targets: one `.sql` file per changed card per run, in a dated run folder, named
+`YYYY-MM-DD__issuer-slug__card-slug.sql`, wrapped in `BEGIN`/`COMMIT`, with a comment
+header carrying the audit metadata (source URLs, dates accessed, clause references,
+confidence). Files assume `service_role` execution and touch the four V2 tables only.
 
 ### Inputs
 
@@ -126,11 +137,21 @@ Emit exactly these sections, in order, with headers matching verbatim.
 `card_products` has no validity columns. Changes are expressed as field-level updates on
 the existing row, tracked in `versioning_metadata` jsonb if you include version trail data.
 Emit either `no_change` or a JSON object with:
-- `op`: `"update"` (field changes on an existing row), `"insert"` (newly added card), or `"deactivate"` (set `is_active = false` for fully discontinued products).
+- `op`: `"update"` (field changes on an existing row), `"insert"` (newly added card), or `"deactivate"` (set `is_active = false` — reserved for cards that should disappear from the product entirely).
 - `id`: the `card_products` primary key (text).
 - `changed_fields`: array of field names that changed.
 - `proposed`: the new values for those fields only (for `update`), or the full row (for `insert`).
 - `source_evidence`: url, clause, quoted_value.
+
+**Discontinued-card default (settled 2026-06-10):** emit an `update` setting
+`application_status = 'closed'` and `scoring_status = 'load_only'`, leaving
+`is_active = true`. The three flags are orthogonal — `application_status` answers "can you
+apply," `is_active` answers "does it appear," `scoring_status` answers "can it rank."
+`"deactivate"` is only for cards that should be hidden outright.
+
+**Program conversions keep card identity** (settled 2026-07; e.g. an issuer migrating a
+card to a new rewards program): emit an `update` on the existing `card_products` row —
+never a new `id` — and turn earn rows over via rule 3 (expire-then-insert).
 
 **Writable columns on `card_products`:** `id` (text, PK), `display_name` (text, NOT NULL),
 `issuer_id` (FK to issuers — use `issuer_id`, not `issuer`), `network_id` (FK to networks),
@@ -142,7 +163,7 @@ true), `product_family` (nullable), `tier_normalized` (constrained, nullable), `
 `base_earn` (numeric(10,4)), `base_rate_unit` (`points_per_dollar | cents_per_dollar |
 percent_cashback`), `annual_fee_cad` (numeric(10,2), CAD), `fx_fee_percent` (numeric(5,2)),
 `source_metadata` (jsonb), `versioning_metadata` (jsonb), `scoring_status` (`scoreable |
-load_only`, NOT NULL, default `scoreable`). Never emit any other value — 'exclude' appeared in early registry data and is invalid.
+load_only`, NOT NULL, default `scoreable`).
 
 `tier_normalized` allowed values: `standard`, `visa_classic`, `visa_gold`, `visa_platinum`,
 `visa_infinite`, `visa_infinite_privilege`, `mastercard_standard`, `mastercard_world`,
@@ -332,7 +353,7 @@ read snapshots:
 | Scotia | universal revolving credit agreement + product page | Product page drives earn; agreement drives structural. Two-source diff. |
 | BMO | universal CHA + World Elite addendum | Product page drives earn. Addendum applies to World Elite tier only. |
 | CIBC | universal CHA + per-product privacy disclosure | Product page drives earn. Privacy disclosure has FX/fees. |
-| Rogers | universal CHA + per-card benefits landing | **Material change flag:** rewards restructured 2025 and 2026. Cohorts see different rates. Product decision still open on which cohort CardCoach represents. |
+| Rogers | universal CHA + per-card benefits landing | **Material change flag:** rewards restructured 2025 and 2026. Cohorts see different rates. Settled 2026-06-10: CardCoach represents **new-cardholder rates** (Feb 26, 2026 restructure); cohort disclosure is handled app-side. |
 | MBNA | universal account agreement | Product page drives earn. TD subsidiary — shares some infrastructure. |
 | Desjardins | grouped CMAs by product family | French-first issuer. EN version is a translation. One agreement covers 4–6 products. Quebec vs Quebec-resident agreements differ. |
 | National Bank | personal/business agreements | Cashback program terms live separately per card. |
@@ -340,7 +361,7 @@ read snapshots:
 | PC Financial | universal CHA + disclosure summary | EQB acquisition in progress — watch for agreement version changes post-close. Gas earn in `points_per_litre` → `Unsupported_Benefits`. |
 | Simplii | single card | All docs on product page. |
 | Tangerine | single card | User-selected categories → `scoring_status = 'load_only'`. |
-| HSBC | discontinued | All cards migrated to RBC successor products. Do not reverify directly. If an HSBC row still exists, emit an `application_status = 'closed'` update. |
+| HSBC | discontinued | All cards migrated to RBC successor products. Do not reverify directly. Settled 2026-06-10: `application_status = 'closed'`, `is_active = true` (unless the card should be hidden), `scoring_status = 'load_only'`. |
 
 ### Invocation
 
@@ -363,28 +384,24 @@ Produce the six-section delta.
 
 ---
 
-## Handoff format (settled 2026-06-10 — Alex's spec)
-
-Approved deltas ship as **one SQL file per changed card**, all affected V2-table changes
-in the same file:
-
-- **Folder:** a dated run folder per pipeline run.
-- **Filename:** `YYYY-MM-DD__issuer-slug__card-slug.sql`
-  (e.g. `2026-06-08__scotia__momentum-visa-infinite.sql`).
-- **Wrapping:** entire file in `BEGIN;` … `COMMIT;`.
-- **Header:** SQL comment block at the top with source URLs, changed fields, and
-  verification date.
-- **Execution context:** `service_role` / admin maintenance writes for all four V2 tables.
-  Never client, anon, or authenticated writes.
-
----
-
 ## Versioning
 
 Bump this prompt's version number when any non-negotiable rule or output-spec column
 changes. Record what changed and why in the changelog below.
 
 ### Changelog
+
+**1.3 (2026-07-16)** — Relabel of the same-day rebuild. The rebuild was written as
+a reconstruction while the June v1.2 was believed lost; the June original then
+surfaced at repo root via the 2026-07-16 sync (preserved at commit `1a55114c` and
+in `attic/duplicates_2026-07-16/governance/STAGE3_PROMPT.md`). This file is that
+rebuild, relabeled. Relative to v1.1 it bakes in the settled 2026-06-10 set (rule
+8 SQL handoff spec, the five open questions resolved in place, the discontinued
+three-flag default, the Rogers cohort settlement) plus the post-June items: the
+program-conversion identity rule, rule 2 restated as V1-is-dead (2026-07-16
+ruling), and the PCF pending note. The 1.2 entry below is carried verbatim from
+the recovered original; diff this file against `1a55114c:STAGE3_PROMPT.md` for the
+full comparison.
 
 **1.2 (2026-06-10)** — Handoff format settled (SQL per card, Alex's spec) and added as a
 section. RLS write path fixed to service_role. Discontinued semantics finalized
@@ -409,10 +426,19 @@ pattern reference.
 
 ---
 
-## Formerly open questions — all resolved 2026-06-10
+## Former open questions — resolved 2026-06-10
 
-All five pre-dry-run questions were answered by Alex (2026-06-08) and are now rules in
-this prompt and entries in the decisions log: (1) RLS → service_role for all four tables;
-(2–4) SQL file format, naming, wrapping, and header → see "Handoff format" above;
-(5) discontinued semantics → `application_status='closed'`, `is_active=true` unless
-intentionally hidden, `scoring_status='load_only'` for in-DB-but-never-recommended.
+Resolved with Alex and logged in `PIPELINE_AND_DECISIONS.md` (2026-06-10). The
+`WORKING_NOTES.md` #1 mirror of these questions is superseded by this list.
+
+1. **RLS write path** — assume `service_role` execution for all four V2 tables (explicit
+   `_service` policies on `card_caps`/`card_exclusions`; `BYPASSRLS` covers
+   `card_products`/`earn_rates`).
+2. **SQL file format** — one file per changed card per run, not per table.
+3. **Filename + wrapping** — dated run folder; `YYYY-MM-DD__issuer-slug__card-slug.sql`;
+   plain `BEGIN`/`COMMIT`. Savepoints and idempotent guards were not part of the settled
+   spec.
+4. **Audit metadata** — comment header inline in the SQL file; no `.md` sidecar.
+5. **HSBC / discontinued semantics** — three orthogonal flags: `application_status =
+   'closed'`, `is_active = true` unless the card should be hidden, `scoring_status =
+   'load_only'`.

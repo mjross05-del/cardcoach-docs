@@ -5,7 +5,7 @@ consolidates both Phase 4 PDFs — the full spreadsheet dump and its executive s
 into one reference. It supersedes any earlier affiliate-only framing.
 
 Built: May 2026 · Currency: CAD throughout · Horizon: 24-month projection (M1 = July 2026)
-Last consolidated: 2026-06-02
+Last consolidated: 2026-07-16
 
 > **Note on the old model.** Earlier project notes framed revenue as affiliate-only with a
 > "$100k ARR / ~30 conversions a week" target. That framing is **stale** — this v2 model is
@@ -13,10 +13,11 @@ Last consolidated: 2026-06-02
 > committed users. If you see the old affiliate-only math referenced anywhere, this file is
 > the authority.
 
-> **The model itself lives in a spreadsheet, on disk in `01_CORE/data/`:**
-> `CardCoach_Phase4_Revenue_Model_v2.xlsx` (866 formulas, editable inputs; recovered
-> 2026-07-02). The two PDFs were renders of it. If you want to flex assumptions, use that
-> `.xlsx`. This doc captures the numbers and logic, not the live model.
+> **Revenue model:** `01_CORE/data/CardCoach_Phase4_Revenue_Model_v2.xlsx` (materialized 2026-06-09;
+> verified 2026-07-16 — 7 tabs, 866 formulas). Current summary output:
+> `CardCoach_Phase4_Sensitivity_OnePager.md` (generated 2026-06-10). The two PDFs were
+> renders of it. If you want to flex assumptions, use that `.xlsx`. This doc captures the
+> numbers and logic, not the live model.
 
 ---
 
@@ -160,7 +161,7 @@ live there; these are specific to making the model real.
 2. **Trial structure decision.** Default assumes 30% trial-to-paid via the 0.3% web→sub bridge. Generous trials may raise conversion but increase abuse cost. Alex's call at submission.
 3. **Fintel Connect commission ranges** during onboarding — replaces the $65 mid-point.
 4. **First 60 days of TestFlight retention** as a sanity check on the 12% monthly churn assumption. (TestFlight users aren't paid, but engagement patterns signal whether the product earns retention.)
-5. **App Store listing copy** for the paid app — the "free web, premium mobile companion" narrative bridge needs to be in both the App Store description and the website CTA. Mikayla's lane (under Mike's review).
+5. **App Store listing copy** for the paid app — the "free web, premium mobile companion" narrative bridge needs to be in both the App Store description and the website CTA. App Store listing copy is Alex's lane entirely (settled 2026-06-10, reaffirmed 2026-07-16 — it sits in the app lane). Mikayla handles social media; her role is being defined, directed by Mike.
 
 ---
 

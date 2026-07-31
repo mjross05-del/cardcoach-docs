@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-07-08 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-07-16 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -30,6 +30,8 @@ Last updated: 2026-07-08 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#17** Waitlist endpoint (site v2 funnel) — OPEN (Mike, ~5 min; scaffold shipped 2026-07-05, see section below)
 - **#18** Email routing on cardcoach.ca — not started (Mike, ~10 min; gates the domain-flip push)
 - **#19** Site git wiring / deploy-channel cutover — wiring DONE 2026-07-05; G3 domain move pending (was a duplicate #16, renumbered 2026-07-08)
+- **#20** Web app v1 (free recommendation surface) — approved 2026-07-13 (D1); P1 pending keys
+- **#21** www.cardcoach.ca dead-ends — needs www→apex redirect
 
 ---
 
@@ -217,6 +219,28 @@ Last updated: 2026-07-08 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **Blocker:** None — ~10 min in the Cloudflare dashboard.
 - **Next action:** Cloudflare Email Routing on cardcoach.ca: create hello@cardcoach.ca → forward to Mike's inbox (Cloudflare writes the MX records). **Must exist before the domain-flip commit is pushed** — otherwise the live site publishes a dead contact address. Keep hello@card.coach receiving as a legacy forward (it's on the currently-live site; the web 301 does not carry mail). Send-as for replies from the new address = separate, optional, later.
 - **Context:** Follows the 2026-07-08 canonical-domain flip (PIPELINE_AND_DECISIONS 2026-07-08 ×2). All 58 site occurrences flipped in the worktree, uncommitted.
+
+### #20 — Web app v1 (free recommendation surface)
+*(Recovered 2026-07-16 from the 2026-07-13 session — the original append never landed on
+disk.)*
+- **Status:** approved 2026-07-13 (D1) — P0 done; P1 dispatch ready, pending keys
+- **Owner:** Mike (design + build) · Alex (Annex A answers + URL/anon-key handoff only)
+- **Blocker:** Supabase URL + anon key (P1); Annex A contract answers (P3)
+- **Next action:** Send the Alex ping (item 0 = keys). On key receipt, run
+  `P1_DISPATCH_web_data_spike.md` in Claude Code → output `01_CORE/webapp/DATA_CONTRACT.md`.
+- **Context:** Proposal + phase plan: `PROPOSAL_web_app_v1_2026-07-13.md` (both files to be
+  re-exported from the 2026-07-13 session or re-materialized — neither landed on disk).
+  Decision logged in PIPELINE_AND_DECISIONS 2026-07-13. Web is read/invoke only — Supabase
+  writes stay Alex's lane. CTA target (waitlist Worker) live and allowlisted; tag
+  `source: "best-card"`.
+
+### #21 — www.cardcoach.ca dead-ends (post-cutover residue)
+- **Status:** open, flagged 2026-07-16
+- **Owner:** Mike (dashboard — the API token lacks ruleset/pagerule scopes)
+- **Problem:** `www.cardcoach.ca` carries a dummy A record and now dead-ends since the
+  defensive redirects were removed at cutover.
+- **Next action:** Add a www→apex redirect rule in the cardcoach.ca zone via dashboard;
+  verify `www` resolves to the apex with path+query preserved.
 
 ---
 

@@ -4,7 +4,7 @@
 This file is the "why things are the way they are" reference. The pipeline section is
 stable; the decisions section is **append-only** — add new entries, never rewrite old ones.
 
-Last updated: 2026-06-02 · Owner: Mike (data integrity, governance, review)
+Last updated: 2026-07-16 · Owner: Mike (data integrity, governance, review)
 Status: **Infrastructure complete. First end-to-end run not yet done.**
 
 ---
@@ -55,7 +55,7 @@ Output: a structured five-section delta (`card_products`, `earn_rates`, `card_ca
 `card_exclusions`/Unsupported_Benefits, audit notes), field-level, with issuer-verified
 evidence, for Alex to apply as SQL.
 
-- **Prompt:** Stage 3 reverification prompt, v1.1 (2026-04-22). The full prompt is **not stored as a file in this folder** — it was delivered as a PDF. Keep the working copy wherever Mike pastes it from; this doc is the summary of what it does.
+- **Prompt:** The full prompt is **STAGE3_PROMPT.md** in this folder (v1.3, 2026-07-16). The June v1.2 was recovered at commit 1a55114c after the rebuild was written; v1.3 is the rebuild relabeled — see the prompt's changelog.
 - **Hard rules the prompt enforces:** Canada-only; Tier 1 / Tier 1b sources only (reject secondary sources with `SOURCE_REJECTED`); every emitted row carries `source_url`, `source_date_accessed`, `source_language`, and `source_clause_reference` where applicable; never guess or infer — flag unclear facts for human review; expire-then-insert for versioned tables; no V1 writes ever.
 
 ## The monthly loop
@@ -63,7 +63,7 @@ evidence, for Alex to apply as SQL.
 1. Run the fetcher → ~10 min, automated.
 2. Open the change report → usually 0–10 real changes.
 3. For each real change: grab snapshot text → pull current DB rows → paste both into Claude with the Stage 3 prompt → review the delta (approve / edit / reject).
-4. Send approved deltas to Alex as SQL.
+4. Send approved deltas to Alex as SQL. (one file per card, per the 2026-06-10 handoff-format decision below)
 
 Active work per month: ~30 min at a typical 3–5 material changes. Scales with the change
 rate, not the registry size.
@@ -206,6 +206,22 @@ storage is a viable Stage 2.5 upgrade if compliance ever needs it.
 **Implications:** "What did this URL say 6 months ago?" is unanswerable. Add
 `--archive-all-snapshots` if it ever matters.
 
+*The following entry is carried verbatim from the retired `pipeline/DECISIONS.md` (archived 2026-06-10) so the pre-fork base is complete in this log.*
+
+### 2026-04-22 — Three docs, not five
+**Decision:** The pipeline is documented in exactly three markdown files — `PIPELINE.md`,
+`DECISIONS.md`, `OPEN_ITEMS.md`. No separate overview, runbook, or stakeholder brief docs
+at the markdown layer.
+**Why:** More files means more drift. The existing `stage2_README.md` already serves as
+the operational runbook and should not be duplicated. The stakeholder-facing one-pager is
+a PDF and doesn't need a markdown twin.
+**Alternatives considered:** Five files (Overview, Decisions, Open Items, Runbook,
+Stakeholder Brief) — rejected because of overlap and maintenance burden. Two files
+(combined decisions+open) — rejected because append-only history and churning status have
+incompatible editing patterns.
+**Implications:** `PIPELINE.md` is the single "start here" doc. `DECISIONS.md` is
+append-only. `OPEN_ITEMS.md` is the only file that churns regularly.
+
 ### 2026-06-02 — Documentation collapsed into the clean four-file set
 **Decision:** Project documentation is consolidated into `SOURCE_OF_TRUTH.md`,
 `HOW_THE_ENGINE_WORKS.md`, `PIPELINE_AND_DECISIONS.md` (this file), and `WORKING_NOTES.md`.
@@ -223,6 +239,85 @@ brand kit, and live site were not touched.
 ---
 
 *Append new decisions below this line.*
+
+### 2026-06-10 — Delta handoff format: SQL, per Alex's spec (supersedes the unlogged JSON decision)
+**Decision:** Approved Stage 3 deltas are handed to Alex as **SQL files**: one file per
+changed card, containing all affected V2-table changes for that card. Files live in a dated
+run folder, named `YYYY-MM-DD__issuer-slug__card-slug.sql` (e.g.
+`2026-06-08__scotia__momentum-visa-infinite.sql`). Each file is wrapped in `BEGIN;` /
+`COMMIT;` and opens with a short SQL-comment header: source URLs, changed fields,
+verification date.
+**Why:** Alex specified this format directly (2026-06-08) and he is the one executing the
+files. A complete, executable spec from the person running it beats relitigating format.
+**Supersedes:** Mike's earlier decision to hand off deltas as JSON (~May 2026, never logged
+— recorded here for the trail). That decision predated Alex's concrete spec.
+**Implications:** Stage 3 keeps emitting structured JSON internally; a small converter
+script (WORKING_NOTES #2) turns approved JSON deltas into Alex's SQL file format. The
+Stage 3 prompt is bumped to v1.2 to reflect the resolved format.
+
+### 2026-06-10 — Pipeline writes assume service_role for all four V2 tables
+**Decision:** All handoff SQL assumes `service_role` / admin maintenance execution for
+`card_products`, `earn_rates`, `card_caps`, and `card_exclusions`. No client, anon, or
+authenticated write paths for this pipeline, ever.
+**Why:** Alex confirmed (2026-06-08). `card_caps`/`card_exclusions` have explicit
+`_service` policies; `card_products`/`earn_rates` rely on `service_role` BYPASSRLS — same
+effective path either way.
+**Implications:** Resolves Stage 3 open question #1. No RLS-policy changes requested.
+
+### 2026-06-10 — Discontinued / not-recommended card semantics
+**Decision:** Three orthogonal flags, used as follows:
+- `application_status = 'closed'` — card closed to new applications.
+- `is_active = true` stays the default; set `false` only to intentionally hide a card from
+  all active app/product surfaces.
+- `scoring_status = 'load_only'` — card stays in the database but is never recommended.
+**Why:** Alex confirmed (2026-06-08). The schema already expresses all three states;
+no new values or constraint changes needed.
+**Implications:** Resolves Stage 3 open question #5 (HSBC). HSBC rows: `closed` +
+`is_active = true` + `load_only`.
+
+### 2026-06-10 — Fido/HSBC `scoring_status='exclude'` fixed by data, not by constraint
+**Decision:** Replace `scoring_status = 'exclude'` with `'load_only'` on all affected rows.
+The check constraint (`scoreable | load_only`, migration 0039) is **not** extended.
+**Why:** Alex confirmed (2026-06-08). `'exclude'` was never a valid value; `'load_only'`
+expresses the intended "in DB, never recommended" semantics exactly.
+**Implications:** 16 registry rows in `card_sources_seed_enriched.csv` carry the invalid
+string and are corrected (see the registry fix in this same sync). The Stage 3 prompt's
+allowed-values list is unchanged; v1.2 adds an explicit "never emit `exclude`" note.
+
+### 2026-06-10 — Rogers cohort representation: new-cardholder rates only, flagged
+**Decision:** CardCoach represents Rogers (and Fido) card earn rates as they apply to
+**new cardholders as of the February 26, 2026 restructure**. Legacy cohort rates are not
+represented in V1. The app shows a disclosure line on affected cards, e.g.: "Rates shown
+reflect terms for new cardholders as of February 2026; earlier cardholders may earn
+different rates."
+**Why:** Three cohorts see different rates on the same products after the Mar 2025 and
+Feb 2026 restructures. Representing multiple cohorts requires scoring changes in Alex's
+lane; new-cardholder rates serve the acquisition use case and are what issuer pages
+publish. Cohort complexity is also depreciating — further Rogers changes are expected to
+converge cohorts over time.
+**Alternatives:** Legacy-only (serves existing holders, contradicts published pages);
+both cohorts (major scoring change) — both rejected for V1.
+**Implications:** Rogers/Fido reverification targets current new-cardholder terms.
+Disclosure copy ships with those cards. Revisit only if cohort divergence becomes
+user-visible complaint volume.
+
+### 2026-06-10 — BMO AIR MILES → Blue Rewards: card treatment
+**Decision:** AIR MILES converted to BMO Blue Rewards (conversion June 1, 2026; official
+launch June 2; baseline redemption 1,500 Blue Points = $10 → 0.667¢/pt in-store/eGift,
+other redemption forms at separate rates per bluerewards.ca/value). The three legacy
+BMO AIR MILES cards in the registry: `application_status = 'closed'` (no longer
+available to new applicants), remain `scoreable` (renamed in place, live in existing
+wallets), names and earn rates to be updated ONLY via a verified Stage 2/3 pass against
+BMO's pages — public reports of the converted structure (12.5x partners / 1.25x base)
+are Tier 2 and do not enter the DB. The two NEW BMO Blue Rewards Mastercards (no-fee +
+World Elite) are queued as Stage 1 registry additions; when they land, the safe public
+claim moves 95 → 97 cards and SOURCE_OF_TRUTH's safe-claims line must move with it.
+**Why:** Follows mechanically from the 2026-06-10 discontinued-card semantics and the
+Rogers new-cardholder precedent. Existing-wallet scoring is CardCoach's core use case;
+closed-to-new + scoreable is exactly what those flags exist to express.
+**Implications:** BMO kit pre-staged (`Reverify Script/bmo_bluerewards_kit/`). Air Miles
+point_programs entry is superseded by Blue Rewards (legacy Miles converted ~16:1, no
+loss of value per BMO).
 
 ### 2026-07-02 — PC Financial earn-basis model: card-attributable rates only
 **Decision:** `earn_rates` stores card-attributable rates. Loyalty overlays (the 15 pts/$
@@ -298,3 +393,81 @@ outside the scoring engine at launch.
 **Decision:** The published contact address flips with the domain: hello@cardcoach.ca everywhere (mailto links, Organization JSON-LD email, and the nine in-body/microcopy sentences — Mike approved the prose touch by requesting the swap). Resolves the "open decision" left by the entry above. hello@card.coach stays alive as a legacy forward.
 **Why:** Same logic as the domain flip — pre-launch, switch cost near zero; a mismatched @card.coach address would permanently advertise the demoted domain.
 **Implications:** Repo-side only, same uncommitted worktree: render_v2.py footer mailto + SITE_JSONLD email flipped, 8 hand pages swapped (28 occurrences), full re-render + demo rebuild. site/ and render_v2.py now grep **zero** for card.coach in any form; new address ×58 sitewide. **Push gate (WORKING_NOTES #18):** Cloudflare Email Routing for hello@cardcoach.ca must exist before the domain-flip commit is pushed, or the live site publishes a dead address; keep card.coach mail forwarding (the web 301 does not carry mail). Send-as for outbound replies = separate, optional.
+
+### 2026-07-13 — Web app v1: Mike-built free recommendation surface, scored by the v2 engine
+*(Recovered 2026-07-16 from the 2026-07-13 session — the original append never landed on
+disk. Deploy sentence corrected to the verified mechanism.)*
+**Decision:** The free web recommendation app is Mike's lane to design and build (per the
+July 2026 Mike/Alex meeting). It calls Alex's `recommend-card-v2` edge function for all
+scoring — the web never reimplements earn math. Purchase input = category picker (primary)
++ merchant search via `merchant_entities` (secondary, graceful degrade); owned-card filter
+persists in device-only localStorage (`cc_wallet_v1`, product ids only, "Clear my cards"
+control); ships at `cardcoach.ca/best-card/` inside the `cardcoach-site` repo/Worker,
+vanilla no-build; anonymous and free — no accounts, geolocation, wallet sync, or cap
+tracking (those are the app); `scoring_status = 'load_only'` cards badged "can't rank
+yet," not hidden; caps disclosed with the zero-spend assumption stated; CTA = waitlist
+until the iOS app ships; no affiliate links until Fintel; pageview analytics only.
+**Why:** Calling the engine eliminates web-vs-app answer drift by construction and keeps
+scoring truth in one codebase. The remaining choices follow existing site conventions
+(repo, brand, no-build) and the freemium split in REVENUE.md.
+**Implications:** Alex's contract answers (Annex A of the proposal) gate the build phase
+(P3); Supabase URL + anon key gate the P1 data spike. The CTA target is already live: the
+waitlist Worker has served production since 2026-07-05 and was origin-allowlisted for both
+domains 2026-07-13; web-app submissions can tag `source: "best-card"` for segmentation.
+Deploy rides the site's actual mechanism — push to `main` auto-deploys via Workers Builds
+(verified 2026-07-16); anything committed to `main` ships live within ~1 minute. Full
+decision set, phase plan, and contract questions: `PROPOSAL_web_app_v1_2026-07-13.md`.
+
+### 2026-07-16 — Docs fork identified; canonical files rebased to carry both waves
+**Decision:** The attic and canonical copies of SOURCE_OF_TRUTH.md,
+PIPELINE_AND_DECISIONS.md, REVENUE.md, and HOW_THE_ENGINE_WORKS.md are forked lineages,
+not duplicates: the 2026-07-02 folder recovery rebuilt the canonical tree from a
+pre-2026-06-10 snapshot, so all July edits sat on a base missing the June wave. The
+canonical files are rebased to carry both waves plus the 2026-07-16 verified state; the
+attic copies stay in `_archive` with a merged-on note. Nothing is deleted.
+**Why:** Each side was the sole carrier of decisions the other lacked — six June decisions
+(attic) vs ten July entries (canonical). Discarding either loses settled history.
+**Implications:** The v24 audit workbook
+(`cardcoach_initial_load_audit_pack_canada_2026-06-07_v24_cleaned.xlsx`) is re-designated
+canonical at repo root — verified 2026-07-16: 95 unique cards, 15 issuers, v22→v23→v24
+lineage sheets intact. The Phase 4 revenue model
+(`CardCoach_Phase4_Revenue_Model_v2.xlsx`) is verified as the 2026-06-09 build: 7 tabs,
+exactly 866 formulas, Web Path C5=100/C28=25,650 and Monthly Model C45/C46 break-even
+formulas matching the Sensitivity One-Pager. STAGE3_PROMPT.md: the June v1.2 was recovered after all — it rode into the repo with the 2026-07-16 sync and sat at root; the same-day rebuild is relabeled v1.3 and supersedes it (see the prompt's changelog). The three files retired 2026-06-10
+(`CARDCOACH.md`, `pipeline/DECISIONS.md`, `pipeline/OPEN_ITEMS.md`) were found loose on
+Mike's Mac, not in the live tree; confirm their absence from the tree at commit time.
+`pipeline/DECISIONS.md`'s twelve April entries must exist in this log (as the pre-fork
+base) before its archival is treated as final.
+
+### 2026-07-16 — Engine framing is final: V2 is the only engine
+**Decision:** V2 is it. V1 is dead; there are not two engines and nothing coexists. Any
+live doc, copy, or prompt claiming V1/V2 coexistence or an operative V1 is an error —
+correct it on sight. Offer stacking (`solveOfferStack`) is not wired into the V2
+production path; no live doc may claim the engine "factors in" stacking until Alex ships
+it.
+**Why:** Ruled by Mike 2026-07-16 to put the question to bed permanently. The canonical
+engine explainer's "factors in automatically" stacking claim contradicts its own V1→V2
+section; the retired CARDCOACH.md's "V1 and V2 coexist" line is the same class of error.
+**Implications:** HOW_THE_ENGINE_WORKS.md becomes one file, one truth: the plain-English
+explainer body, corrected to V2-only, with the governance guardrails ("what is NOT live,"
+V1-is-dead statement) folded in. No separate governance doc — one file means one surface
+for drift. Stage-3 prompt rule 2 restated accordingly (v1.2).
+**Supersedes:** any coexistence framing anywhere, including archived docs if quoted.
+
+### 2026-07-16 — Public card-count claim: "95+ cards" until the registry clears 100
+**Decision:** All public copy uses "95+ cards." No other number ships until the registry
+clears 100.
+**Why:** Verified-safe today: the v24 baseline counts exactly 95 unique cards across 15
+issuers; Blue Rewards adds and PCF net-new ride on top as deltas, so "95+" stays true
+through the queued growth without copy churn.
+**Implications:** Corrects the attic's "95 cards" and standardizes the canonical's "95+."
+Registry count is the trigger to revisit, not a date.
+
+### 2026-07-16 — Lanes: Mike everything-but-the-app; Alex the app; Mikayla social media
+**Decision:** Mike is ultimately responsible for everything except the app. Alex handles
+the app — including App Store submission and listing copy. Mikayla handles social media;
+her role is still being defined, directed by Mike.
+**Why:** Ruled by Mike 2026-07-16. App Store listing copy sits in the app lane, not the
+social lane.
+**Supersedes:** REVENUE.md "what we still need" item 5's "Mikayla's lane" framing (stale);
+any "Mikayla off project" framing.
