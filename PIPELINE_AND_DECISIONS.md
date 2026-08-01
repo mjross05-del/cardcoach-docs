@@ -481,3 +481,17 @@ question that rode in WORKING_NOTES #6's audit notes is moot with the program re
 **Implications:** Closes WORKING_NOTES #6 and #7 (deleted per "Close = delete",
 2026-07-31). Trail: `card_coach_business_docs/HANDOFF_cpp_valuation_lane_2026-07-29.md`
 in CardCoachv2; `pnpm verify:cpp:cloud` remains the live source of truth for the numbers.
+
+### 2026-07-31 — CardCoachv2 is the canonical site home; cardcoach-site becomes a downstream mirror
+**Decision:** The cardcoach.ca working tree lives canonically at
+`CardCoachv2/card_coach_website/site/` (Mike's ruling, 2026-07-31; committed `b87aa22`
+overnight). The `cardcoach-site` GitHub repo remains the DEPLOY repo — Cloudflare Workers
+Builds auto-deploys it on push, live since 2026-07-05 — but is now a downstream mirror
+pending the repoint in `proposals/PROPOSAL_site_deploy_repoint_2026-07-31.md`.
+**Why:** One repo of record; the deployed tree had no canonical home under version control
+alongside its render sources (`01_CORE/blog/`).
+**Implications:** Interim deploy mechanics (double-repo working copy, detached git-dir) are
+documented in `card_coach_website/README.md`. The renderer's templates lag the deployed
+truth (waitlist retirement, App Store link, Best Card nav) — regenerating without a
+template update would regress the site. Repoint execution and the eventual archive of
+`cardcoach-site` are Mike's dashboard work, not a session's.
