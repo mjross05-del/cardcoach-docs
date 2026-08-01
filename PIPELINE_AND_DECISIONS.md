@@ -527,3 +527,160 @@ any UPDATE of an under-evidenced tier2 row, discovered executing this ruling). A
 constraint rewrite scoped to active rows is proposed in the marriott delta header
 (CardCoachv2, `2026-07-31__marriott__spread-rule-v2-four-cad-sources.sql`). Trail:
 commit `ef807c7`; `pnpm verify:cpp:cloud` remains the source of truth.
+
+### 2026-07-31 — Spread rule v3: realistic = MEDIAN of CAD consensus
+**Decision:** Realistic for `variable` programs = **MEDIAN of 3+ independent CAD programme
+valuations**, superseding v2's lowest-consensus rule.
+**Why:** Aligns with the two documented industry methodologies (Frequent Miler
+50th-percentile RRV; Frugal Flyer median-of-observations) per the 2026-07 valuation
+research; the lowest-consensus rule systematically understated flexible currencies on the
+default scoring tier. v2's reasoning (never overstate) is retained at the conservative
+tier, which stays the floor.
+**Landed:** 2026-07-31 (night apply session, from
+`cardcoach_master_valuation_index_2026-07-31_v1.xlsx`, approved with amendments 1–4).
+Applied to avios, aeroplan, amex-mr this session; marriott excluded — see the v3-vs-v2
+conflict entry below.
+
+### 2026-07-31 — Governance §2 condition 3 amended: worked-redemption ceiling
+**Decision:** Aggressive for `variable` programs may exceed the highest published valuation
+only on **worked-redemption evidence**: named, currently-bookable, fixed-price partner
+redemptions, 75th–90th percentile of repeatable value, stored at or below the worked band,
+documented one-off outliers excluded. New source class `worked_redemption`; confidence cap
+`medium`. Each worked example records route, points cost from the live chart, dated
+cash-fare snapshot, computed CPP.
+**Landed:** 2026-07-31 as a rule. No worked-redemption row landed this session — the
+aeroplan and amex-mr aggressive targets (3.00) are **deferred** pending the evidence pack
+(live chart prices + dated cash fares for 2+ named examples were not capturable in the
+apply session).
+
+### 2026-07-31 — Aeroplan re-anchor (v3)
+**Decision:** Conservative 1.20→1.00 (practical floor, pending Tier 1b artifact), realistic
+1.27→2.00 (median; also cures the below-band defect from governance §8), aggressive
+2.00→3.00 (worked cap).
+**Landed:** 2026-07-31 — **realistic 2.0000 applied** (median{NerdWallet CA 1.60, PoT 2.00,
+Milesopedia 2.00}, all read on the publishers' pages per §2b; +57.5% on the default tier,
+10 scoreable cards). Conservative **deferred, stays 1.2000** — no ~1.0 portal/gift-card
+issuer artifact verified on-page this session. Aggressive **deferred, stays 2.0000** — no
+evidence pack. Delta: `2026-07-31/2026-07-31__aeroplan-points__cpp.sql` (CardCoachv2).
+
+### 2026-07-31 — Amex MR re-anchor (v3)
+**Decision:** Realistic 1.70→2.00 (median{1.70, 2.00, 2.20}; Frugal Flyer added as band
+source, Mega Miles Broker demoted to directional per §2a), aggressive 2.20→3.00 via 1:1
+Aeroplan.
+**Landed:** 2026-07-31 — **realistic 2.0000 applied**; MMB demoted (observed_value nulled +
+notes) on the active conservative/aggressive rows with FF 2.00 attached in its place, bands
+unchanged at 1.70–2.20 (+17.6%, 6 scoreable cards). FF's MR figure was read on-page in
+their **bank-loyalty-program** article (the frequent-flyer article the index cited now
+carries transfer ratios only — divergence recorded on the row). Aggressive **deferred,
+stays 2.2000** (same evidence pack as aeroplan). Delta:
+`2026-07-31/2026-07-31__amex-mr-points__cpp.sql`.
+
+### 2026-07-31 — RBC Avion Elite realistic anchored to the Air Travel Redemption Schedule
+**Decision:** Realistic 1.00→2.00 anchored to the issuer-published Air Travel Redemption
+Schedule floor (tier1b); the 2.00 assumes band-optimal fares — mid-band redemptions yield
+less, so it is the schedule floor under optimal use, not a guarantee. Aggressive
+2.30→2.3333 exact chart max ($350/15,000). Confidence classification of chart-derived
+rates to be settled (§5 wording vs 07-31 Aventura precedent).
+**Landed:** 2026-07-31 — both rows applied at **medium-high** (not `high`; flag recorded in
+review_notes for Mike). Dual-confirmed on two issuer artifacts: the Avion Visa Infinite and
+Visa Platinum benefits-guide PDFs on rbcroyalbank.com (identical schedule tables; internal
+doc date 2019, noted). +100% on the default tier, 3 scoreable Elite cards. Delta:
+`2026-07-31/2026-07-31__rbc-avion-points__cpp.sql`.
+
+### 2026-07-31 — Avios unblocked; conservative re-anchored
+**Decision:** Five CAD sources on file (1.50–2.00) satisfy §2 condition 2. Conservative
+1.20→1.50 (band floor as practical floor; prior figure traced to discredited §2b reading),
+realistic 1.50→1.90 (median).
+**Landed:** 2026-07-31 — both applied. The realistic row was written earlier the same day
+(session-4 ruling D, v2), so the v3 value landed as a **same-day in-place UPDATE** per §7;
+supersession recorded in review_notes. +26.7% on 1 scoreable card. Delta:
+`2026-07-31/2026-07-31__avios-points__cpp.sql`.
+
+### 2026-07-31 — Marriott Bonvoy under v3 (drafted) — NOT APPLIED; v2/v3 conflict for Mike
+**Decision (drafted in the index):** Directed search per amendment 4 unblocked Marriott:
+band {PoT 0.80, Milesopedia 0.90, TPC 0.90, FF 1.00}, realistic 0.70→0.90 (median),
+aggressive 0.90→1.00, conservative 0.70 unchanged.
+**Landed:** **NOT APPLIED.** The v2 morning ruling (previous entry, applied 22:58 ET the
+same evening) landed first: live is 0.70 / 0.86 / 1.00 on a band {Finly 0.86, TPC 0.90,
+Milesopedia 0.90, FF 1.00} — which no longer matches the index's "current" values, so the
+apply session skipped marriott on preflight drift (per the apply prompt's drift rule).
+**Open for Mike:** under v3, the median of the *live* band is 0.90 — reconciling marriott
+to v3 would move realistic 0.86→0.90. The two same-day rulings applied different spread
+rules; needs an explicit call before any further marriott write.
+
+### 2026-07-31 — Bank conservative floors: verify-to-page rule (amendment 1)
+**Decision:** TD, BMO, NBC and Scene+ conservative floors re-anchor to the EXACT rate the
+issuer page states at verification — the research figures (0.25 / 0.33 / 0.40 / ~0.70) are
+framework approximations, not write values; the page is truth, not the workbook cell. If a
+page shows no channel below the current value, the current value stands. Scene+
+additionally reclassifies fixed→bank only if a lower channel confirms.
+**Landed:** 2026-07-31 —
+**TD 0.40→0.2500** (T&C PDF §3.3: "minimum value of 400 TD Rewards Points per $1";
+limited-time-promotional caveat recorded; confidence medium, single numeric artifact).
+**NBC 0.83→0.4000** (À la carte Rewards Plan Schedule A: repayment $100 = 25,000 pts,
+uniform 0.40 across all five tiers; also cures the unrecorded-basis defect; medium).
+**BMO: no write** — the issuer T&C states travel 150 pts/$1 and non-travel 200 pts/$1
+(=0.50, equals current); no 300 pts/$1 channel exists on the page; 0.5000 stands.
+**Scene+: no write, no reclass** — the program's own help page and Scotiabank welcome-kit
+pages state every rate at 1.0 (1,000 = $10; 500 = $5; 100 = $1) and give no numeric rate
+for "Points for Credit"; 1.0000 and `fixed` stand.
+Deltas: `2026-07-31__td-rewards-points__cpp.sql`, `2026-07-31__national-bank-points__cpp.sql`.
+
+### 2026-07-31 — Event-driven refresh triggers adopted (framework recommendation 5)
+**Decision:** Award-chart change, transfer-ratio change, statement-credit rate change, and
+program merger/closure each trigger immediate re-valuation of the affected program
+regardless of SLA. The SLA ladder (variable 90d / bank 180d / fixed 365d / legacy exempt)
+is the scheduled backstop, not the only trigger. Detection feeds: D3 redemption_terms
+registry (monthly fetch) for chart and rate changes; transfer-ratio and merger events are
+manual-watch until a registry source class exists for them.
+**Landed:** 2026-07-31 (rule adoption; recorded with the index apply).
+
+### 2026-07-31 — Master valuation index adopted as review artifact
+**Decision:** `cardcoach_master_valuation_index_2026-07-31_v1.xlsx` is the
+review-and-approval artifact for `point_valuations` changes; DB writes only via its
+StagedSQL sheet under governance §7.
+**Landed:** 2026-07-31 — the night apply session executed it: 8 rows written across 6
+programs (avios ×2, aeroplan realistic, amex-mr realistic, rbc-avion ×2, td conservative,
+nbc conservative), 2 verified no-writes (bmo, scene+), 3 deferred (aeroplan conservative +
+both worked-redemption aggressives), 1 drift-skip (marriott). Full accounting:
+`cardcoach-docs/APPLY_REPORT_valuation_index_2026-07-31.md`.
+
+### 2026-08-01 — Marriott v2/v3 conflict resolved: realistic reconciled to v3 median
+**Decision:** `marriott-bonvoy-points` realistic **0.8600 → 0.9000** — the v3 median of the
+live four-source band {Finly 0.86, TPC /ca/ 0.90, Milesopedia 0.90, Frugal Flyer 1.00}.
+Ruled by Mike 2026-08-01 on the apply report ("apply the marriott v3 reconciliation —
+realistic 0.86 → 0.90"), closing the conflict entry above (two 2026-07-31 rulings had
+applied different spread rules to the same program).
+**Landed:** 2026-08-01 (morning). Standard expire-then-insert — the 0.86 row was a
+prior-day row by ruling time, so no same-day exception; it keeps an honest one-day validity
+window (07-31 → 08-01). Evidence carried over with original 07-31 on-page access dates;
+band re-guarded as exactly {0.86, 0.90, 0.90, 1.00} at write time. Snapshots
+`point_valuations_snapshot_20260801` + sources companion taken before the write. Delta:
+CardCoachv2 `2026-08-01/2026-08-01__marriott-bonvoy-points__cpp.sql`.
+**Residue:** confidence left at the v2 pass's `medium`; the index proposed `medium-high`
+for this row under v3 — still open for Mike (noted on the row). Realistic temporal chain now
+reads 0.90 (03-14) → 0.70 (07-29) → 0.86 (07-31) → 0.90 (08-01). +4.7% vs v2, net +28.6%
+vs the 07-29 baseline, 2 scoreable cards.
+
+### 2026-08-01 — tier2 three-source constraint rescoped to active rows and VALIDATED; Aeroplan completed
+**Decision:** `pv_tier2_needs_three_sources` is rescoped to active rows (`valid_to IS NOT
+NULL OR source_tier IS DISTINCT FROM 'tier2' OR source_count >= 3`, migration
+`20260801082400`) and **VALIDATED** (`20260801090500`) — all six pv_ constraints are now
+load-bearing; the database itself refuses an active Tier 2 valuation without three
+sources. Aeroplan is complete per the approved master valuation index: conservative
+**1.20 kept** (the ~1.0 portal/gift-card artifact does not verify on the issuer page —
+aircanada.com's redeem hub publishes no ratio; workbook fallback applied), realistic
+**2.00** (spread rule v3 median, master-index apply session), aggressive **3.00** on a
+worked-redemption pack under amended condition 3 (ANA YVR–HND J 55k pts: 6.48–8.68 cpp
+typical-date; YYZ–FRA J 60k pts: 4.40–6.2; dated Google Flights snapshots 2026-08-01,
+chart points from the D3 registry capture 2026-07-31; peak/monopoly and single-date-low
+outliers excluded; 3.00 stored below the worked band).
+**Why:** Ruled by Mike 2026-08-01 in-session ("apply the constraint rescope migration and
+start on aeroplan"). The old constraint shape froze under-evidenced tier2 history (fires
+on any UPDATE, including expiry) and could never validate.
+**Implications:** The v2-era draft (realistic → 1.44) was VOIDed — the pre-guards caught
+that the master-index session had already applied v3 (realistic = median) before it ran;
+the two-rule window also produced marriott 0.86 (v2) → 0.90 (v3 reconciliation, apply
+session, Mike's ruling — that session's delta). Trail: CardCoachv2 commit `1dc84fe`;
+`pnpm verify:cpp:cloud` remains the source of truth while the master-index apply session
+finishes landing workbook rows.
