@@ -824,3 +824,15 @@ CardCoachv2 commit `feee2ac`; deltas
 `2026-08-01__td-conservative__promo-caveat-resolution.sql` and
 `2026-08-01__marriott__pot-fifth-source-band-0p80.sql`; the apply-report ledger annotated
 in place (that session's file to land).
+
+### 2026-08-01 — Avion Elite conservative: dual evidence attached; zero-evidence rows extinct
+**Decision:** `rbc-avion-points` conservative (1.0000, portal baseline) now carries dual
+issuer evidence: Avion Rewards T&C §24 (100 Points per $1.00 CAD outside ION/Core/Select —
+the Elite non-schedule baseline; doc 128366, 03/2026) and the Signature RBC Rewards Visa
+benefits guide ("Every 100 Avion points is worth $1 CAD for travel"). Value unchanged;
+band [1.00, 1.00]. It was the last active issuer-anchored row with an empty evidence set —
+it had escaped CPP-17 only because its confidence is medium-high.
+**Why:** Ruled by Mike 2026-08-01 in-session ("do the avion conservative evidence row").
+**Implications:** Every active row in point_valuations now carries attached, dated
+evidence. Suite green both modes. Trail: CardCoachv2 commit `c40ef29`, delta
+`2026-08-01__rbc-avion-conservative__evidence.sql`.
