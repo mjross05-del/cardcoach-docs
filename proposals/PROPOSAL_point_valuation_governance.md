@@ -186,8 +186,10 @@ re-sourced to Tier 1/1b — see §8.
 This closes the blind spot. Stage 2 fetches card product pages; program redemption terms are a
 separate source class and need their own cadence.
 
-- Add a `redemption_terms` source type to the registry — approved as decision D3, not yet
-  implemented.
+- Add a `redemption_terms` source type to the registry — approved as decision D3,
+  **implemented 2026-07-31** (`PROPOSAL_d3_redemption_terms_registry.md`): 19 programme rows
+  keyed by `point_program_id`, baselines fetched, changed sources emit `verify.parking` review
+  items (topic `cpp_terms_change`), never writes.
 - One registry row per point program, pointing at the program's redemption terms or rewards-chart
   URL, distinct from any card product page.
 - Monthly fetch on the same loop as Stage 2. `CPP_DEDUPE_DAYS: 6` already handles multi-issuer
