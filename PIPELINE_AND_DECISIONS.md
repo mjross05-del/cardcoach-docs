@@ -768,6 +768,21 @@ there; Mike's ruling, not written. CPP-17 remainder is now 6, all awaiting rulin
 (blue_rewards ×3 and bmo r/a on the 0.6667 rounding pair; cibc realistic de-publication).
 Trail: CardCoachv2 commit `c17696d`.
 
+### 2026-08-01 — TD conservative floor affirmed at 0.2500; promo-caveated floors acceptable when documented
+**Decision:** `td-rewards-points` conservative stays **0.2500** — the T&C §3.3 issuer-stated
+minimum ("400 TD Rewards Points per $1 (Minimum Value)") — despite the same section labeling
+Other Redemption Options "limited-time promotional offers" TD may change or cancel. The
+caveat documented on the row is the accepted defensibility record; reverting conservative to
+the Expedia 0.50 was considered and declined. Ruled by Mike 2026-08-01 ("keep the td 0.25 —
+the caveat note is enough"), closing apply-report item 3 — the report's last open item.
+**Implications:** Precedent: a promo-caveated issuer floor is acceptable for the
+conservative tier when the caveat is recorded on-row. Risk containment is the event-driven
+refresh trigger set (2026-07-31): withdrawal or repricing of the 400/$1 channel is a
+statement-credit rate change → immediate re-valuation, not an SLA wait. Ruling recorded on
+the row and as a rider on `2026-07-31/2026-07-31__td-rewards-points__cpp.sql`. **With this,
+every item from the 2026-07-31 master valuation index apply and its follow-up rulings is
+closed**; `pnpm verify:cpp:cloud` runs 17/17 with zero warnings.
+
 ### 2026-08-01 — Rounding pair fixed; CIBC realistic re-based; CPP-17 promoted to FAIL; strict passes
 **Decision:** (1) `blue_rewards` ×3 re-anchored **0.6670 → 0.6667** and `bmo-rewards-points`
 realistic/aggressive **0.6700 → 0.6667** — the exact issuer ratios (1,500 pts = $10;

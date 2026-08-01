@@ -196,6 +196,19 @@ Note that `issuer_stated` is **not** a legal value — it was requested for the 
 | `medium-low` | Issuer source located but rate inferred from a redemption chart rather than stated |
 | `low` | Legacy or excluded program; value retained for completeness only |
 
+> **SETTLED 2026-08-01 (Mike, ruling on APPLY_REPORT_valuation_index_2026-07-31.md item 2:
+> "settle the avion confidence — keep medium-high on chart-derived rates").** A rate read from
+> an issuer-published redemption chart and **dual-confirmed** classifies as **`medium-high`** —
+> not `medium-low` (which continues to govern a chart inference that is *not* dual-confirmed),
+> and not `high` (reserved for rates the issuer states numerically). This resolves the tension
+> between the `medium-low` line above and the 07-31 Aventura precedent. Applied 2026-08-01: the
+> two `rbc-avion-points` chart rows (realistic 2.0000, aggressive 2.3333) keep `medium-high`,
+> flags resolved on-row. **Retrofit ruled and applied the same morning** (Mike: "downgrade the
+> aventura aggressive to medium-high"): `cibc-aventura-points` aggressive 2.2857, the row whose
+> 07-31 `high` created this tension, is now `medium-high` (delta
+> `2026-08-01__cibc-aventura-points__cpp.sql`). Its conservative and realistic rows keep `high`
+> as issuer-stated rates. No chart-derived row carries `high`.
+
 A Tier 2 row carrying `high` is non-compliant on its face. Four rows currently do: all three
 `aeroplan-points` rows and `amex-mr-points` aggressive. Each must be capped at `medium-high` or
 re-sourced to Tier 1/1b — see §8.
