@@ -240,11 +240,9 @@ disk.)*
 
 ## #22 — Loyalty stacking Phase 1: activation gates (landed dark 2026-08-01)
 
-- **Status:** code + seeds LANDED on `CardCoachv2` branch `feat/loyalty-offers-phase1` (engine 120/120, contracts 103/103, edge Deno 166/166, `pnpm verify:loyalty-p1` 8/8). Runtime flag `loyalty_offer_stacking` = **false**; PROJECT_RULES rule 5 still holds.
-- **Owner:** Mike (gates 1, 3), Alex or a Claude Code dispatch (gate 2).
-- **Gate 1 — WS-1 Tier-1 verification** of the 7 editorial offers (RBC↔Triangle at 0.40 confidence is the weakest): `dispatches/DISPATCH_WS1_stack_verification_2026-08-01.md`.
-- **Gate 2 — APP-017 mobile release** with the widened explanation union BEFORE the flag flips (old clients would fail the discriminated-union parse on `fuel_price_assumption`): `dispatches/DISPATCH_APP017_till_moment_ux_2026-08-01.md`.
-- **Gate 3 — founder flag flip** + rule 5 update, only after 1 and 2.
-- **Before merge:** `pnpm supabase:db-reset` + full `pnpm verify` on a machine with Docker (session sandbox had none); mobile jest suite.
-- **Also open:** monthly fuel-price review cadence owner (WS-5 dispatch); Quebec Journie carve-out [VERIFY]; Moi CPP fail-closed until Tier-1.
+- **Status (updated 2026-08-01 evening):** branch `feat/loyalty-offers-phase1` at `cbf2739`. **Gate 1 CLOSED** — WS-1 executed same-day; all 7 editorial offers now issuer_confirmed 0.95–0.97 (see `dispatches/REPORT_WS1_results_2026-08-01.md`; RBC↔Triangle corrected to CT-retail-only, Moi CPP 0.8¢/pt captured, excluded-co-brand scope added). **Gate 2 code-complete** — APP-017 landed via concurrent runtime (`cbf2739`), needs local suite re-run + a shipped build. Mike's first `db reset` failure (FK ordering, migrations-before-seed-data) fixed in `89facba`. Flag still **false**; rule 5 still holds.
+- **Owner:** Mike (re-run + merge + gate 3), Alex (release build).
+- **Gate 3 — founder flag flip** + rule 5 update, only after the APP-017 build ships.
+- **Before merge:** re-run `pnpm supabase:db-reset` (now expected green) + `pnpm verify:loyalty-p1` + `pnpm test` + `pnpm test:supabase`; then full `pnpm verify`.
+- **Also open:** monthly fuel-price review cadence owner (WS-5 dispatch); Journie 30-vs-60-day threshold validity conflict (cibc.com vs journie.ca); Parkland→Sunoco ownership + Journie T&C 2030-12-31 sunset on the WS-5 watch.
 - **Next:** QA-009 30-scenario pack: `dispatches/DISPATCH_QA009_thirty_scenario_pack_2026-08-01.md`.
