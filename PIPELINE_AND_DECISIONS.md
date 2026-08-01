@@ -4,7 +4,7 @@
 This file is the "why things are the way they are" reference. The pipeline section is
 stable; the decisions section is **append-only** — add new entries, never rewrite old ones.
 
-Last updated: 2026-07-16 · Owner: Mike (data integrity, governance, review)
+Last updated: 2026-07-31 · Owner: Mike (data integrity, governance, review)
 Status: **Infrastructure complete. First end-to-end run not yet done.**
 
 ---
@@ -471,3 +471,13 @@ her role is still being defined, directed by Mike.
 social lane.
 **Supersedes:** REVENUE.md "what we still need" item 5's "Mikayla's lane" framing (stale);
 any "Mikayla off project" framing.
+
+### 2026-07-29 — Air Miles CPP retired; More Rewards CPP verified
+**Decision:** `airmiles-points` is retired (inert in the point-programs registry —
+superseded by `blue_rewards`; nothing scores against it). `more-rewards-points` is
+verified at **0.1429 / 0.15 / 0.15** (fixed, 2 sources).
+**Why:** Resolved in the 2026-07-29 CPP valuation-lane session; the Air Miles program-wide
+question that rode in WORKING_NOTES #6's audit notes is moot with the program retired.
+**Implications:** Closes WORKING_NOTES #6 and #7 (deleted per "Close = delete",
+2026-07-31). Trail: `card_coach_business_docs/HANDOFF_cpp_valuation_lane_2026-07-29.md`
+in CardCoachv2; `pnpm verify:cpp:cloud` remains the live source of truth for the numbers.

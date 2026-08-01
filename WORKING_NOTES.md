@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-07-16 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-07-31 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -17,8 +17,6 @@ Last updated: 2026-07-16 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#4** "Uncertain" registry entries (~10 landing-page rows) — not started
 - **#16** Blue Rewards tier successors (BMO) — CLOSED 2026-07-02
 - **#5** Welcome-bonus data pipeline — design approved 2026-07-03; DB-side implementation pending
-- **#6** Air Miles CPP (Blue Rewards) — DONE 2026-07-03 (delta filed)
-- **#7** More Rewards CPP — not started
 - **#8** Rogers cohort-differentiated rates — CLOSED 2026-07-04 (date-gated 2026-08-04 delta pre-staged; August confirmations remain; August-cycle fetcher/registry prep done 2026-07-05)
 - **#9** PC Financial post-EQB — in progress (F2 post-close CMA, F3 standard-card income still open)
 - **#10** Per-litre rate_unit enum — blocked (Alex, engineering backlog)
@@ -96,19 +94,10 @@ Last updated: 2026-07-16 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **PC Optimum (verified 2026-07-02):** redemption floor 10,000 pts = $10 (0.1¢/pt), issuer-stated on the earning-rates legal page — input for the `point_programs` dataset.
 - **Blue Rewards expiry [VERIFY] — CLOSED 2026-07-05:** 24-month Member-Account inactivity clause LIVE-VERIFIED (Program Agreement, bluerewards.ca/en/terms.html, captured 2026-07-05; Quebec notice/cure variant). Ledgered in post-06 + BLOG_OPERATIONS 2026-07-05. The gap lived in post-09 FLAG-4 / post-06 pre-draft inventory — no numbered item existed here; closure recorded so the trail resolves.
 
-### #6 — Air Miles CPP (Blue Rewards SHIPPED)
-- **Status:** DONE 2026-07-03 — entry filed; provisional Air Miles CPP retired for BMO cards
-- **Owner:** Mike + Claude
-- **Blocker:** None.
-- **Next action:** None here — the `blue_rewards` entry is filed as a delta (`01_CORE/data/deltas/2026-07-03/2026-07-03__bmo__point-programs-blue-rewards.sql`, 0.667¢/pt issuer-anchored). One open question rides in its audit notes: whether the air_miles valuation row can be expired program-wide (Alex).
-- **Context:** **Blue Rewards SHIPPED** — BMO Blue Rewards Mastercard live at bmo.com/en-ca/main/personal/credit-cards/bmo-blue-rewards-mastercard/ ("Blue Rewards (formerly AIR MILES)"), verified 2026-07-02. **Blue Points base redemption is now issuer-stated: 1,500 pts = $10 (0.667¢/pt), product page 2026-07-02.** Old AIR MILES card URLs are dead (Mike, 2026-07-02). Prior provisional AIR MILES CPP values are invalidated as expected. Standard-card conversion delta filed (`2026-07-02__bmo__blue-rewards-mastercard.sql`); tier successors tracked in #16.
-
-### #7 — More Rewards CPP (low confidence)
-- **Status:** not started
-- **Owner:** Mike + Claude
-- **Blocker:** None.
-- **Next action:** Dedicated verification session against the official BCAA More Rewards redemption catalog.
-- **Context:** Flagged low-confidence in the `point_programs` dataset. Not blocking, but tighten before V1 launch.
+*(#6 Air Miles CPP and #7 More Rewards CPP closed and deleted 2026-07-31 — both resolved
+2026-07-29: `airmiles-points` retired, `more-rewards-points` verified. Trail:
+PIPELINE_AND_DECISIONS 2026-07-29 entry + `HANDOFF_cpp_valuation_lane_2026-07-29.md` in
+CardCoachv2.)*
 
 ---
 
