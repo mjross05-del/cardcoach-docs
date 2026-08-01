@@ -90,6 +90,27 @@ band.
 band; FX drift makes them non-reproducible. Avios is quoted in pence by most sources, so only the
 CAD-denominated figures were used.
 
+### 2b. A search summary is not a source (added 2026-07-31)
+
+Every source recorded in `point_valuation_sources` must be **read on the publisher's own page**.
+A search-engine summary characterising what a publisher says is not that publisher's figure, and
+recording it as one puts an unverifiable number behind a constraint that looks satisfied.
+
+Two rows written on 2026-07-29 failed this and neither attribution reproduced when checked:
+
+| Recorded | Actual, on the publisher's page (2026-07-31) |
+|---|---|
+| `amex-mr` — "Prince of Travel ~2.00" | Prince of Travel publishes **2.2¢ CAD** for MR |
+| `avios` — "ThePointCalculator / Award Travel Finder 1.20" | ThePointCalculator's CAD page says **1.5–1.7**, no 1.20 anywhere. Award Travel Finder publishes only GBP pence and USD — unusable under the currency rule above |
+
+Both were taken from search-result summaries rather than the publishers' pages. The failure mode
+is quiet: the band looked plausible, the source count was right, and the constraint would have
+passed. In the Avios case the error was load-bearing — the stored `realistic` 1.20 was *below* the
+real consensus floor, which only surfaced when someone tried to attach the actual evidence.
+
+**Practical rule:** the URL in `source_urls` must be the page the figure was read from. If you
+cannot open it and see the number, you do not have the source.
+
 - Dual confirmation applies, per RUNBOOK_verify_batch.md §52: two independent artifacts agree, or
   two independently prompted extraction passes agree. Disagreement fails closed.
 - No value is estimated. Unknowns are flagged `[VERIFY: issuer-verified data needed]` and the row
@@ -198,7 +219,18 @@ separate source class and need their own cadence.
 - A changed published rate opens a verification item; it does not auto-write. Every value change
   still goes through §7.
 - Programs classified `variable` get a calendar review regardless of fetch result, since their
-  floors can move without page changes. Annual, per the existing `review_notes` convention.
+  floors can move without page changes.
+
+  **CORRECTED 2026-07-31.** This clause originally said "annual", which contradicted the review
+  SLA agreed in `PROPOSAL_cpp_audit_layer2.md` §4 and now enforced by CPP-13 off
+  `sources_verified_at`: **`variable` 90 days**, `bank` 180, `fixed` 365, `legacy` exempt. The
+  SLA governs. An annual review would have let the 2026-06-01 Aeroplan devaluation sit for up
+  to a year — the exact failure this section exists to prevent, written into the section itself.
+
+  Note the two clocks are different things and both are needed: **fetch cadence** is how often
+  the registry pulls the document; **review SLA** is how long a stored value may go without its
+  sources being re-read. Fetching cannot satisfy the SLA on its own, because an unchanged page
+  does not prove the valuation still holds.
 
 ---
 
