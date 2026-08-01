@@ -12,7 +12,17 @@
 | 3 | `source_urls` shape | **Child table** `point_valuation_sources`, carrying each source's own `observed_value`. `observed_low`/`observed_high`/`source_count` become derived, never hand-typed |
 | 4 | Change-control gate | **Yes, enforced as a check** — not a convention. A rule in a document will not survive multi-session work |
 
-### OPEN DEFECT — the three-source constraint does not currently bite (found 2026-07-31)
+### RESOLVED DEFECT — the three-source constraint does not currently bite (found 2026-07-31, resolved 2026-07-31)
+
+> **RESOLVED 2026-07-31** by migration `20260731221119_source_count_not_null`
+> (CardCoachv2): backfill NULL→0 across all 95 NULL rows, `SET DEFAULT 0`,
+> `SET NOT NULL`. One wrinkle the fix surfaced: a NOT VALID CHECK still fires on
+> UPDATE, so the constraint had to be dropped around the backfill and re-added
+> NOT VALID (verified against prod — the naive UPDATE is rejected with 23514).
+> The seven tier2 rows (six active: aeroplan ×3, marriott ×3; plus one expired
+> avios row) now read `source_count = 0` and genuinely fail
+> `source_count >= 3` — validation stays gated on evidence attachment.
+> The section below is preserved as found.
 
 `source_count` was applied as **nullable**. The draft specified `NOT NULL DEFAULT 0`; the applied
 migration `20260731151950_cpp_structured_evidence` does not carry that. The consequence:
