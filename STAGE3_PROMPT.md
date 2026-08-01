@@ -1,6 +1,6 @@
 # CardCoach Stage 3 — Reverification Extraction Prompt
 
-**Version 1.3 · Last updated 2026-07-16**
+**Version 1.3 · Last updated 2026-07-31** (v1.3 rebuild authored 2026-07-16, landed 2026-07-31)
 
 This is the complete, ready-to-paste prompt for Stage 3 of the reverification pipeline.
 When the Stage 2 fetcher flags a meaningful change on a card, paste this prompt into

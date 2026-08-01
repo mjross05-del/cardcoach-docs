@@ -1,5 +1,7 @@
 # CardCoach — Session Rules (2026-07-02)
 
+Last updated: 2026-07-31 · Owner: Mike (rule 10 clarification authored 2026-07-29, landed 2026-07-31)
+
 Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to behave.
 
 1. Canada-only, issuer-verified. Every asserted card fact traces to Tier 1 / Tier 1b sources.

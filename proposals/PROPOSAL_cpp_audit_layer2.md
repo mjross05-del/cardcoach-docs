@@ -1,6 +1,6 @@
 # PROPOSAL — CPP audit layer 2: structured evidence and scheduled re-verification
 
-**Status:** **DECIDED 2026-07-29** (Mike, all four questions) · Migration written:
+**Status:** **DECIDED 2026-07-29** (Mike, all four questions) · Last updated: 2026-07-31 · Migration written:
 `mobile_app_codebase/supabase/migrations/0057_cpp_structured_evidence.sql`, not yet applied
 
 ## Decisions (Mike, 2026-07-29)

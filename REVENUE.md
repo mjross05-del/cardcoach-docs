@@ -5,6 +5,7 @@ consolidates both Phase 4 PDFs — the full spreadsheet dump and its executive s
 into one reference. It supersedes any earlier affiliate-only framing.
 
 Built: May 2026 · Currency: CAD throughout · Horizon: 24-month projection (M1 = July 2026)
+Last updated: 2026-07-31 (pointer + lanes corrections authored 2026-07-16, landed 2026-07-31)
 Last consolidated: 2026-07-16
 
 > **Note on the old model.** Earlier project notes framed revenue as affiliate-only with a

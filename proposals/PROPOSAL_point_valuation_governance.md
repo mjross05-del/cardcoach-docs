@@ -1,6 +1,6 @@
 # PROPOSAL — Point valuation (CPP) governance
 
-**Status:** PROPOSED 2026-07-29 · Owner: Mike · Supersedes: nothing (first written rule for this table)
+**Status:** PROPOSED 2026-07-29 · Last updated: 2026-07-31 · Owner: Mike · Supersedes: nothing (first written rule for this table)
 **Decisions captured:** tier spread rule (Mike, 2026-07-29); drop `aggressive` where no issuer
 ceiling is published (Mike, 2026-07-29); `point_valuations` moved to Mike's lane with direct-write
 authorisation (Mike, 2026-07-29 — see PROJECT_RULES.md rule 9 exception).
