@@ -1,5 +1,7 @@
 # CardCoach Database Schema Handoff
 
+Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
+
 Generated on 2026-04-15 from the local Supabase database after applying all
 repository migrations.
 

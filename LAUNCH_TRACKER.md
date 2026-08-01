@@ -1,5 +1,6 @@
 # LAUNCH_TRACKER.md — The Playbook go-live sequence
 Updated 2026-07-01. Check items off as they complete. Owner key: [M]ike · [CW] Cowork · [C]laude chat.
+Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
 
 ## Stage 1 — Project knowledge complete  ← YOU ARE HERE
 - [x] Rule 3 supersedence clause added to project instructions

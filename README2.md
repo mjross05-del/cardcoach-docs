@@ -1,5 +1,7 @@
 # CardCoach — Clean Document Set
 
+Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
+
 This folder is the consolidated, plain-Markdown replacement for the old CardCoach project
 file pile. Everything here is real, cross-checked against what's actually on disk, and free
 of references to files that don't exist.

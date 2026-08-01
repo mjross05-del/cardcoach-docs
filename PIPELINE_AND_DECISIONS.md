@@ -495,3 +495,18 @@ documented in `card_coach_website/README.md`. The renderer's templates lag the d
 truth (waitlist retirement, App Store link, Best Card nav) — regenerating without a
 template update would regress the site. Repoint execution and the eventual archive of
 `cardcoach-site` are Mike's dashboard work, not a session's.
+
+### 2026-07-31 — Stamp discipline: the stamp is the landing date
+**Decision:** A doc's `Last updated:` stamp carries the date of the commit that lands the
+change — never the authoring date, and a stamp never predates its own commit. Late-landed
+work notes the authoring date in parentheses: `Last updated: 2026-07-31 (authored 2026-07-16)`.
+Docs spelling the field differently (`Last consolidated:`, `Version N · Last updated`, a
+proposal's `Status:` line) satisfy the rule via that field; a doc with no stamp field gets a
+`Last updated:` line the first time it is edited.
+**Why:** Adopted by Mike 2026-07-31 after a restamp audit showed authoring-date stamps made
+landed work look unlanded (REVENUE.md appeared unstamped because its stamp carried the 07-16
+authoring date while the commit landed 07-31). Full text in SYNC_PROTOCOL.md; recorded here
+because it lived only in the protocol doc.
+**Implications:** The six docs that carried no stamp field (BLOG_OPERATIONS, BRAND,
+LAUNCH_TRACKER, SCHEMA, README2, SCHEMA_HANDOFF_README) were stamped 2026-07-31, content
+untouched.

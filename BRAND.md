@@ -1,5 +1,7 @@
 # CardCoach Brand — Warm Logic
 
+Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
+
 **Canonical brand reference.** Consolidates the Warm Logic Brand Kit v1.1 and the
 Colors & Fonts one-pager into a single Markdown file. This replaces both `.docx` brand
 docs as the authority.

@@ -1,5 +1,6 @@
 # BLOG_OPERATIONS.md — The Playbook (blog at cardcoach.ca site root; domain flipped from card.coach 2026-07-08)
 Updated: 2026-07-05. Owner: Mike. Status: launch-ready. (Header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-01, contradicting the 2026-07-02/03/04 dated entries within.)
+Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
 
 ## What exists
 - Blog name: **The Playbook** — "Practical guides to getting more from the cards you already have."
