@@ -78,3 +78,25 @@ Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to 
    this.
 10. PIPELINE_AND_DECISIONS.md is append-only. Settled decisions stay settled; shelved items
     stay shelved until Mike reopens them.
+
+    **CLARIFIED 2026-07-29.** As originally written this rule covered the whole file, which
+    made routine header maintenance read as a violation and forced an agent to escalate a
+    diff that served the rule's intent. Scope it precisely:
+
+    (a) **The decisions section is append-only.** No existing decision entry may be
+        rewritten, deleted, reordered or changed in meaning. This is the rule; everything
+        else below is mechanics.
+    (b) **The header and pipeline-reference sections are maintainable.** They hold pointers
+        to current artefacts and versions, and a stale pointer is a defect. Correcting one
+        is not a rule-10 event. The file's own preamble already said this — "the pipeline
+        section is stable; the decisions section is append-only" — and that reading governs.
+    (c) **Chronological backfill of RECOVERED decisions is permitted**, inserted at its true
+        date position rather than at the end, provided the same commit adds an entry stating
+        what was recovered and from where. A decision made in April and lost belongs in
+        April. The 2026-07-16 docs-fork entry is the worked example.
+    (d) **Genuinely new decisions append at the end**, below the marker. Never mid-log.
+    (e) An insertion that is neither (c) nor (d) needs Mike's explicit sign-off.
+
+    The audit property this preserves: any mid-log change must be self-declaring. If a diff
+    inserts above the end marker without a recovery entry explaining it, treat that as a
+    stop condition.
