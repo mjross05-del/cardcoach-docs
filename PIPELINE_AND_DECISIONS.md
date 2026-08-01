@@ -684,3 +684,86 @@ the two-rule window also produced marriott 0.86 (v2) → 0.90 (v3 reconciliation
 session, Mike's ruling — that session's delta). Trail: CardCoachv2 commit `1dc84fe`;
 `pnpm verify:cpp:cloud` remains the source of truth while the master-index apply session
 finishes landing workbook rows.
+
+### 2026-08-01 — Marriott confidence aligned to the index (M / MH / MH)
+**Decision:** `marriott-bonvoy-points` realistic and aggressive confidence **medium →
+medium-high**, per the index's marriott row (C/R/A = M/MH/MH); conservative stays medium.
+Ruled by Mike 2026-08-01 ("bump marriott realistic and aggressive to medium-high per the
+index"). Closes the residue line of the reconciliation entry above.
+**Landed:** 2026-08-01 (~08:30 ET), in-place metadata updates per house convention (values
+unchanged — cf. the session-4 avios confidence pass): both rows guarded at 0.9000/1.0000 @
+medium before the bump. The tier2 MH ceiling clears (§5): four CAD sources read on the
+publishers' pages 2026-07-31, values inside the 0.86–1.00 band. Recorded as a rider on
+CardCoachv2 `2026-08-01/2026-08-01__marriott-bonvoy-points__cpp.sql`. Marriott now matches
+the index's proposed confidence grid exactly.
+
+### 2026-08-01 — Amex MR aggressive to 3.00 via the aeroplan pack; master valuation index fully landed
+**Decision:** `amex-mr-points` aggressive **2.2000 → 3.0000**, inheriting the aeroplan
+worked-redemption pack via the 1:1 MR→Aeroplan transfer (index section D / Changes r6,
+amended §2 condition 3). Ruled by Mike 2026-08-01 ("apply the amex-mr aggressive
+2.20 → 3.00 via the aeroplan pack").
+**Landed:** 2026-08-01 (~09:45 ET), expire-then-insert; the 2.20 row keeps a one-day
+validity window. Evidence: the consensus band carried over (Milesopedia 1.70, FF 2.00,
+PoT 2.20 + demoted MMB directional) plus the two worked rows copied from the aeroplan
+aggressive row with the 1:1 transfer named per example (ANA YVR–HND J 55k = 6.48 cpp;
+YYZ–FRA J 60k = 4.40 cpp; dated 2026-08-01 fare snapshots; outliers excluded). Band
+1.70–6.48; 3.0000 stored below the worked band. Confidence **medium-high → medium** — the
+worked-row cap, a deliberate downgrade paired with the higher value. Transfer-ratio basis
+recorded honestly: 1:1 per the approved index + PoT's transfer-based valuation; the public
+amex.ca transfer page (attempted 2026-08-01) does not state the ratio. Pre-guards pinned
+both the outgoing amex row and the aeroplan pack rows by id and value. Delta: CardCoachv2
+`2026-08-01/2026-08-01__amex-mr-points__cpp.sql`.
+**Implications:** This was the last deferred value — **the 2026-07-31 master valuation
+index is now fully landed**: every index row is at its final state (writes applied,
+verified no-writes kept, marriott reconciled to v3 with the index confidence grid,
+aeroplan conservative kept at 1.20 by the fallback rule). Still open, tracked in the apply
+report: chart-derived confidence classification (affects the two RBC Avion rows), the TD
+promo-caveat floor question, and the BMO 0.67 → 0.6667 cosmetic candidate.
+
+### 2026-08-01 — Chart-derived confidence settled: dual-confirmed charts are medium-high
+**Decision:** A rate read from an issuer-published redemption chart and **dual-confirmed**
+classifies as **`medium-high`** — not `medium-low` (governance §5's strict line, which
+continues to govern chart inferences that are *not* dual-confirmed), and not `high`
+(reserved for rates the issuer states numerically). Ruled by Mike 2026-08-01 ("settle the
+avion confidence — keep medium-high on chart-derived rates"), resolving apply-report
+decision item 2 and the §5-vs-Aventura-precedent tension.
+**Landed:** 2026-08-01 (~09:55 ET). No value or confidence changes needed — the two
+`rbc-avion-points` chart rows (realistic 2.0000, aggressive 2.3333) already carried
+`medium-high`; their open flags were resolved on-row by in-place notes update (rider on
+the 2026-07-31 rbc-avion delta). Dated SETTLED note added under §5 of
+`PROPOSAL_point_valuation_governance.md` (same inline-annotation convention as §6's
+2026-07-31 correction).
+**Residue:** `cibc-aventura-points` aggressive 2.2857 carries `high` from the 07-31 pass
+under the old reading (dual-confirmed chart = high). Retrofit not actioned — aventura was
+on the index's no-writes list and this ruling named avion only. Needs an explicit call:
+downgrade to `medium-high`, or document an exception on the row.
+
+### 2026-08-01 — Aventura aggressive retrofitted: high → medium-high
+**Decision:** `cibc-aventura-points` aggressive (2.2857, the Airline Rewards Chart maximum
+whose 07-31 `high` created the §5 tension) is downgraded to **`medium-high`**, conforming
+to the settled chart-derived classification. Ruled by Mike 2026-08-01 ("downgrade the
+aventura aggressive to medium-high"), closing the residue of the entry above.
+**Landed:** 2026-08-01 (~10:05 ET), in-place metadata update (value and evidence
+unchanged; guarded at 2.2857 @ high, count 2). Aventura's conservative 0.6250 and
+realistic 1.0000 keep `high` — issuer-stated rates, outside the ruling. **No chart-derived
+row now carries `high`.** The §5 dated note updated to record the completed retrofit.
+Delta: CardCoachv2 `2026-08-01/2026-08-01__cibc-aventura-points__cpp.sql`. Outside the
+master index's no-writes list by explicit ruling; noted on the row.
+
+### 2026-08-01 — WestJet: the "relaunch" was history; points-era record completed, values unchanged
+**Decision:** `westjet-dollars-points` stays **1.00 ×3** (master-index NO CHANGE honoured).
+The overnight "programme relaunch in flight" gate resolves as already-history: WestJet
+dollars converted to WestJet points on **2025-04-30 at $1 = 100 points** (D3 registry
+verification 2026-07-31); the future-tense copy on westjet.com is stale marketing text.
+Nine evidence rows attached (redeem page read live 2026-08-01: "100 WestJet points will be
+worth 1 CAD... base fare, surcharges, bags and seats"; "2,500 points for $25 CAD"; plus the
+two legacy-URL pages), `point_programs.display_name` updated to **WestJet Points** (id
+keeps the FK-stable legacy slug), and both RBC WestJet cards' earn_rates confirmed already
+points-based — no earn work needed.
+**Why:** Ruled by Mike 2026-08-01 in-session ("start on westjet").
+**Implications:** NEW report-only flag: the taxes/fees and post-booking-extras channel
+redeems at 105–115 pts/$1 (**0.87–0.95 c/pt**) — a lower published channel. If WestJet is
+ever reclassified fixed→bank (the Scene+ amendment-1 pattern), conservative re-anchors
+there; Mike's ruling, not written. CPP-17 remainder is now 6, all awaiting rulings
+(blue_rewards ×3 and bmo r/a on the 0.6667 rounding pair; cibc realistic de-publication).
+Trail: CardCoachv2 commit `c17696d`.
