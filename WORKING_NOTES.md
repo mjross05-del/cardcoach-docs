@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-07-31 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-08-01 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -30,6 +30,7 @@ Last updated: 2026-07-31 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#19** Site git wiring / deploy-channel cutover — wiring DONE 2026-07-05; G3 domain move pending (was a duplicate #16, renumbered 2026-07-08)
 - **#20** Web app v1 (free recommendation surface) — approved 2026-07-13 (D1); P1 pending keys
 - **#21** www.cardcoach.ca dead-ends — needs www→apex redirect
+- **#22** Loyalty stacking Phase 1 (DATA-018/PKG-010/API-013) — LANDED DARK 2026-08-01 on `feat/loyalty-offers-phase1`; three activation gates open (see section below). Also gives #10 a pump-case resolution via cents_per_litre offers (earn_rates enum for card-catalog per-litre representation still Alex's).
 
 ---
 
@@ -234,3 +235,16 @@ disk.)*
 ---
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
+
+---
+
+## #22 — Loyalty stacking Phase 1: activation gates (landed dark 2026-08-01)
+
+- **Status:** code + seeds LANDED on `CardCoachv2` branch `feat/loyalty-offers-phase1` (engine 120/120, contracts 103/103, edge Deno 166/166, `pnpm verify:loyalty-p1` 8/8). Runtime flag `loyalty_offer_stacking` = **false**; PROJECT_RULES rule 5 still holds.
+- **Owner:** Mike (gates 1, 3), Alex or a Claude Code dispatch (gate 2).
+- **Gate 1 — WS-1 Tier-1 verification** of the 7 editorial offers (RBC↔Triangle at 0.40 confidence is the weakest): `dispatches/DISPATCH_WS1_stack_verification_2026-08-01.md`.
+- **Gate 2 — APP-017 mobile release** with the widened explanation union BEFORE the flag flips (old clients would fail the discriminated-union parse on `fuel_price_assumption`): `dispatches/DISPATCH_APP017_till_moment_ux_2026-08-01.md`.
+- **Gate 3 — founder flag flip** + rule 5 update, only after 1 and 2.
+- **Before merge:** `pnpm supabase:db-reset` + full `pnpm verify` on a machine with Docker (session sandbox had none); mobile jest suite.
+- **Also open:** monthly fuel-price review cadence owner (WS-5 dispatch); Quebec Journie carve-out [VERIFY]; Moi CPP fail-closed until Tier-1.
+- **Next:** QA-009 30-scenario pack: `dispatches/DISPATCH_QA009_thirty_scenario_pack_2026-08-01.md`.
