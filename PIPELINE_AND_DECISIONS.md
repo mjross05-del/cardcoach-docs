@@ -510,3 +510,20 @@ because it lived only in the protocol doc.
 **Implications:** The six docs that carried no stamp field (BLOG_OPERATIONS, BRAND,
 LAUNCH_TRACKER, SCHEMA, README2, SCHEMA_HANDOFF_README) were stamped 2026-07-31, content
 untouched.
+
+### 2026-07-31 — Marriott Bonvoy re-anchored under spread rule v2; three-source test satisfied
+**Decision:** `marriott-bonvoy-points` is **0.70 / 0.86 / 1.00** (conservative kept as the
+practical floor with a documented divergence — every live consensus figure sits above it;
+realistic = lowest consensus, Finly Wealth 0.86; aggressive = highest, Frugal Flyer 1.00
+explicit-CAD). Four CAD sources attached to all three rows (Finly 0.86, ThePointCalculator
+/ca/ 0.90, Milesopedia 0.90, Frugal Flyer 1.00); NerdWallet 0.80 excluded as USD. The
+tier2 three-source test is satisfied for marriott; the retirement option is dead.
+**Why:** Ruled by Mike 2026-07-31 (morning ruling on the overnight report, item 4). The
+2026-07-29 basis — the low end of a 0.70–0.80 third-party band — is no longer published
+anywhere; the live band is 0.86–1.00.
+**Implications:** `pv_tier2_needs_three_sources` still cannot be VALIDATED — aeroplan is
+unresolved, and the constraint as written also freezes expired tier2 history (it fires on
+any UPDATE of an under-evidenced tier2 row, discovered executing this ruling). A
+constraint rewrite scoped to active rows is proposed in the marriott delta header
+(CardCoachv2, `2026-07-31__marriott__spread-rule-v2-four-cad-sources.sql`). Trail:
+commit `ef807c7`; `pnpm verify:cpp:cloud` remains the source of truth.
