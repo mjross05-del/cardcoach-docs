@@ -12,6 +12,34 @@
 | 3 | `source_urls` shape | **Child table** `point_valuation_sources`, carrying each source's own `observed_value`. `observed_low`/`observed_high`/`source_count` become derived, never hand-typed |
 | 4 | Change-control gate | **Yes, enforced as a check** — not a convention. A rule in a document will not survive multi-session work |
 
+### OPEN DEFECT — the three-source constraint does not currently bite (found 2026-07-31)
+
+`source_count` was applied as **nullable**. The draft specified `NOT NULL DEFAULT 0`; the applied
+migration `20260731151950_cpp_structured_evidence` does not carry that. The consequence:
+
+```sql
+CHECK (source_tier IS DISTINCT FROM 'tier2' OR source_count >= 3)
+```
+
+For a Tier 2 row with no evidence attached, `source_count` is NULL, so `source_count >= 3`
+evaluates to NULL, `false OR NULL` is NULL — and **a CHECK constraint is satisfied by NULL.**
+
+So a Tier 2 row with *zero* sources passes. Validating the constraint would not catch it. Six
+rows are in exactly this state right now — `aeroplan-points` ×3 and `marriott-bonvoy-points` ×3,
+all `source_count = NULL`.
+
+This means the headline claim for layer 2 — "the database refuses a Tier 2 row without three
+sources" — **is not true as applied.** The rows that most need the rule are the ones it silently
+passes.
+
+**Fix, needs a migration:** either `ALTER COLUMN source_count SET DEFAULT 0` plus a backfill of
+NULL → 0 then `SET NOT NULL`, or rewrite the constraint as
+`coalesce(source_count, 0) >= 3`. The first is cleaner — it makes "no evidence" and "zero
+evidence" the same state, which they are.
+
+Until then the gate is CPP-11/CPP-17 in the check suite, not the database. Do not treat
+`pv_tier2_needs_three_sources` as load-bearing.
+
 ### Consequence of decision 3 that changed the design
 
 **A CHECK constraint cannot reference another table.** Putting sources in a child table means

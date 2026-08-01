@@ -243,6 +243,23 @@ Per PROJECT_RULES.md rule 9 exception (2026-07-29):
    point_program_id = ... AND valuation_tier = ... AND valid_to IS NULL`, then INSERT the
    replacement with `valid_from = CURRENT_DATE`. Expire count ≠ expected → ROLLBACK.
 
+   **`CURRENT_DATE` is UTC on the server, and it will bite evening sessions.** Added 2026-07-31
+   after a live incident: a session running past 20:00 Eastern crossed 00:00 UTC mid-flight, and
+   the first write of ruling A stamped `valid_from = 2026-08-01` — a future date, from a session
+   everyone involved believed was running on 2026-07-31. Post-commit verification caught it and
+   it was corrected in place.
+
+   Two consequences, both nasty because they are silent:
+   - A row can be stamped **tomorrow**, which makes it invisible to
+     `valid_from <= CURRENT_DATE` filters in local time and breaks the staleness arithmetic.
+   - The same-day rule below inverts: a row you wrote "today" may be dated tomorrow, so
+     expire-then-insert unexpectedly *succeeds* where it should have failed, silently creating a
+     one-day validity window nobody intended.
+
+   **Rule:** pin an explicit `DATE 'YYYY-MM-DD'` literal in every write of a session that could
+   cross 00:00 UTC — which in Eastern time means any session running after 20:00. Do not rely on
+   `CURRENT_DATE`. Verify after the first write of the session, not at the end.
+
    **Same-day supersession is an in-place UPDATE, not expire-then-insert.** The schema enforces
    `CHECK (valid_to IS NULL OR valid_to > valid_from)`, strictly greater, so a row created today
    cannot be expired today — the attempt raises `point_valuations_valid_date_range` and rolls the
