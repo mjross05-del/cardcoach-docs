@@ -801,3 +801,26 @@ every check passes including staleness and drift; every active row traces to att
 dated, on-page evidence; all six pv_ constraints are validated. Trail: CardCoachv2 commit
 `27d0598`. The master-index apply session was still landing workbook rows (live 124/155 at
 the final resync); `verify:cpp:cloud` remains the source of truth.
+
+### 2026-08-01 — TD promo-caveat floor resolved (0.25 stands); marriott's last index prerequisite closed
+**Decision:** (1) `td-rewards-points` conservative **stays 0.25**. The full T&C §3.3 read
+confirms the fragility flag was real — "Other Redemption Options are limited-time
+promotional offers ... [TD] can cancel or change" covers the 400 pts/$1 Minimum Value —
+but td.com's pay-off-purchases page publishes the identical $1 = 400 pts as a **standing
+feature** ("accurate as of August 19, 2025", no promotional framing), now attached as a
+second issuer artifact. The conservative tier is the lowest channel that exists today;
+withdrawal is covered by the event-driven refresh triggers, confidence stays `medium`, and
+the row carries an explicit revert-to-Expedia-0.50 instruction if the channel disappears.
+(2) `marriott-bonvoy-points`: Prince of Travel's Marriott figure — the one workbook band
+member never read on-page — verified 2026-08-01 ("0.8 cents (CAD), 5th night free on 5+
+night stays, off-peak value") and attached as the **fifth source** on all three rows.
+Five-source band 0.80–1.00; the v3 median is still 0.90; **no values changed** by either
+item.
+**Why:** Ruled by Mike 2026-08-01 in-session ("do the td conservative and marriott open
+items") — the last open items from APPLY_REPORT_valuation_index_2026-07-31.md other than
+decision item 2 (chart-derived confidence on the RBC Avion rows, still awaiting a ruling).
+**Implications:** Suite passes both modes (exit 0, CPP-17 at FAIL severity). Trail:
+CardCoachv2 commit `feee2ac`; deltas
+`2026-08-01__td-conservative__promo-caveat-resolution.sql` and
+`2026-08-01__marriott__pot-fifth-source-band-0p80.sql`; the apply-report ledger annotated
+in place (that session's file to land).
