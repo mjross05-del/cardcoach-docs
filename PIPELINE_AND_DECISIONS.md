@@ -767,3 +767,22 @@ ever reclassified fixed→bank (the Scene+ amendment-1 pattern), conservative re
 there; Mike's ruling, not written. CPP-17 remainder is now 6, all awaiting rulings
 (blue_rewards ×3 and bmo r/a on the 0.6667 rounding pair; cibc realistic de-publication).
 Trail: CardCoachv2 commit `c17696d`.
+
+### 2026-08-01 — Rounding pair fixed; CIBC realistic re-based; CPP-17 promoted to FAIL; strict passes
+**Decision:** (1) `blue_rewards` ×3 re-anchored **0.6670 → 0.6667** and `bmo-rewards-points`
+realistic/aggressive **0.6700 → 0.6667** — the exact issuer ratios (1,500 pts = $10;
+150 pts = $1) at the schema's 4-dp precision; evidence recorded at the same precision (bmo
+conservative 0.50 stands per the 07-31 verify-to-page outcome). (2) `cibc-aventura-points`
+realistic **value kept at 1.00**, basis re-sourced **tier1 → tier2** with confidence capped
+medium-high: CIBC de-published the fixed general-redemption ratio, and the value now rests
+on the v3 consensus median {Prince of Travel 1.0 CAD, Frugal Flyer 1.0, Milesopedia 1.2},
+all three read on the publishers' own pages 2026-08-01; event trigger recorded to re-anchor
+to tier1 immediately if CIBC republishes. (3) **CPP-17 promoted WARN → FAIL** — the tier1/1b
+evidence backlog went 32 → 0 across the overnight batches and the morning rulings.
+**Why:** Ruled by Mike 2026-08-01 in-session ("fix the rounding pair and cibc"), closing the
+last items of the overnight report's gated queue.
+**Implications:** **The gated queue is empty and `pnpm verify:cpp:cloud --strict` exits 0** —
+every check passes including staleness and drift; every active row traces to attached,
+dated, on-page evidence; all six pv_ constraints are validated. Trail: CardCoachv2 commit
+`27d0598`. The master-index apply session was still landing workbook rows (live 124/155 at
+the final resync); `verify:cpp:cloud` remains the source of truth.
