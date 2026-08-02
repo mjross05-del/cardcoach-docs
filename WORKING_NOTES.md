@@ -19,12 +19,12 @@ Last updated: 2026-08-01 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#5** Welcome-bonus data pipeline — design approved 2026-07-03; DB-side implementation pending
 - **#8** Rogers cohort-differentiated rates — CLOSED 2026-07-04 (date-gated 2026-08-04 delta pre-staged; August confirmations remain; August-cycle fetcher/registry prep done 2026-07-05)
 - **#9** PC Financial post-EQB — in progress (F2 post-close CMA, F3 standard-card income still open)
-- **#10** Per-litre rate_unit enum — blocked (Alex, engineering backlog)
+- **#10** Per-litre rate_unit enum — open, low priority (LANE CHANGE 2026-08-01: Mike's; pump case resolved by DATA-018 offers, enum only matters for catalog earn_rates)
 - **#11** Legal review of affiliate disclosure — not started
 - **#12** Commission-blind policy publication — not started
 - **#13** Live-site hold-back claims — not started
-- **#14** Point Valuations xlsx disposition — not started (awaiting Alex)
-- **#15** File-for-Alex pack confirmation — not started (awaiting Alex)
+- **#14** Point Valuations xlsx disposition — not started (LANE CHANGE 2026-08-01: Mike decides directly)
+- **#15** File-for-Alex pack confirmation — not started (LANE CHANGE 2026-08-01: Mike decides directly)
 - **#17** Waitlist endpoint (site v2 funnel) — OPEN (Mike, ~5 min; scaffold shipped 2026-07-05, see section below)
 - **#18** Email routing on cardcoach.ca — not started (Mike, ~10 min; gates the domain-flip push)
 - **#19** Site git wiring / deploy-channel cutover — wiring DONE 2026-07-05; G3 domain move pending (was a duplicate #16, renumbered 2026-07-08)
@@ -120,10 +120,10 @@ CardCoachv2.)*
 ## Infrastructure / tooling
 
 ### #10 — Per-litre `rate_unit` enum extension
-- **Status:** blocked
-- **Owner:** Alex (engineering)
-- **Blocker:** Engineering backlog priority.
-- **Next action:** Mike raises with Alex when other blockers clear. Not urgent while the Unsupported_Benefits pattern holds the data.
+- **Status:** open, low priority — LANE CHANGE 2026-08-01: Mike's (Alex stepped back; "awaiting Alex" no longer a blocker state). Pump-case pressure is OFF: DATA-018 gives per-litre facts a canonical `offers` home (b0ff0005/6/7), so the enum now only matters for card-catalog `earn_rates` representation.
+- **Owner:** Mike
+- **Blocker:** None — priority only.
+- **Next action:** Fold into a future earn_rates schema pass if catalog-side per-litre representation is ever wanted; otherwise leave — the offers home covers the till moment.
 - **Context:** Canadian Tire (cents/litre) and PC Financial (points/litre) gas rewards are captured but parked. Unblocks when the enum gains `cents_per_litre` and `points_per_litre`.
 - **Update 2026-07-02:** PCF gas rates now fully verified and waiting on the enum — World ≥30 pts/L; Insiders ≥50 pts/L (+20 bonus pts/L in months with ≥150L at Esso/Mobil → 70), loyalty-inclusive, price-dependent. Strengthens the case when Mike raises this with Alex.
 
@@ -179,17 +179,17 @@ CardCoachv2.)*
 ## Folder / data housekeeping
 
 ### #14 — Point Valuations xlsx disposition
-- **Status:** not started
-- **Owner:** Mike → Alex
-- **Blocker:** Needs Alex's answer.
-- **Next action:** Ask Alex whether `CardCoach Point Valuations v1.3 2026-03-14.xlsx` (in `00_COWORK/_TRIAGE/`) is a live engine input or superseded by the DB; file to Core or archive on his answer.
+- **Status:** not started — LANE CHANGE 2026-08-01: Mike decides directly (Alex stepped back; no answer to await).
+- **Owner:** Mike
+- **Blocker:** None.
+- **Next action:** Determine from the DB itself whether `CardCoach Point Valuations v1.3 2026-03-14.xlsx` (in `00_COWORK/_TRIAGE/`) feeds anything: `point_valuations` is tiered + evidence-governed since 0038/0034 and the 2026-07-31 master valuation index superseded workbook values — near-certainly archive. Verify no script references the file, then archive.
 - **Context:** Surfaced in the 2026-07-02 folder reorg; the only remaining data file whose currency can't be determined from the folder itself.
 
 ### #15 — File-for-Alex pack confirmation
-- **Status:** not started
-- **Owner:** Mike → Alex
-- **Blocker:** Needs Alex's confirmation.
-- **Next action:** Ask Alex whether the `…v1.4_ONEFILE_ALEXTESTED.pdf` acquisition pack (in `00_COWORK/_TRIAGE/File for Alex/`) was consumed; archive the folder on his confirmation.
+- **Status:** not started — LANE CHANGE 2026-08-01: Mike decides directly (Alex stepped back).
+- **Owner:** Mike
+- **Blocker:** None.
+- **Next action:** The `…v1.4_ONEFILE_ALEXTESTED.pdf` acquisition pack (in `00_COWORK/_TRIAGE/File for Alex/`) is a Jan-2026 handoff artifact from a handoff era that's fully archived; archive the folder on Mike's own review.
 - **Context:** Jan 2026 handoff artifacts; everything else from the handoff era is archived.
 
 ### #19 — Site git wiring / deploy-channel cutover *(renumbered from a duplicate #16, 2026-07-08 — Blue Rewards keeps #16; it's cited by post-09's ledger)*
@@ -238,8 +238,8 @@ disk.)*
 ## #22 — Loyalty stacking Phase 1: activation gates (landed dark 2026-08-01)
 
 - **Status (updated 2026-08-01 evening):** branch `feat/loyalty-offers-phase1` at `cbf2739`. **Gate 1 CLOSED** — WS-1 executed same-day; all 7 editorial offers now issuer_confirmed 0.95–0.97 (see `dispatches/REPORT_WS1_results_2026-08-01.md`; RBC↔Triangle corrected to CT-retail-only, Moi CPP 0.8¢/pt captured, excluded-co-brand scope added). **Gate 2 code-complete** — APP-017 landed via concurrent runtime (`cbf2739`), needs local suite re-run + a shipped build. Mike's first `db reset` failure (FK ordering, migrations-before-seed-data) fixed in `89facba`. Flag still **false**; rule 5 still holds.
-- **Owner:** Mike (re-run + merge + gate 3), Alex (release build).
-- **Gate 3 — founder flag flip** + rule 5 update, only after the APP-017 build ships.
+- **Owner:** Mike — all of it (LANE CHANGE 2026-08-01: Alex stepped back for the time being; build + release are Mike's, in progress).
+- **Gate 3 — founder flag flip** + rule 5 update, only after the APP-017 build ships AND the installed base has adopted it (TestFlight adoption check in App Store Connect — the widened explanation union must be on testers' devices before the server emits it; see counsel gate in COMPLIANCE pack for QC).
 - **Before merge:** re-run `pnpm supabase:db-reset` (now expected green) + `pnpm verify:loyalty-p1` + `pnpm test` + `pnpm test:supabase`; then full `pnpm verify`.
 - **WS-5 freshness: WIRED 2026-08-01** into the daily scheduled verify batches (wed-rbc, fri-cibc, sun-ct-pcf, mon-scotiabank + chrome lane) — parking-lane only, OFFERS_PROMOTION OFF preserved, sections no-op until the branch merges; fuel-price check first Wednesday monthly; see `dispatches/DISPATCH_WS5_offer_freshness_ops_2026-08-01.md` (now the record of what was wired). Journie 30-vs-60-day conflict + Sunoco/2030 sunset + Scene+/Shell + Blue Rewards watches all live in those prompts.
 - **QA-009: DONE 2026-08-01** — 30-scenario golden pack built + independently verified on branch `feat/qa-009-golden-pack` (commit `12f47fe`; suite 199/199; merge via the merge dispatch, step 6).

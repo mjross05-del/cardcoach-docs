@@ -63,6 +63,14 @@ Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to 
    permission to estimate. App build and App Store remain Alex's lane; social and Canva remain
    Mikayla's.
 
+   **SUPERSEDED (Mike, 2026-08-01): Alex has stepped back for the time being.** The app build,
+   App Store / TestFlight releases, the engine, and the schema lane are Mike's with **equal
+   authority** — nothing routes through Alex while this holds, and "awaiting Alex" is no longer
+   a valid blocker state. Everything that disciplined the lane still binds whoever writes:
+   conditions (a)–(f) above, the per-change DDL proposal discipline, and rule 7. Mikayla's lane
+   is unchanged. If Alex re-engages, ownership becomes shared again — this note grants Mike
+   authority; it does not remove Alex's.
+
    **RESOLVED 2026-07-29: DDL is authorised, per-change.** Mike signed off migration 0056
    (`point_programs` uniqueness relaxation) explicitly after being shown the alternatives. The
    working rule: schema changes are in scope, but each one is proposed with its reasoning, its
