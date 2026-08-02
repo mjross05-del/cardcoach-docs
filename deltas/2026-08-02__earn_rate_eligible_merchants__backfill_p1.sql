@@ -1,0 +1,33 @@
+-- Delta: earn_rate_eligible_merchants backfill, pass 1 (+25 merchant entities, +1 category fix)
+-- Applied: 2026-08-02 via Supabase MCP execute_sql, project hrzpznlpmxxrbtwskacu, single transaction
+-- Trigger: Mike's live test at Real Canadian Superstore — PC Financial MC not recommended.
+-- Root cause: earn_rate_eligible_merchants was EMPTY (0 rows in production), so every
+--   merchant_list_only earn row failed closed at every merchant (the API-011-era gap).
+-- Scope: 21 of 31 merchant_list_only rows populated (108 pairs) where a Tier-1-adequate
+--   FIXED banner list exists:
+--   PC x8 (Loblaw banners + SDM/Pharmaprix; Tier-1 fetch 2026-08-02 - NOTE the official
+--     list is NON-EXHAUSTIVE "including ... and more"; banners seeded = fine-print-named
+--     (Loblaws, No Frills, Real Canadian Superstore, Maxi, SDM, Pharmaprix) + logo-carousel
+--     evidence (Atlantic Superstore, Zehrs, Wholesale Club, Valu-mart, Fortinos).
+--     Provigo / Your Independent Grocer / Dominion / T&T are NOT named in any official text
+--     captured today and are deliberately absent (rule 7) - known coverage gap.)
+--   Triangle 4% x2 (WS-1-verified CT-family list incl. Sports Rousseau / Hockey Experts /
+--     L'Entrepot du Hockey), More Rewards x2 (six Pattison banners, WS-1), moi RBC legs x2
+--     (Metro/Brunet/Premiere Moisson QC + Jean Coutu; beauty leg Jean Coutu + Brunet),
+--   Scotia Scene+ grocery x4 (Sobeys, Safeway, IGA, Foodland, FreshCo per issuer fine print),
+--   Home Hardware x1, Cineplex x1, BMO World MC Shell x1.
+-- Deliberately NOT populated (10 rows, fail-closed stands): Amazon/Whole Foods (Prime-state),
+--   Air Canada direct x3, British Airways, Costco gas / Costco.ca (network-classified),
+--   streaming x2 + food delivery x3 (issuer-classifier lists), Blue Rewards partners x2
+--   (changeable-without-notice list at bmo.com/bluerewards10x).
+-- Discipline: secured snapshots merchant_entities_snapshot_20260802 +
+--   earn_rate_eligible_merchants_snapshot_20260802 (RLS enabled, grants revoked) in the same
+--   transaction; idempotent inserts; exact-match post-guards (rows=108, rates=21,
+--   superstore-pairs=4, loblaws category fixed NULL->grocery).
+-- First attempt intentionally ABORTED by its own guard (expected rates=20, actual 21 - a
+--   tally error in the guard, not the data); full rollback confirmed, then re-applied with
+--   corrected guard. Guards work.
+-- Local parity: NOT added to repo seed.sql in this pass; local dev DBs will lack these rows.
+--   Follow-up in WORKING_NOTES #23 if local-testing parity is wanted.
+-- (Full SQL as applied is recorded in the session transcript; the statement is the
+--  two-part insert + guarded DO block described above.)
