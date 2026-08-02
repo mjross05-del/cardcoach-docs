@@ -1,0 +1,18 @@
+-- Delta: re-point 3 location-suffixed place mappings to canonical chain entities
+-- Applied: 2026-08-02 via Supabase MCP execute_sql, single guarded transaction
+-- Trigger: Mike's re-test still recommended TD Aeroplan at Real Canadian Superstore.
+-- Root cause: Google names chain stores with location suffixes; resolve-place minted
+--   per-location entities ('real canadian superstore oxford street oakridge',
+--   'zehrs stanley park', 'zehrs stratford') that no eligible list references.
+-- Change: merchant_entity_places rows for those 3 places re-pointed to the canonical
+--   'real canadian superstore' / 'zehrs' chain entities; orphan entities left placeless
+--   (harmless). Mark's entity NULL category -> 'general' (guarded).
+-- Snapshot: merchant_entity_places_snapshot_20260802 (RLS enabled, grants revoked).
+-- Guards: repointed=3, orphans_with_places=0 - passed.
+-- Math note recorded: at realistic tier, TD Aeroplan VI grocery (1.5 x 2.0c = 3.0%) TIES
+--   PC WE (30 x 0.1c = 3.0%); PC edges ahead only on exact-value float + tie-break. The
+--   recommendation either way is honest.
+-- DURABLE FIX (code): branch fix/chain-entity-binding commit 788c76b - is_chain curation
+--   + word-boundary prefix matching in both resolvers, fail-open, 8 unit tests, 207/207
+--   suite. Requires: merge -> npx supabase db push -> npx supabase functions deploy
+--   resolve-place recommend-here-v2.
