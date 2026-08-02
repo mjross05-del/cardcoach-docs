@@ -242,4 +242,6 @@ disk.)*
 - **Gate 3 — founder flag flip** + rule 5 update, only after the APP-017 build ships.
 - **Before merge:** re-run `pnpm supabase:db-reset` (now expected green) + `pnpm verify:loyalty-p1` + `pnpm test` + `pnpm test:supabase`; then full `pnpm verify`.
 - **WS-5 freshness: WIRED 2026-08-01** into the daily scheduled verify batches (wed-rbc, fri-cibc, sun-ct-pcf, mon-scotiabank + chrome lane) — parking-lane only, OFFERS_PROMOTION OFF preserved, sections no-op until the branch merges; fuel-price check first Wednesday monthly; see `dispatches/DISPATCH_WS5_offer_freshness_ops_2026-08-01.md` (now the record of what was wired). Journie 30-vs-60-day conflict + Sunoco/2030 sunset + Scene+/Shell + Blue Rewards watches all live in those prompts.
-- **Next:** QA-009 30-scenario pack: `dispatches/DISPATCH_QA009_thirty_scenario_pack_2026-08-01.md`.
+- **QA-009: DONE 2026-08-01** — 30-scenario golden pack built + independently verified on branch `feat/qa-009-golden-pack` (commit `12f47fe`; suite 199/199; merge via the merge dispatch, step 6).
+- **WS-7: DRAFTED 2026-08-01** — `COMPLIANCE_loyalty_stacking_pack_2026-08-01.md` (string review, trademark attribution EN/FR, Quebec/Law 25 checklist). NEEDS COUNSEL SIGN-OFF before flag flip; one APP-017 follow-up: in-app attribution notice screen.
+- **Merge/push/cloud-apply prompt ready:** `dispatches/DISPATCH_MERGE_AND_CLOUD_APPLY_2026-08-01.md` — paste into Claude Code on the laptop.
