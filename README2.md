@@ -1,6 +1,6 @@
 # CardCoach — Clean Document Set
 
-Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
+Last updated: 2026-08-01 (script-pipeline retirement reflected; see PIPELINE_AND_DECISIONS 2026-08-01 decision entry)
 
 This folder is the consolidated, plain-Markdown replacement for the old CardCoach project
 file pile. Everything here is real, cross-checked against what's actually on disk, and free
@@ -16,12 +16,12 @@ of references to files that don't exist.
 |------|-----------|
 | `SOURCE_OF_TRUTH.md` | **Open first.** Index of every real file + the "these don't exist, stop looking" ghost list. |
 | `HOW_THE_ENGINE_WORKS.md` | The data model + pipeline truth. V1 is dead; V2 is live. |
-| `PIPELINE_AND_DECISIONS.md` | The reverification pipeline + the append-only decisions log. |
+| `PIPELINE_AND_DECISIONS.md` | The daily verification batch process + the append-only decisions log. |
 | `WORKING_NOTES.md` | The only file that churns — open items, owners, next actions. |
-| `STAGE3_PROMPT.md` | The full Stage 3 reverification prompt (recovered, complete). |
+| `STAGE3_PROMPT.md` | RETIRED 2026-08-01 with the script pipeline; kept as the extraction-rules record. |
 | `BRAND.md` | Warm Logic brand: palette, type, logo, voice, rules. |
 | `REVENUE.md` | The Phase 4 v2 revenue model (free web + paid iOS). |
-| `stage2_fetcher.py` | The Stage 2 source fetcher — **recovered** and compile-checked. |
+| `stage2_fetcher.py` | The Stage 2 source fetcher — recovered, compile-checked, **RETIRED 2026-08-01** (kept as a record; do not run). |
 
 These replace the entire old PDF/docx governance pile.
 
@@ -37,7 +37,7 @@ need rewriting.
 - `README.md` — schema handoff notes.
 
 **Card data**
-- `card_sources_seed_enriched.csv` — the Stage 1 registry the fetcher runs against. **Load-bearing — do not delete.**
+- `card_sources_seed_enriched.csv` — the Stage 1 registry the retired fetcher ran against. **RETIRED 2026-08-01; keep on disk as a record** (its URL knowledge migrates to verify.issuer_notes as batches touch each issuer).
 
 **Brand assets**
 - `CardCoach_Mark_Light.png`

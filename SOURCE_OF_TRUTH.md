@@ -1,7 +1,7 @@
 # CardCoach — Source of Truth
 
 **Open this file first. Always.**
-Last updated: 2026-07-16 · Owner: Mike
+Last updated: 2026-08-01 · Owner: Mike
 
 This is the only file that tells you what to trust. If any other document points you
 at a filename, check it against the lists below before you go looking for it. Most of
@@ -15,7 +15,7 @@ CardCoach is a Canada-only, issuer-verified credit card recommendation product u
 the **Warm Logic** brand. Three things are real and built:
 
 1. **The database** — a live Supabase schema (48 tables, 18 views, 43 migrations). Real. Done. The asset.
-2. **The reverification pipeline** — a 3-stage system that keeps card data current. Infrastructure complete; first real run not done yet.
+2. **The verification batches** — daily scheduled runs (per-issuer weekday rotation + Friday chrome lane) that keep card data current, with evidence and audit in the Supabase `verify` schema. Operational since late July 2026. *(The old 3-stage script pipeline is retired — 2026-08-01 decision entry in PIPELINE_AND_DECISIONS.md.)*
 3. **The brand + live site** — Warm Logic brand kit and the marketing site (HTML).
 
 Everything else in the old project folder is either (a) the same content in a worse
@@ -32,15 +32,15 @@ plain Markdown, each one actually is what it says it is.
 |------|---------------|----------------------|
 | `SOURCE_OF_TRUTH.md` | This file. The index + ghost list. | Rarely |
 | `HOW_THE_ENGINE_WORKS.md` | The data model + pipeline truth. How the engine and DB actually work. | Rarely — only on real architecture changes |
-| `PIPELINE_AND_DECISIONS.md` | The reverification pipeline, plus the append-only log of settled decisions. | Append-only — add, never rewrite |
+| `PIPELINE_AND_DECISIONS.md` | The daily verification batch process, plus the append-only log of settled decisions. | Part 1 on process changes; Part 2 append-only |
 | `WORKING_NOTES.md` | What's unresolved, who owns it, what's next. The churning to-do reality. | Often — this is the only one that churns |
-| `STAGE3_PROMPT.md` | The full reverification prompt you paste into Claude. | Versioned — bump on rule/column changes |
+| `STAGE3_PROMPT.md` | RETIRED 2026-08-01 (script pipeline). Kept as the record of the extraction rules. | Frozen |
 | `BRAND.md` | Warm Logic brand: palette, type, logo, voice, rules. | Rarely |
 | `REVENUE.md` | The Phase 4 v2 revenue model: free web + paid iOS. | Rarely — on strategy shifts |
 
-Seven files. Plus `SCHEMA.md` and `README.md` (real, on disk, keep), and the recovered
-`stage2_fetcher.py`. If you find yourself maintaining an eighth governance doc, ask whether
-it belongs inside one of these instead.
+Seven files. Plus `SCHEMA.md` and `README.md` (real, on disk, keep), and the recovered —
+now retired — `stage2_fetcher.py`. If you find yourself maintaining an eighth governance
+doc, ask whether it belongs inside one of these instead.
 
 ---
 
@@ -63,12 +63,12 @@ it belongs inside one of these instead.
 - **Deploy workflow:** edit locally in the `01_CORE/site/` git worktree → commit → **push to `main` → Cloudflare Workers Builds auto-deploys**. Branch pushes give preview URLs. Zip uploads are retired; zips in `00_COWORK/_OUTPUTS/` serve as point-in-time records only. *(Corrected 2026-07-05.)*
 
 **Card data**
-- `card_sources_seed_enriched.csv` — the Stage 1 registry of issuer source URLs. **Real, on disk.**
+- `card_sources_seed_enriched.csv` — the Stage 1 registry of issuer source URLs. **Real, on disk — RETIRED 2026-08-01** with the script pipeline; kept as a record. Source discovery now happens in the daily batches' coverage diffs; learned per-issuer source knowledge lives in `verify.issuer_notes`.
 - 95+ cards · 15 issuers · 442+ earn rates · 155+ caps (dataset v23, 2026-03-14; PCF net-new adds pending).
 - The actual card facts (earn rates, caps, fees, point values) live in the **Supabase database**, governed by the pipeline. They are NOT re-derivable from the docs alone.
 
-**Pipeline code**
-- `stage2_fetcher.py` — the Stage 2 source fetcher. **Recovered from `stage2_fetcher.pdf` and now a real, compile-checked `.py` file.** Run it from a directory next to the registry CSV. See `STAGE3_PROMPT.md` for the Stage 3 half.
+**Pipeline code (retired)**
+- `stage2_fetcher.py` — the Stage 2 source fetcher. Recovered from `stage2_fetcher.pdf`, compile-checked — and **RETIRED 2026-08-01** with the script pipeline (it could not handle bot-walled / headless-blocked / client-rendered issuer sites; see the decision entry). Kept on disk as a record; do not run it against live sites. `STAGE3_PROMPT.md` is likewise retired-with-banner.
 
 ---
 

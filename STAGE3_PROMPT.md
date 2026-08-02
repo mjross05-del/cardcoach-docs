@@ -1,6 +1,13 @@
 # CardCoach Stage 3 — Reverification Extraction Prompt
 
-**Version 1.3 · Last updated 2026-07-31** (v1.3 rebuild authored 2026-07-16, landed 2026-07-31)
+**Version 1.3 · Last updated 2026-08-01** (v1.3 rebuild authored 2026-07-16, landed 2026-07-31)
+
+> **RETIRED 2026-08-01.** The Stage 1–3 script pipeline is retired — verification now
+> runs as daily batched scheduled tasks (see PIPELINE_AND_DECISIONS.md Part 1 and the
+> 2026-08-01 decision entry; retirement driven by sites the script could not handle).
+> This prompt is kept as a record of the extraction rules, most of which live on inside
+> the batch prompts (Tier-1 only, evidence citations, expire-then-insert, no V1 writes,
+> never guess). Do not paste it for new work.
 
 This is the complete, ready-to-paste prompt for Stage 3 of the reverification pipeline.
 When the Stage 2 fetcher flags a meaningful change on a card, paste this prompt into

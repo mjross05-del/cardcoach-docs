@@ -12,9 +12,9 @@ Last updated: 2026-08-01 · Owner: Mike  (header date corrected 2026-07-04, hous
 ## Status index (added 2026-07-04, housekeeping sweep 2 — derived from the dated entries below; the entries stay authoritative)
 
 - **#1** Scotia dry run — CLOSED 2026-07-04 (overtaken by the 2026-06-10 Scotia SQL handoff)
-- **#2** Apply-delta helper script — not started (needs the SQL format from Alex)
-- **#3** French-language URL pass (324 blank FR-CA rows) — not started (deferred post-V1)
-- **#4** "Uncertain" registry entries (~10 landing-page rows) — not started
+- **#2** Apply-delta helper script — not started; RESCOPED 2026-08-01 (input is now batch gated packages/parking rows, not Stage-3 JSON — script pipeline retired)
+- **#3** French-language verification pass — not started (deferred post-V1); RESCOPED 2026-08-01 (vehicle is FR-CA passes inside the daily batches, not registry rows — registry retired)
+- **#4** "Uncertain" registry entries (~10 landing-page rows) — CLOSED 2026-08-01 (retired with the registry; batch coverage-diff owns source discovery, per-card PDF paths accumulate in verify.issuer_notes)
 - **#16** Blue Rewards tier successors (BMO) — CLOSED 2026-07-02
 - **#5** Welcome-bonus data pipeline — design approved 2026-07-03; DB-side implementation pending
 - **#8** Rogers cohort-differentiated rates — CLOSED 2026-07-04 (date-gated 2026-08-04 delta pre-staged; August confirmations remain; August-cycle fetcher/registry prep done 2026-07-05)
@@ -45,30 +45,27 @@ Last updated: 2026-08-01 · Owner: Mike  (header date corrected 2026-07-04, hous
 
 ## #2 — Apply-delta helper script
 
-- **Status:** not started
+- **Status:** not started — RESCOPED 2026-08-01 (script pipeline retired; the Stage-3-JSON framing is dead)
 - **Owner:** Mike
-- **Blocker:** Needs the Scotia dry run to reveal the SQL format Alex wants.
-- **Next action:** Build after the first dry run — ~100 lines of Python that turns Stage 3's JSON output into the exact SQL file Alex can run.
-- **Context:** Stage 3 currently outputs structured JSON; converting to ready-to-run SQL is a gap. Not worth building until the target format is known.
+- **Blocker:** None hard. Worth building once gated-package volume justifies it.
+- **Next action:** ~100 lines that turn a batch **gated package / parking row** into the dated delta SQL file rule 10(b) requires (expire-then-insert, guards, snapshot preamble). The 2026-06-10 one-file-per-card handoff-format decision still applies to the output.
+- **Context:** The daily batches classify structural changes as gated and record loyalty reverify results in verify.parking; applying them is manual SQL authoring today. The helper closes that gap in the new process.
 
 ---
 
 ## Data coverage gaps
 
-### #3 — French-language URL pass (324 blank FR-CA rows)
-- **Status:** not started
+### #3 — French-language verification pass
+- **Status:** not started — RESCOPED 2026-08-01 (registry retired; "324 blank FR-CA rows" no longer the unit of work)
 - **Owner:** Mike
 - **Blocker:** None — scope only. Deferred to post-V1 per the 2026-04-22 decision.
-- **Next action:** When V1 stabilizes, run a dedicated French research session like the April 2026 English enrichment. ~3 hours focused.
+- **Next action:** When V1 stabilizes, add an FR-CA leg to the daily batch prompts (fetch each issuer's FR pages alongside EN, diff the facts, record divergences as gated) — or run one dedicated FR sweep session per issuer, batch-style, ~3 hours total.
 - **Context:** Quebec is a distinct launch channel, not a translation target. FR pages diverge from EN (Desjardins Bonidollars classification, National Bank product tier names). Needs its own review.
 - **Watch:** reconcile the "French in V1" wording with the Operating Model — French is a V1 *market* commitment; French *source reverification* is the deferred piece. Say it once, in one place.
 
 ### #4 — "Uncertain" registry entries — ~10 landing-page rows
-- **Status:** not started
-- **Owner:** Mike
-- **Blocker:** None.
-- **Next action:** Visit each landing page, find the direct per-card PDF, update the registry row.
-- **Context:** CIBC Aeroplan benefits guides, MBNA Mastercard Benefits, and Rogers per-card benefits guides are linked from landing pages but the direct PDFs weren't captured in April. These rows point at the landing page with `confidence = uncertain`. The fetcher still works, just with noisier diffs.
+- **Status:** CLOSED 2026-08-01 — retired with the registry (script pipeline retirement, PIPELINE_AND_DECISIONS 2026-08-01 entry).
+- **Context kept for the record:** CIBC Aeroplan benefits guides, MBNA Mastercard Benefits, and Rogers per-card benefits guides were landing-page-only registry rows. The need survives in the new form: batches resolving a direct per-card PDF record it in verify.issuer_notes for that issuer, which every future run reads first.
 
 ### #16 — Blue Rewards tier successors (BMO)
 - **Status:** CLOSED 2026-07-02
