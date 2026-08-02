@@ -1,6 +1,6 @@
 # CardCoach — Session Rules (2026-07-02)
 
-Last updated: 2026-07-31 · Owner: Mike (rule 10 clarification authored 2026-07-29, landed 2026-07-31)
+Last updated: 2026-08-02 · Owner: Mike (rule 5 partial supersession landed 2026-08-02; rule 10 clarification 2026-07-31)
 
 Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to behave.
 
@@ -13,6 +13,15 @@ Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to 
    card_exclusions). Never emit or describe V1 paths.
 5. Offer stacking and MCC routing are captured in data but NOT active in production.
    Never describe them as live features.
+   **SUPERSEDED IN PART (Mike, 2026-08-02): loyalty offer stacking is LIVE.**
+   `runtime_flags.loyalty_offer_stacking` flipped true 2026-08-02 13:41 UTC (delta
+   `deltas/2026-08-02__runtime_flags__loyalty_offer_stacking_on.sql`) after its three
+   gates closed: WS-1 Tier-1 verification of all 10 stack offers, the APP-017 TestFlight
+   build, and the founder flip. Describing the 10 `loyalty_stack` offers as live is now
+   correct; their freshness is owned by the daily verify batches (35-day staleness alarm).
+   Still true and unchanged: MCC routing remains captured-not-enforced, legacy/other offer
+   machinery beyond the loyalty_stack class remains dark (OFFERS_PROMOTION OFF for the
+   batches), and nothing here relaxes rule 7.
 6. Older marketing/handoff docs are strategy and UX intent, not technical truth.
 7. Never invent card facts — earn rates, caps, exclusions, fees, point values. Unknowns are
    flagged [VERIFY: issuer-verified data needed], never estimated.

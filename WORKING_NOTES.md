@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-08-01 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-08-02 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -30,7 +30,7 @@ Last updated: 2026-08-01 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#19** Site git wiring / deploy-channel cutover — wiring DONE 2026-07-05; G3 domain move pending (was a duplicate #16, renumbered 2026-07-08)
 - **#20** Web app v1 (free recommendation surface) — approved 2026-07-13 (D1); P1 pending keys
 - **#21** www.cardcoach.ca dead-ends — needs www→apex redirect
-- **#22** Loyalty stacking Phase 1 (DATA-018/PKG-010/API-013) — LANDED DARK 2026-08-01 on `feat/loyalty-offers-phase1`; three activation gates open (see section below). Also gives #10 a pump-case resolution via cents_per_litre offers (earn_rates enum for card-catalog per-litre representation still Alex's).
+- **#22** Loyalty stacking Phase 1 — **ACTIVATED 2026-08-02** (flag flipped 13:41 UTC, delta `deltas/2026-08-02__runtime_flags__loyalty_offer_stacking_on.sql`; all three gates closed; rule 5 superseded-in-part). Remaining tail in section below: counsel review before QC GA, in-app attribution notice (APP-017 follow-up), batch parking reviews now carry live-data weight.
 
 ---
 
