@@ -244,5 +244,5 @@ disk.)*
 - **Owner:** Mike (re-run + merge + gate 3), Alex (release build).
 - **Gate 3 — founder flag flip** + rule 5 update, only after the APP-017 build ships.
 - **Before merge:** re-run `pnpm supabase:db-reset` (now expected green) + `pnpm verify:loyalty-p1` + `pnpm test` + `pnpm test:supabase`; then full `pnpm verify`.
-- **Also open:** monthly fuel-price review cadence owner (WS-5 dispatch); Journie 30-vs-60-day threshold validity conflict (cibc.com vs journie.ca); Parkland→Sunoco ownership + Journie T&C 2030-12-31 sunset on the WS-5 watch.
+- **WS-5 freshness: WIRED 2026-08-01** into the daily scheduled verify batches (wed-rbc, fri-cibc, sun-ct-pcf, mon-scotiabank + chrome lane) — parking-lane only, OFFERS_PROMOTION OFF preserved, sections no-op until the branch merges; fuel-price check first Wednesday monthly; see `dispatches/DISPATCH_WS5_offer_freshness_ops_2026-08-01.md` (now the record of what was wired). Journie 30-vs-60-day conflict + Sunoco/2030 sunset + Scene+/Shell + Blue Rewards watches all live in those prompts.
 - **Next:** QA-009 30-scenario pack: `dispatches/DISPATCH_QA009_thirty_scenario_pack_2026-08-01.md`.

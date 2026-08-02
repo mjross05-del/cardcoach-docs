@@ -1,15 +1,23 @@
-# DISPATCH — WS-5: Offer freshness ops (registry extension + transition watch)
+# WS-5: Offer freshness ops — EXECUTED via daily scheduled batches (2026-08-01)
 
-For: a session extending the existing reverification pipeline (see PIPELINE_AND_DECISIONS.md Part 1). Runs alongside, not instead of, the monthly card pass.
+Status: DONE — superseded and implemented same day. The original version of this dispatch assumed the monthly Stage-2 fetcher was the reverification vehicle; Mike corrected this — reverification runs as **daily batched scheduled tasks** (per-issuer weekday rotation + Friday chrome lane). The loyalty-offer freshness work was folded directly into those task prompts instead. This file records what changed and where.
 
-## Prompt (paste below this line into the runtime)
+## What was wired in (additive sections in the scheduled task prompts)
 
-CardCoach's reverification pipeline (Stage 1 registry CSV → Stage 2 fetcher → Stage 3 extraction) currently tracks card sources. DATA-018 introduced loyalty-stack offers whose staleness is now a product-trust risk (a wrong "use this card" costs the user money at the till). Extend the pipeline:
+All additions respect the batches' standing invariants: OFFERS_PROMOTION OFF (batches NEVER write `public.offers` or any loyalty table), evidence + grep-guard discipline, results land as `verify.parking` rows (kind `loyalty_stack_reverify` / `loyalty_stack_watch` / `fuel_price_drift`) + issuer_notes for Mike's review pass. All sections no-op gracefully until the feature branch merges (offer_class column absent → skip + note). `runtime_flags.loyalty_offer_stacking` is read-only everywhere — founder decision.
 
-1. **Registry rows (Stage 1).** Add one row per (offer-source × language) to `card_sources_seed_enriched.csv` with a new `source_type: loyalty_offer`, covering: rbcroyalbank.com/petro-canada + faq + Linked Loyalty Terms PDF (EN/FR), petro-canada.ca RBC page, cibc.com Journie offer page + journie.ca terms, pcfinancial.ca card pages + pcoptimum.ca terms, triangle.canadiantire.ca credit-cards + triangle-rewards pages, morerewards.ca, moi.ca, sceneplus.ca partners page (Shell watch). Follow the existing row conventions exactly.
-2. **Freshness SLAs.** Persistent gas/grocery linkage offers: re-verify monthly (fetcher cadence). Record the SLA in the offer's `notes` convention: any offer whose `last_verified_at` is older than its SLA must be flagged in the monthly change report even when the page hash is unchanged (silent T&C swaps happen inside PDFs).
-3. **AIR MILES → Blue Rewards / Shell → Scene+ transition watch (P0).** `loyalty_programs.blue_rewards` carries the dates: Blue Rewards launched 2026-06-02; Shell earn/redeem ended nationally 2026-05-25 (Alberta 2026-03-02). Each monthly run must check: (a) any surviving AIR MILES references in CardCoach data, (b) Scene+ Shell rollout status — when Shell fuel earn mechanics are published and stable, open a WORKING_NOTES item to stand up the Shell+Scene+ stack (Tier-1 capture first; do not seed from press coverage).
-4. **Fuel price parameter review.** Monthly: pull the latest Statistics Canada Table 18-10-0001-01 national self-serve regular average; if it differs from `fuel_price_assumptions` by more than ±5¢/L, produce an expire-then-insert delta (never UPDATE in place; `valid_to` the old row). Note the 2026 federal excise-holiday distortion in `source_note`.
-5. **Output**: the standard dated change report, plus a "loyalty offers freshness" section listing every `loyalty_stack` offer with `last_verified_at`, SLA state (fresh/stale), and source-page change status.
+| Task | Addition |
+|---|---|
+| `verify-batch-wed-rbc` (Wed) | Reverify b0ff0001/2/3 (RBC↔Petro-Points: 3¢/L anchors incl. retail-only, excluded cards, one-additional-card rule), b0ff0008 (RBC↔Triangle: 1.2% pre-tax, CT-retail-only — fuel appearing in scope = mechanic change), b0ff0009 (More Rewards +1 pt/$), b0ff0010 (Moi +1 pt/$2, $60 min). Plus FIRST-WEDNESDAY monthly fuel-price check vs StatsCan 18-10-0001-01 (drift >±5¢/L → expire-then-insert proposal). |
+| `verify-batch-fri-cibc` (Fri) | Reverify b0ff0004 (Journie 3¢/L, max 100 L, dual-presentation requirement, card exclusions); standing recheck of the 60-vs-30-day threshold-validity conflict (journie.ca vs cibc.com); Sunoco-ownership + 2030-12-31 T&C sunset watch. |
+| `verify-batch-sun-ct-pcf-simplii-tangerine` (Sun) | Reverify b0ff0005/6 (PC litre-bonus deltas +10/+20 with the 30-contains-10 re-ingestion warning; floors; premium/app/volume-bonus watch items) and b0ff0007 (Triangle 5¢/L absolute, card-rate-replaces-member-rate anchor). Notes that the previously-parked CT per-litre facts now have canonical offer records to reverify against. |
+| `verify-batch-mon-scotiabank` (Mon) | Scene+/Shell fuel-partner watch: check sceneplus.ca for published Shell fuel-earn mechanics; Tier-1 mechanics appearing → parking + flag so Mike can commission the Shell+Scene+ stack. |
+| `verify-chrome-lane-weekly` (Fri pm) | BMO Blue Rewards / AIR MILES transition watch (~3 min cap): surviving AIR MILES/Shell claims on bmo.com → parking with screenshot evidence; capture Blue Rewards accelerator mechanics as gated proposals. No Blue Rewards stack seeded until the program stabilizes. |
 
-Constraints: registry/report/file outputs only — DB deltas go through the normal Stage 3 → apply flow with its snapshot/delta/guard discipline (PROJECT_RULES rule 10 a–f).
+## Freshness SLA
+
+Persistent stack offers: staleness flag in RUN SYNC when `last_verified_at` > 35 days (daily rotation gives each issuer a weekly touch, so the effective cadence is weekly with a 5-week alarm). Fuel price: monthly, first Wednesday. `last_verified_at` refreshes are applied by Mike from parking rows — never auto-written by batches.
+
+## Not covered here (unchanged)
+
+Tue Amex and Sat Rogers/MBNA/Desjardins/NB batches carry no loyalty-stack offers today — no additions. If Phase-2/3 adds Amex Offers or other issuer stacks, extend those prompts the same way.
