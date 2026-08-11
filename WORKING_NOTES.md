@@ -197,7 +197,7 @@ CardCoachv2.)*
 - **Status:** git wiring DONE (2026-07-05) — pending Mike's G3 domain move.
 - **Owner:** Mike (G3 next).
 - **Blocker:** None on wiring. Retirement of the old channel waits on the domain move.
-- **Next action:** Mike does G3 (point the domain at the new Cloudflare Pages project fed by `cardcoach-site`). The old direct-upload Pages project retires **+7 days after the domain move** (grace window; keep it live until then as fallback).
+- **Next action:** Mike does G3 (point the domain at the `cardcoach-site` Worker serving static assets — push-to-`main` auto-deploy via Cloudflare Workers Builds; not classic Cloudflare Pages). The old direct-upload deploy channel retires **+7 days after the domain move** (grace window; keep it live until then as fallback).
 - **2026-07-08 note:** canonical flipped (see PIPELINE_AND_DECISIONS 2026-07-08) — G3's target domain is now **cardcoach.ca**, with card.coach getting the reverse 301 (path + query preserved). Repo-side cutover is done in the worktree, uncommitted; the Cloudflare-side move is unchanged in scope, just pointed at the other domain.
 - **Context:** `01_CORE/site/` is now a git working tree pushed to `github.com/mjross05-del/cardcoach-site` (first commit `b0bd3d6`, 56 deployables + `.gitignore`). Deploy is now push-to-`main` → Cloudflare auto-deploy; drag-and-drop retired. Convention logged in LAUNCH_TRACKER + BLOG_OPERATIONS.
 
@@ -230,6 +230,15 @@ disk.)*
 - **Next action:** Add a www→apex redirect rule in the cardcoach.ca zone via dashboard;
   verify `www` resolves to the apex with path+query preserved.
 
+## 2026-08-11 — Pre-launch sweep fixes (run entry)
+
+- Sweep 2026-08-10 findings executed 2026-08-11 (approved dispatch), zero DB writes.
+- Site: `.assetsignore` excludes repo internals — `/.git/*`, `/.gitignore`, `/wrangler.jsonc` now 404 (cardcoach-site `e18bd17`); Terms template disclaimer removed from `legal.html` (cardcoach-site `6f3a6d6`). Both deployed via Workers Builds, live-verified.
+- Delta governance (CardCoachv2): APPLY_CHECKLIST top stop-note `99b259b` — the 18 card-lane delta files are superseded by live DB state, do not execute; DELTAS_INDEX card-lane statuses reconciled `4c8c8f6` (17 `superseded-live (2026-08-10 sweep)`, Fido closure `not-applied — live state NULL`).
+- April-2026 governance snapshots bannered SUPERSEDED (CardCoachv2 `c2744b7` / `e2dd084` / `696b0f5` / `7c95eab` / `9045523`); bodies unedited.
+- Alex handoff filed: `ALEX_HANDOFF_2026-08-11.md` (`2308bb4`) — dormant-delta drift, Fido NULL, stacking-flag-vs-engine (N4), advisor items, earn-rate pairs, snapshot housekeeping. Engine docs stay unedited until Alex answers N4.
+- Stray workers `divine-brook-e823` + `broad-leaf-7294`: workers.dev subdomains disabled, API-confirmed (archive-and-disable; assets-only workers — no script to archive; reversible via re-enable).
+- www.card.coach dead-end: no change made — the apex 301 is a card.coach zone Single Redirect rule (catch-all expression, not worker-based), so the fix is dashboard-scoped: add a proxied `www` DNS record on the card.coach zone; the existing rule then covers www. Registrar-side getcardcoach.ca repoint stays on Mike's manual list.
 ---
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
