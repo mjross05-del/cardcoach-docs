@@ -249,6 +249,7 @@ disk.)*
 - Item 4b: 9 definer views reviewed — accepted by design 2026-08-11 (catalog-only read surface; +2 since sweep via the 2026-08-11 verify_apply_loop migrations, concurrent session). Item 4c: leaked-password protection = D-B, dashboard toggle, Mike.
 - Item 5 earn-rate groups: no defect — engine picks the single best priced row (never sums); all 15 groups condition-differentiated; NB pairs additionally unreachable (all 3 NB cards load_only). Observation: 'other'-type condition variants can win selection when their condition cannot hold (Amex 3x portal row in-store; MBNA Prime rows) — overstatement class, with Mike; nothing expired.
 - Item 6: `point_valuations_snapshot_20260729` attributed via table COMMENT (ad-hoc 2026-07-29 prod copy; secured by 20260729205344); retained, drop stays Mike-only. write_audit `9487dc68`.
+- **Decisions resolved (Mike, 2026-08-11):** D-A — flag stays ON; authed-path verification passed (deployed v2 bundles carry the flag-gated path, no opt-out; live traffic confirmed); engine docs corrected, dated (HOW_THE_ENGINE_WORKS ×5, PIPELINE_AND_DECISIONS decision line). D-D — accept absence; both Fido delta files marked not-applicable in DELTAS_INDEX. D-B — approved; dashboard-only toggle with Mike.
 ---
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
