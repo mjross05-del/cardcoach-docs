@@ -38,3 +38,20 @@ Evidence observed live: BMO Blue Rewards WE fee 150 and CashBack WE 139; `blue_r
 ## 6. Snapshot-table housekeeping
 
 Snapshot/backup tables (`*_snapshot_*`, `*_night_*`) carry RLS-enabled-no-policy lints; `point_valuations_snapshot_20260729` is an unattributed drop-candidate. Housekeeping only.
+
+---
+
+# Status ledger — worklist run 2026-08-11 (appended by the run; file renamed from ALEX_HANDOFF_2026-08-11.md, lane model updated: no Alex lane)
+
+verify.runs id `a261a243-d361-4f53-82d3-9b66f9318ed2` · run start 2026-08-11T13:54:31Z · zero card-fact writes.
+
+| Item | Result | Evidence |
+|---|---|---|
+| 1 delta provenance | INVESTIGATED | End-states live-confirmed by value checks. No producing migration (74 checked) and no write_audit rows; rows' created_at cluster 2026-07-27–29; end-states present in repo catalog canon (`mobile_app_codebase/supabase/seed.sql`) — out-of-band catalog apply, same unattributed signature as the 20260729 snapshot. Full note in DELTAS_INDEX. |
+| 2 Fido | BLOCKED → D-D | `ca_rogers_bank_fido_standard_mastercard` is absent from live card_products (114 rows; no fido match by id or name; absent from 2026-07-31 and 2026-08-02 snapshots; zero orphan earn_rates/caps/exclusions; no audit trail). The sweep's "application_status NULL" was a missing-row misread. No write. Options: insert-as-closed from the two delta files, or accept absence. |
+| 3 stacking | INVESTIGATED | Shared scorer is flag-gated and wired: `loadReferenceScoringContext` reads `runtime_flags.loyalty_offer_stacking` when `includeOffers` (default true); `solveOfferStack` sits in the apply path; API-013/014 surfaces are flag-conditional. Authed v2 endpoints use the default (offers on); `recommend-cards-stateless-v1` passes `includeOffers: false` and has no loyalty input — its `appliedOffers` is [] by design, which explains the sweep probe. D2 doc-correction gates (scoped to a stateless live call) not met → docs untouched; D-A raised. |
+| 4a function revokes | DONE | Migration `harden_trigger_function_execute`: EXECUTE revoked from PUBLIC/anon/authenticated on the 3 trigger functions; ACLs now postgres+service_role only; anon RPC probes 404 (PGRST202); advisor lints 0028/0029 cleared, no new ERRORs; engine probe unchanged (TD grocery 300¢). write_audit `728310dc-f5f8-48f1-8d5c-f0d4beba238c`. |
+| 4b definer views | ACCEPTED BY DESIGN 2026-08-11 | 9 definer views (was 7 at sweep; +2 via the 2026-08-11 02:52 verify_apply_loop migrations, concurrent session). All read canonical catalog/offer/i18n data only; none reaches user data, auth, or verify schema. No conversion (security_invoker would break the RLS-withheld public read surface). |
+| 4c leaked-password | D-B (manual) | Dashboard → Authentication → Providers → Email/Password → enable leaked-password protection. Not reachable via connector. |
+| 5 earn-rate groups | NO DEFECT | Engine selects the single best priced row per category (never sums rows), so no additive double-count is possible. All 15 groups are condition-differentiated; the National Bank pairs are additionally unreachable (all 3 NB cards `load_only`, confirmed unrankable live). Observation: `other`-type condition variants (Amex 3x Amex-Travel-Online row, MBNA Prime rows) always price and win selection even when their condition cannot hold — overstatement class, not duplication; no row is surplus, nothing expired. |
+| 6 snapshot | ATTRIBUTED | COMMENT applied to `point_valuations_snapshot_20260729` (ad-hoc prod copy 2026-07-29; no engine/migration/audit provenance; secured by 20260729205344). Retained; drop stays Mike-only. RLS-no-policy lints on `*_snapshot_*`/`*_night_*`: deny-all by design, no policies added. write_audit `9487dc68-dfa2-4906-b089-d718a85c8a90`. |
