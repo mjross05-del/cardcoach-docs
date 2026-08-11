@@ -469,7 +469,8 @@ base) before its archival is treated as final.
 live doc, copy, or prompt claiming V1/V2 coexistence or an operative V1 is an error —
 correct it on sight. Offer stacking (`solveOfferStack`) is wired into the V2
 production path behind `runtime_flags.loyalty_offer_stacking` — activated 2026-08-02,
-wiring verified 2026-08-11 in the deployed v2 bundles with live traffic; the public
+production application verified 2026-08-11 by a live probe — offer b0ff0008 applied
+at exactly 1.2 percent (transcript: STACKING_CLOSURE_REPORT_2026-08-11.md §2); the public
 stateless tool excludes offers by design. *(Sentence corrected 2026-08-11, worklist D-A —
 it previously said "not wired … until Alex ships it", superseded by the activation, the
 verification, and the lane change. Evidence: WORKLIST_REPORT_2026-08-11.md §I2.)*
