@@ -122,11 +122,11 @@ per tier, filtered via the `v_active_point_valuations` view)
 
 ### 5. Promotional Offers
 
-Cards sometimes have limited-time bonus offers. Offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; wiring verified 2026-08-11 in the deployed recommend-card-v2 / recommend-here-v2 bundles — the public stateless web tool alone excludes offers by design; evidence: WORKLIST_REPORT_2026-08-11.md §I2).
+Cards sometimes have limited-time bonus offers. Offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; production application verified 2026-08-11 — a live recommend-card-v2 probe applied offer b0ff0008 at exactly 1.2 percent; the public stateless web tool alone excludes offers by design; transcript: STACKING_CLOSURE_REPORT_2026-08-11.md §2).
 
 **Types of offers:**
 - **Stackable:** Can combine with other stackable offers (all bonuses add up)
-- **Non-stackable:** Can't combine; offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; wiring verified 2026-08-11 in the deployed recommend-card-v2 / recommend-here-v2 bundles — the public stateless web tool alone excludes offers by design; evidence: WORKLIST_REPORT_2026-08-11.md §I2)
+- **Non-stackable:** Can't combine; offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; production application verified 2026-08-11 — a live recommend-card-v2 probe applied offer b0ff0008 at exactly 1.2 percent; the public stateless web tool alone excludes offers by design; transcript: STACKING_CLOSURE_REPORT_2026-08-11.md §2)
 
 **How stacking works:**
 1. Add up all stackable bonuses
@@ -180,7 +180,7 @@ Here's exactly what happens when you ask "which card should I use?":
    c) Check if there's a category bonus for this purchase type
    d) If the card earns points, convert to dollar value
    e) Check your spending this month against any caps
-   f) Offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; wiring verified 2026-08-11 in the deployed recommend-card-v2 / recommend-here-v2 bundles — the public stateless web tool alone excludes offers by design; evidence: WORKLIST_REPORT_2026-08-11.md §I2)
+   f) Offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; production application verified 2026-08-11 — a live recommend-card-v2 probe applied offer b0ff0008 at exactly 1.2 percent; the public stateless web tool alone excludes offers by design; transcript: STACKING_CLOSURE_REPORT_2026-08-11.md §2)
    g) Calculate the total value you'd earn
          ↓
 4. Sort cards from highest value to lowest
@@ -414,7 +414,7 @@ CardCoach's recommendation engine is a sophisticated but straightforward system:
 1. **It knows your cards** and their earn rates (base + category bonuses)
 2. **It tracks your spending** to account for monthly/annual caps
 3. **It values points fairly** using conservative baseline estimates
-4. Offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; wiring verified 2026-08-11 in the deployed recommend-card-v2 / recommend-here-v2 bundles — the public stateless web tool alone excludes offers by design; evidence: WORKLIST_REPORT_2026-08-11.md §I2)
+4. Offer stacking (`solveOfferStack`) is live in the V2 production path behind `runtime_flags.loyalty_offer_stacking` (flag ON since 2026-08-02; production application verified 2026-08-11 — a live recommend-card-v2 probe applied offer b0ff0008 at exactly 1.2 percent; the public stateless web tool alone excludes offers by design; transcript: STACKING_CLOSURE_REPORT_2026-08-11.md §2)
 5. **It ranks cards honestly** by actual dollar value earned
 6. **It explains its reasoning** so you understand why one card beats another
 
@@ -426,7 +426,7 @@ The result: You always know which card to use, and exactly why.
 
 *Carried from the 2026-06-02 governance doc; welcome-bonus and MCC items updated 2026-07-16.*
 
-- **Offer stacking** — `stack_rules` and `offer_incompatibilities` tables exist; **live behind `runtime_flags.loyalty_offer_stacking` since 2026-08-02** (wiring verified 2026-08-11; the stateless web tool is excluded by design).
+- **Offer stacking** — `stack_rules` and `offer_incompatibilities` tables exist; **live behind `runtime_flags.loyalty_offer_stacking` since 2026-08-02** (production application verified 2026-08-11 by live probe; the stateless web tool is excluded by design).
 - **Channel-aware scoring** — designed, not active.
 - MCC-based routing — captured in data, not enforced at runtime (the payment vendor doesn't expose MCC codes; see the 2026-04-16 decision in PIPELINE_AND_DECISIONS.md).
 - **Live/real-time point values** — `point_valuations` is a dated snapshot. Use "current" or "as of," never "live."
