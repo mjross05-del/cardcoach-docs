@@ -236,9 +236,19 @@ disk.)*
 - Site: `.assetsignore` excludes repo internals — `/.git/*`, `/.gitignore`, `/wrangler.jsonc` now 404 (cardcoach-site `e18bd17`); Terms template disclaimer removed from `legal.html` (cardcoach-site `6f3a6d6`). Both deployed via Workers Builds, live-verified.
 - Delta governance (CardCoachv2): APPLY_CHECKLIST top stop-note `99b259b` — the 18 card-lane delta files are superseded by live DB state, do not execute; DELTAS_INDEX card-lane statuses reconciled `4c8c8f6` (17 `superseded-live (2026-08-10 sweep)`, Fido closure `not-applied — live state NULL`).
 - April-2026 governance snapshots bannered SUPERSEDED (CardCoachv2 `c2744b7` / `e2dd084` / `696b0f5` / `7c95eab` / `9045523`); bodies unedited.
-- Alex handoff filed: `ALEX_HANDOFF_2026-08-11.md` (`2308bb4`) — dormant-delta drift, Fido NULL, stacking-flag-vs-engine (N4), advisor items, earn-rate pairs, snapshot housekeeping. Engine docs stay unedited until Alex answers N4.
+- Alex handoff filed: `ALEX_HANDOFF_2026-08-11.md` (`2308bb4`; renamed `DB_ENGINE_WORKLIST_2026-08-11.md`, worklist run) — dormant-delta drift, Fido NULL, stacking-flag-vs-engine (N4), advisor items, earn-rate pairs, snapshot housekeeping. Engine docs stay unedited until Alex answers N4.
 - Stray workers `divine-brook-e823` + `broad-leaf-7294`: workers.dev subdomains disabled, API-confirmed (archive-and-disable; assets-only workers — no script to archive; reversible via re-enable).
 - www.card.coach dead-end: no change made — the apex 301 is a card.coach zone Single Redirect rule (catch-all expression, not worker-based), so the fix is dashboard-scoped: add a proxied `www` DNS record on the card.coach zone; the existing rule then covers www. Registrar-side getcardcoach.ca repoint stays on Mike's manual list.
+## 2026-08-11 — DB/engine worklist run (run entry)
+
+- Worklist executed per Mike's dispatch (no Alex lane; items are ours). File: `DB_ENGINE_WORKLIST_2026-08-11.md` (renamed from ALEX_HANDOFF this run) — per-item ledger appended there. verify.runs `a261a243-d361-4f53-82d3-9b66f9318ed2`; zero card-fact writes; write freeze formally lifted per dispatch standing-state note.
+- Item 1 provenance: card-lane end-states live-confirmed; produced out-of-band from the repo catalog canon (seed.sql) ~2026-07-27–29 — no migrations, no write_audit rows. Full note in DELTAS_INDEX.
+- Item 2 Fido: W1 blocked, no write — the card row is absent from live card_products entirely (not a NULL status; absent from the 07-31/08-02 snapshots, no orphans). Decision D-D: insert-as-closed from the delta files, or accept absence.
+- Item 3 stacking: engine is flag-gated and wired via the shared scorer; authed v2 endpoints load offers (includeOffers defaults true); stateless-v1 opts out (includeOffers false, no loyalty inputs) so its appliedOffers is [] by design — the sweep probe could never show stacking. Doc-correction gates not met → HOW_THE_ENGINE_WORKS / PIPELINE_AND_DECISIONS untouched; decision D-A: flag posture + where to re-gate the doc fix (authed-path probe).
+- Item 4a: trigger-function EXECUTE revoked (migration `harden_trigger_function_execute`); advisor lints cleared; anon RPC probes 404; engine probe unchanged. write_audit `728310dc`.
+- Item 4b: 9 definer views reviewed — accepted by design 2026-08-11 (catalog-only read surface; +2 since sweep via the 2026-08-11 verify_apply_loop migrations, concurrent session). Item 4c: leaked-password protection = D-B, dashboard toggle, Mike.
+- Item 5 earn-rate groups: no defect — engine picks the single best priced row (never sums); all 15 groups condition-differentiated; NB pairs additionally unreachable (all 3 NB cards load_only). Observation: 'other'-type condition variants can win selection when their condition cannot hold (Amex 3x portal row in-store; MBNA Prime rows) — overstatement class, with Mike; nothing expired.
+- Item 6: `point_valuations_snapshot_20260729` attributed via table COMMENT (ad-hoc 2026-07-29 prod copy; secured by 20260729205344); retained, drop stays Mike-only. write_audit `9487dc68`.
 ---
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
