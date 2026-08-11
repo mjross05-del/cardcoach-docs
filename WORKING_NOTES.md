@@ -251,6 +251,14 @@ disk.)*
 - Item 6: `point_valuations_snapshot_20260729` attributed via table COMMENT (ad-hoc 2026-07-29 prod copy; secured by 20260729205344); retained, drop stays Mike-only. write_audit `9487dc68`.
 - **Decisions resolved (Mike, 2026-08-11):** D-A — flag stays ON; authed-path verification passed (deployed v2 bundles carry the flag-gated path, no opt-out; live traffic confirmed); engine docs corrected, dated (HOW_THE_ENGINE_WORKS ×5, PIPELINE_AND_DECISIONS decision line). D-D — accept absence; both Fido delta files marked not-applicable in DELTAS_INDEX. D-B — approved; dashboard-only toggle with Mike.
 - **§2 closure (stacking dispatch, 2026-08-11):** production offer application proven by live probe — recommend-card-v2 applied `b0ff0008` at exactly 1.2 percent (120¢ on $100; final 270 = 100 base + 50 category + 120 offer) for a linked probe user at a Canadian Tire place; pre-link the same offer surfaced as a linkage nudge at 120¢. TestFlight last-mile closed. Probe user retained + marked (probe-20260811@cardcoach.ca). Engine docs' evidence clauses upgraded to the transcript: STACKING_CLOSURE_REPORT_2026-08-11.md.
+## 2026-08-11 — Verify batch: unlogged active cards (run 98d0bc59)
+
+- Coverage 33 → 26 unlogged actives (live recount; the sweep's 24 was stale). Logged 7: Desjardins Bonus + Flexi, NB Syncro, RBC Rewards+ / Signature / Visa Preferred (closed-legacy baselines via lineup evidence), TD Business Select Rate. 23 facts: 22 confirmed, 1 changed-gated, 0 unverified, 0 auto-writes.
+- Gated pending ×1: Desjardins Bonus $3,600 combined dining+pre-auth annual cap missing from card_caps (proposed SQL in fact_check 59fc3176; approve via RUNBOOK_gated_apply).
+- BMO ×11 → chrome-lane queue (walled; list in VERIFY_REPORT_2026-08-11.md). Dedupe-deferred ×15: CIBC 7 + Scotiabank 7 + Amex Business Edge 1 (runs f63bfbd1 / 9a4de2ba <20h; next rotation slots).
+- 6b classifications: Flexi, Syncro, TD BSR = base_earn 0 by design, permanently load_only, never re-fetch earn structure.
+- 6c: Desjardins 8/8 clean. NB lineup carries mycredit/MC1/Edition/Allure/ECHO/Escapade/Ovation Gold/PB1859 beyond the DB's 4 — deliberate-scope question flagged for Mike, not proposed (precedent: 08-08 run proposed only Syncro).
+- Riders: R1 SPEC stacking line corrected (CardCoachv2, local); R2 FK observation appended to worklist ledger.
 ---
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
