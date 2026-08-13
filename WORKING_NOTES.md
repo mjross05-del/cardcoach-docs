@@ -281,6 +281,52 @@ disk.)*
 - 6b classifications: Flexi, Syncro, TD BSR = base_earn 0 by design, permanently load_only, never re-fetch earn structure.
 - 6c: Desjardins 8/8 clean. NB lineup carries mycredit/MC1/Edition/Allure/ECHO/Escapade/Ovation Gold/PB1859 beyond the DB's 4 — deliberate-scope question flagged for Mike, not proposed (precedent: 08-08 run proposed only Syncro).
 - Riders: R1 SPEC stacking line corrected (CardCoachv2, local); R2 FK observation appended to worklist ledger.
+
+## 2026-08-12 — Engine window semantics: push + edge deploy (run entry)
+
+Executed on Mike's machine from `dispatches/` prompt `6e60c32` (the Cowork engine session could not reach GitHub or the deploy channel). Local clock 2026-08-12 evening; **DB/UTC had already rolled to 2026-08-13**, which is why the RBC-std rows carry `valid_from = 2026-08-13` and the interim rows `valid_to = 2026-08-12` — expire-then-insert is correct, the rows are live now, not pre-dated.
+
+**Git.** Stale sandbox artifacts swept from both `.git` dirs (renamed `*.stale.N` locks + orphaned `tmp_obj_*`; no bare `*.lock` survived, no git process was running) then `git gc`. Both pushes were clean fast-forwards, no rebase, no force.
+- `cardcoach-docs` `be235a3..6e60c32` — 5 commits, one more than the prompt listed: `b070acf` (merchant-graph DML is audit-class) had also never been pushed.
+- `CardCoachv2` `cbf25b7..f61ca35` — 15 commits, 12 more than the prompt listed: the whole 08-10/08-11 docs+site backlog had been stranded locally by the sandbox's lack of GitHub reach. 59 files, +2965/−412.
+
+**Deploy.** `recommend-card-v2` 19→**20**, `recommend-here-v2` 19→**20**, `recommend-cards-stateless-v1` 7→**8**. All three ACTIVE, `verify_jwt` still **false** (no `--no-verify-jwt` needed), and all three `ezbr_sha256` bundle digests changed — new code demonstrably shipped. `cap-progress-v1` left at v11 as instructed.
+
+**Probes (stateless-v1, all HTTP 200; effectiveValueCents pre → post).** Every scoreable card's top-line value is **unchanged**, which is the designed outcome, not a failed deploy — see the discriminator note below.
+
+| scenario | pre | post |
+|---|---|---|
+| RBC std · grocery $100 | 200¢ (2.0/$) | 200¢ (2.0/$) |
+| RBC std · grocery $4,000 | 8000¢ (2.0/$) | 8000¢ (2.0/$) |
+| RBC std · grocery $10,000 | 16000¢ (1.6/$) | 16000¢ (1.6/$) |
+| RBC std · dining $100 *(control)* | 100¢ (1.0/$) | 100¢ (1.0/$) |
+| RBC std · dining $10,000 | 10000¢ | 10000¢ |
+| RBC std · no context $100 | 100¢ | 100¢ |
+| RBC WE · grocery $4,000 | 6000¢ (1.5/$) | 6000¢ (1.5/$) |
+| RBC WE · dining $100 | 150¢ (1.5/$) | 150¢ (1.5/$) |
+| NBC WE · grocery $4,000 | unrankable `load_only` | unrankable `load_only` |
+| rank pair · grocery $4,000 | std #1 8000¢, WE #2 6000¢ | unchanged ordering |
+
+Six of ten responses are byte-identical modulo `requestId`/`computedAt`. The control held exactly.
+
+**ANOMALY 1 — the prompt's discriminator does not exist.** NBC WE grocery $4,000 cannot be priced by any scoring endpoint: **both NBC cards are `scoring_status = 'load_only'`** (`ca_national_bank_rewards_mastercard_world_elite_mastercard`, `..._platinum_mastercard`), so stateless-v1 returns them in `unrankable`, and the authed v2 paths never rank them either. Consequence to be explicit about: **the NBC tier-window remodel is live in the data but dormant in production pricing** — it will start paying only if/when those cards become scoreable. This matches the 2026-08-11 worklist finding that NB cards are load_only; it was simply not carried into the deploy prompt. Nothing to fix here, but the ADDENDUM-2 claim that all four remodelled cards now price their true structure in production is **true only for the two RBC cards**.
+
+**ANOMALY 2 (benign, and the actual proof) — the change is in attribution, not in totals.** With NBC unavailable, the discriminator is `category_excludes` on RBC std grocery, visible in `breakdown`:
+
+| RBC std grocery | pre | post |
+|---|---|---|
+| $4,000 | baseEarn 1.0/$ = 4000¢ + categoryBonus 4000¢ | baseEarn **0** = **0¢** + categoryBonus **8000¢** |
+| $10,000 | baseEarn 1.0/$ = 10000¢ + categoryBonus 6000¢, capAdj −4000¢ | baseEarn **0** = **0¢** + categoryBonus **16000¢**, capAdj **−8000¢** |
+
+The base slot now pays **nothing** on grocery (its rows carry `category_excludes = {grocery}`) and the grocery slot carries the card's whole 2%→1% schedule itself — exactly the §3 target modelling. Totals are identical because A2 keeps the nominal primary at the highest total, so the category bonus absorbs what base used to contribute. This is the new engine running.
+
+Why nothing else moved: on snapshot-less surfaces (stateless-v1 always sends no snapshots) generalized D2 sets the assumed prior to the *start of the highest-rate windowed row's window* — $6,000 for RBC std's base 1% row (rising pair → terminal rate) and $0 for its grocery 2% row (falling pair → headline rate) — which reproduces the old engine's numbers on both slots. RBC WE carries no floors or buckets at all. So every scoreable card converges by construction, and no snapshot-less probe can move a total. The floors bite only on authed, snapshot-bearing paths.
+
+**Other verification.** `health` 200 `{"status":"healthy"}`, database check pass. Engine suite **143/143**. Goldens `verify:qa-005` **8/8**. Edge logs for all three functions across the full 24h window: `info`/`log` only — **no error or warn class** before or after. Caveat: `recommend-card-v2` and `recommend-here-v2` have had **zero invocations since the deploy** (authenticated endpoints, no live traffic in the window), so they are shipped and healthy-by-artifact but not yet exercised by real traffic.
+
+**ANOMALY 3 — CLI/keychain, for the next session.** `npx supabase` installed a fresh **2.114.0** at a new npx cache path; the macOS Keychain item "Supabase CLI" (created 2026-07-29) does not grant that binary, so `npx supabase …` hangs indefinitely on an invisible authorization prompt with stdin closed. Fix used: invoke the already-authorized **2.110.0** binary directly at `~/.npm/_npx/7960735060baecd3/node_modules/@supabase/cli-darwin-x64/bin/supabase` — same CLI, deploys identically. Alternative is to export `SUPABASE_ACCESS_TOKEN`. Do not assume `npx supabase` works unattended on this machine.
+
+**Not done / untouched:** no source files modified, no data SQL run (reads only, to diagnose the discriminator), no `db push`, `public.*` and `verify.*` untouched, apply queue still empty.
 ---
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
