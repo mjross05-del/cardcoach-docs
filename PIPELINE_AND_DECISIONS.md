@@ -5,7 +5,7 @@ This file is the "why things are the way they are" reference. The process sectio
 the current system; the decisions section is **append-only** — add new entries, never
 rewrite old ones.
 
-Last updated: 2026-08-01 · Owner: Mike (data integrity, governance, review)
+Last updated: 2026-08-12 · Owner: Mike (data integrity, governance, review)
 Status: **Daily scheduled batches operational (first runs week of 2026-07-27). The Stage 1–3 script pipeline is RETIRED (2026-08-01 decision entry) — see the historical note at the end of Part 1.**
 
 ---
@@ -899,4 +899,24 @@ dark, via DATA-018 (2026-08-01). Loyalty-stack reverification and the monthly
 fuel-price check ride the batches (WS-5, wired 2026-08-01). The old "never direct
 writes to Supabase" note in Part 1 was already superseded by PROJECT_RULES rule 10
 (2026-07-29); the batches' guarded auto lane operates under that authority.
+
+### 2026-08-12 — Merchant-graph DML is audit-class
+**Decision:** All DML against the merchant graph — `merchant_entities`,
+`merchant_entity_aliases`, `merchant_entity_places`, `earn_rate_eligible_merchants`,
+`merchant_group_memberships` — is audit-class: gated approval plus a
+`verify.write_audit` row with `run_id`, same as card-fact and schema writes.
+**Why:** The discipline as practiced covered card facts and schema; merchant-graph
+DML fell through. Found via the unaudited 2026-08-02 keeper INSERT (`d4a1923b`,
+14:09:56Z — author unattributed: no scheduled run was live (cowork run `0393616f`, the
+Sunday PC Financial batch, finished 10:36Z; next run started 15:36Z), and the row shares
+an exact timestamp with the `Atlantic Superstore` row — a hand batch creating the
+spaces-style chain rows `20260802160000` flagged but never inserted; no `write_audit` row
+exists for any merchant-table write that day; DESIGN_place_resolution_v1 §1.4 carries the
+code-side attribution analysis). Precedent: run `7e2b9c41` (2026-08-12 RCSS dedupe — run
+row, in-transaction row-count assertions, audit rows for the DML and both DDL
+migrations). **Implications:** Batch prompts and dispatches treat merchant-graph writes
+exactly like card-fact writes: pre-flight reads across all referencing FK tables,
+old-value/row-count guards, audit row committed in the same transaction.
+`verify.runs.runtime` vocabulary gained `'chat'` (migration
+`verify_runs_runtime_allow_chat`) so chat-surface gated writes record truthfully.
 
