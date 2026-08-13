@@ -81,6 +81,12 @@
 |--------|------|----------|
 | `IF` | `NOT` | `0031_earn_rates_display_label` |
 | `CONSTRAINT` | `earn_rates_earn_rate_type_check` | `0027_earn_rates_gold_standard_columns` |
+| `floor_monthly_cad` | `numeric` | `20260812210310_earn_rates_spend_floors` |
+| `floor_annual_cad` | `numeric` | `20260812210310_earn_rates_spend_floors` |
+| `category_excludes` | `text[]` | `20260812210310_earn_rates_spend_floors` |
+| `window_bucket` | `text` | `20260812210325_earn_rates_window_bucket` |
+| `CONSTRAINT` | `earn_rates_window_bucket_check` | `20260812210325_earn_rates_window_bucket` |
+| `CONSTRAINT` | `earn_rates_floor_monthly_nonneg`, `earn_rates_floor_annual_nonneg`, `earn_rates_floor_monthly_below_cap`, `earn_rates_floor_annual_below_cap`, `earn_rates_category_excludes_nonempty` | `20260812210310_earn_rates_spend_floors` |
 
 ### i18n_strings
 

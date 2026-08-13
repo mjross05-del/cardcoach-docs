@@ -86,6 +86,25 @@ Caps are stored in two places:
 
 **Pooled caps:** Some cards share a single cap across multiple categories. For example, a card might offer 3% on both groceries and gas, but with a combined $500/month cap across both. The engine handles this via `capPoolId` — earn rates that share a pool ID have their spending aggregated together when checking the cap.
 
+**Spend floors — rising tiers (ENG-floors, 2026-08-12):** Some rates *rise* after a spend threshold instead of falling (RBC Cash Back: 0.5% on the first $6,000 of non-grocery Net Purchases per year, 1% beyond). A row's applicability is now the half-open window **[floor, cap)** over cumulative period spend, via `floor_monthly_cad` / `floor_annual_cad` on `earn_rates` (engine: `floorMonthlyCents` / `floorAnnualCents`). Eligible spend for a purchase is the overlap of `[prior, prior + amount]` with the window; with no floor set this reduces exactly to the old cap arithmetic, so cards without floors price byte-identically.
+
+How a rising tier is modelled (decision D1, A2 + category excludes):
+
+- Two (or more) `total` rows in one slot with **disjoint windows** each price their own stretch of spend and are summed. Rows whose windows overlap keep the old highest-primary-wins behaviour; if a floor is involved in such an overlap the engine emits a warning, because overlapping windows in one slot double-count and are almost certainly a modelling mistake.
+- `category_excludes` (engine: `categoryExcludes`) lets a row opt out of purchase categories per issuer wording ("Net Purchases *other than Grocery Store Purchases*"). RBC's base tiers exclude grocery; grocery carries its own windowed schedule (2% on [0, $6k), 1% on [$6k, ∞) over the *grocery* bucket). When every base row is excluded for a purchase, base pays zero and category totals keep their full rate — nothing is subtracted.
+- The slot's *nominal* rate (used for display and for the category-bonus subtraction) stays the highest `total` row — for a rising pair that is the terminal rate, which is what keeps every falling-tier card's excess-over-base arithmetic unchanged.
+
+**Where floor buckets come from (decision D3):** floors read cumulative spend the same way caps do, but annual floors need annual-to-date buckets. The scoring loader synthesizes them from the user's monthly `user_spend_snapshots` rows (calendar-year approximation of issuer "Annual Period"), **only for cards that carry floored rows**: per-category annual buckets plus a base-slot bucket (`category_id` null) that sums categorized spend *excluding* the union of the card's floored base rows' `category_excludes` (for RBC: non-grocery). Snapshots carry an optional `period` (`monthly` | `annual`); each cap/floor leg prefers its own period and falls back to the legacy period-less row, so no existing read changes. No schema or trigger change was needed.
+
+**Missing bucket default (decision D2):** when a floored row's bucket is entirely absent from the request, the floor is treated as **met** — symmetric with caps, whose missing bucket already reads as "nothing consumed". Snapshot-less contexts (the web ranking path, brand-new users) therefore price a rising-tier card at its terminal rate, which equals the flat-rate interim state and is never worse than it. Implementation detail: the assumed prior is the slot's highest floor, so the below-floor sibling row prices as exhausted and the slot cannot double-pay. A bucket that *exists with zero spend* is real data: floors are then genuinely unmet and the sub-floor rate applies.
+
+A floor is a threshold to cross, not a budget to consume: cap-progress must never render a floor-only row as "0 of $X used" (its query already admits only rows with a cap set — keep it that way).
+
+**Window buckets (`window_bucket`, 2026-08-12 follow-up):** a window is measured over a bucket, and the bucket is not always the row's own category. `window_bucket` on `earn_rates` (engine: `windowBucket`) selects it: `NULL`/`'category'` = the row's category/pool bucket, exactly as caps have always worked; `'card'` = the whole-card bucket (snapshot `category_id` null). NBC Rewards Platinum/World Elite are the motivating case: "2 pts/$ (5 pts/$) on grocery and restaurants for the first increment of $1,000 ($2,500) in **gross monthly purchases** charged to the account, then 1.5 (2)" — the boundary is crossed by ALL card spend, not by grocery spend. The scoring loader synthesizes a whole-card current-month bucket for cards carrying `window_bucket='card'` rows (summed from the per-category monthly snapshots, explicit `period: 'monthly'`). Two totals in one slot may only combine when their windows read the SAME bucket; different-bucket windows are treated as overlapping (primary wins).
+
+The missing-bucket default generalizes accordingly: the assumed prior sits at the start of the highest-rate windowed row's window, so a rising tier defaults to its terminal rate (RBC: 1%) and a falling tier to its headline rate (NBC: 5 pts/$) — in both shapes, the same "price the best case" rule caps have always had.
+
+
 - Your spending history: `user_spend_snapshots` table
 
 ---
