@@ -1001,3 +1001,44 @@ deciding where reclassification lives instead. Note also that PROJECT_RULES rule
 governs what a *session* emits; this entry applies the same principle to shipped code on
 a request path, which the rule as written did not literally cover.
 
+
+### 2026-08-14 — The authed merchant path supplies the category-typical MCC assumption
+**Decision (Mike, 2026-08-14):** `recommend-card-v2` and `recommend-here-v2` now supply
+API-011's category-typical MCC assumption when scoring a resolved merchant, superseding
+the original API-011 position that the assumption is "never active with a merchant
+supplied." Implemented as the **ordered test** — MCC-mapping intersection primary,
+`category_fallback` only for categories with **no** active mappings — NOT the literal
+blanket fallback: gas, grocery and dining are all mapped, and a bare fallback beside
+mappings is the fail-open widening the stateless implementation documents against.
+Gated by `runtime_flags.merchant_mcc_assumption` (shipped false in migration
+`20260814213000`, flipped on 2026-08-14 by delta with Mike's chat approval; flip-off is
+the no-deploy rollback). Both endpoints move in lockstep because api-008 parity is a
+values contract, not just a schema one. The stateless surface is untouched — its
+assumption stays caller-opt-in; the asymmetry (server-decided on the authed first-party
+surface, opt-in on the anon public one) is deliberate.
+**Why:** with no assumption, `earnRowPrices` fails every `mcc_defined` row closed on the
+merchant path — 145 live rows across 18 categories priced at base rate on every tap.
+Found 2026-08-14 via the Slice 1 disclosure at a literal gas bar: CIBC Dividend VI
+showed 1% at an entity correctly categorized `gas`. The accelerator categories are the
+product's core claim; systematically understating them at obviously-correct merchants
+is the inverse accuracy failure of the one the prohibition guarded against.
+**Disclosure invariant:** the disclosure input **is** the scoring input — one predicate,
+one assumption object. Rows suppressed stay in `conditionalNotApplied`; rows priced
+*because of* the assumption are disclosed per-recommendation (`mccAssumptionApplied[]`)
+plus a response-level `categoryMccAssumption {categoryId, test, mccs}`, present only
+when it changed at least one card's pricing. Distinct key — `assumptions` is occupied by
+fuel (the Slice 5 collision, sidestepped not decided). D3 copy still gates all client
+rendering.
+**Measured, not assumed (recon of 2026-08-14, before code):** 88 of 145 rows price
+under the flip — 65 by mapping intersection, 23 by genuine fallback on the 8 unmapped
+niche categories. **57 rows stay dark**, nearly all with `mcc_includes` NULL, which the
+shipped predicate correctly fails closed: an `mcc_defined` row that does not declare its
+MCCs cannot be verified against any mapping. That is a card-fact data gap (verify lane,
+gated), deliberately not papered over in code — CIBC's dining `c0cfce4c` and grocery
+`f382d9d7` are in it, so Kelsey's and RCSS keep showing 1% until the backfill lands,
+while gas `350c583a` (`[5552]` ∩ `{5541,5542,5552}`) prices immediately.
+**Governance implication:** `mcc_category_mappings` writes are now ranking-affecting on
+the authed surface **in both directions** — adding the first mapping to a currently
+unmapped category flips it from blanket-fallback to strict intersection, which can
+*revoke* pricing from NULL-`mcc_includes` rows. Mapping DML is gated-delta work with a
+pre-flip recon, same discipline as everything else in this file.
