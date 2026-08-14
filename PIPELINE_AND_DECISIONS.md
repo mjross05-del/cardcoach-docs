@@ -963,3 +963,41 @@ commit `bd88062` (fixtures only, inert defaults: `floor_*_cad`/`category_exclude
 `window_bucket` null, `annualSnapshots` empty); suite went 216 passed/40 failed + 6 type
 errors → 256 passed/0 failed with type-checking on, no golden expectation changed.
 
+### 2026-08-14 — Request paths do not self-heal data; corrections go through gated deltas
+**Decision:** A user-facing request path never performs **corrective** DML — no
+rewriting an existing row toward a better value as a side effect of serving a request.
+Data correction is a gated, audited delta. This generalises the 2026-08-12 audit-class
+entry: that entry said merchant-graph DML needs gated approval plus a
+`verify.write_audit` row with `run_id`, and a request path structurally **cannot** supply
+any of the three — there is no run, no reviewer, and no approval; the write is triggered
+by whichever user happens to tap. For a request path the only compliant form of an
+audit-class write is not to make it.
+**Scope boundary — this is about *correction*, not all writes.** `resolve-place` minting
+a `merchant_entities` / `merchant_entity_places` row on a cache miss is the function
+doing its job: the request cannot be served without it, and the row is new rather than a
+silent revision of someone else's. That question belongs to
+`DESIGN_place_resolution_v1` and is untouched here. What this entry forbids is the
+self-heal: a read path quietly rewriting stored data it happened to disagree with.
+**Why:** the writes are unattributable by construction, and the bill arrives later.
+`DESIGN_place_resolution_v1` §1.4 had to reconstruct the authorship of four duplicate
+RCSS rows from timestamp fingerprints, ms-precision gaps and normalizer punctuation
+styles, because several runtime writers had been live concurrently and none of them
+signed their work; `d4a1923b` is still recorded there as "the single event no committed
+code explains". A correction that cannot be attributed also cannot be reviewed, reverted
+as a unit, or distinguished from a bug.
+**Precedent set 2026-08-14:** `recommend-card-v2`'s `default_category_id` write-back
+removed (commit `86c6110`, deployed v22); that function now performs no writes at all.
+It cost nothing to remove — `categoryId` is still normalized per request, every consumer
+normalizes on read, and a live check found all 344 non-null `default_category_id` rows
+already canonical with `classifyPlace` unable to emit a non-canonical slug, so the write
+was dead code that could only ever fire on data no longer present.
+**Implications:** nine sites of the same class remain — `recommend-here-v2` ×6 and
+`resolve-place` ×3, catalogued at `DESIGN_place_resolution_v1.md:27` and tracked as
+`WORKING_NOTES` #26. They are in scope of this decision but are **not** mechanical
+removals: they also write *reclassified* categories derived from live Google place
+types, which is real improvement, not just normalization. Retiring them requires first
+deciding where reclassification lives instead. Note also that PROJECT_RULES rule 9
+("Output is files, SQL deltas, prompts, or docs — never direct writes to Supabase")
+governs what a *session* emits; this entry applies the same principle to shipped code on
+a request path, which the rule as written did not literally cover.
+
