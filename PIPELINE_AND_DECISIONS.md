@@ -5,7 +5,7 @@ This file is the "why things are the way they are" reference. The process sectio
 the current system; the decisions section is **append-only** — add new entries, never
 rewrite old ones.
 
-Last updated: 2026-08-12 · Owner: Mike (data integrity, governance, review)
+Last updated: 2026-08-14 · Owner: Mike (data integrity, governance, review)
 Status: **Daily scheduled batches operational (first runs week of 2026-07-27). The Stage 1–3 script pipeline is RETIRED (2026-08-01 decision entry) — see the historical note at the end of Part 1.**
 
 ---
@@ -919,4 +919,47 @@ exactly like card-fact writes: pre-flight reads across all referencing FK tables
 old-value/row-count guards, audit row committed in the same transaction.
 `verify.runs.runtime` vocabulary gained `'chat'` (migration
 `verify_runs_runtime_allow_chat`) so chat-surface gated writes record truthfully.
+
+### 2026-08-14 — Suppression disclosure is decided by the pricing predicate, never a copy
+**Decision:** `recommend-card-v2` discloses condition-suppressed earn rows via
+`conditionalNotApplied[]`, decided by the same exported `earnRowPrices` predicate that
+prices them (`_shared/scoring.ts:1179`), not a second implementation. The field is
+absent — never an empty array — when nothing was suppressed, matching the stateless
+`ConditionalNotAppliedV1` shape. `categoryMccAssumption` stays null on the authed
+merchant path: API-011 is unchanged by this slice.
+**Why:** a disclosure gate written as its own copy of the condition logic drifts from
+pricing silently, and the failure is invisible in both directions — a user is told a card
+"may earn more" on a row that in fact priced, or is never told about one that didn't.
+Extracting the predicate makes that drift impossible by construction rather than by
+review discipline. **Implications:** ranking is untouched — response fields and two
+success-log fields only. Verified on live taps 2026-08-14: Kelsey's disclosed
+`c0cfce4c`, RCSS disclosed `f382d9d7`, and no PC Financial grocery row was disclosed
+while PC cards priced normally (the mixed-gate case). RCSS `topCardId`/`cardCount`
+byte-identical to the same-day pre-deploy baseline. Deployed as `recommend-card-v2` v21,
+commit `f1a7158`. Client rendering stays gated on D3 copy.
+
+### 2026-08-14 — A shared-type change owns the edge-function fixtures too
+**Decision:** Changing a type in `supabase/functions/_shared/` is not complete until
+`supabase/functions/__tests__/` compiles and passes against it. Adding a required field
+to `ScoringContext` or `EarnRateRow` means updating every hand-built fixture in the same
+commit — the golden packs included.
+**Why:** `bfd487e` (ENG-floors, 2026-08-12) added four fields to `EarnRateRow` and
+`annualSnapshots` to `ScoringContext`, and touched no file under `__tests__/`. It added
+tests for `packages/engine` but the edge-function suite went red and stayed red for two
+days: 6 type errors, plus 40 runtime failures on `TypeError: ctx.annualSnapshots is not
+iterable` (`scoring.ts:1666` iterates it unconditionally). Those 40 were the **entire
+QA-009 loyalty-stacking golden pack** — so the regression guard against ranking drift was
+dead, not passing, during a period when ranking-adjacent work was shipping. The failure
+mode is self-concealing: once a suite is red, the next red is indistinguishable from the
+last, and a dispatch's "STOP on any failure" gate stops gating anything real.
+**Implications:** `pnpm typecheck` does **not** cover `supabase/functions/` — it is
+`pnpm -r typecheck` over the five pnpm workspaces, and Deno code is invisible to it. The
+gates that see edge functions are `deno check <fn>/index.ts` and `pnpm test:supabase`
+(`cd supabase/functions && deno task test`, which type-checks `__tests__/` before
+running); at least one must be green before an edge-function deploy. When a dispatch's
+gate fails, establish whether the failure is pre-existing by re-running against the
+pristine file before concluding anything about the change in hand. Repaired 2026-08-14 in
+commit `bd88062` (fixtures only, inert defaults: `floor_*_cad`/`category_excludes`/
+`window_bucket` null, `annualSnapshots` empty); suite went 216 passed/40 failed + 6 type
+errors → 256 passed/0 failed with type-checking on, no golden expectation changed.
 
