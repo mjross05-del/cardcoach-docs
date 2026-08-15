@@ -1042,3 +1042,32 @@ the authed surface **in both directions** — adding the first mapping to a curr
 unmapped category flips it from blanket-fallback to strict intersection, which can
 *revoke* pricing from NULL-`mcc_includes` rows. Mapping DML is gated-delta work with a
 pre-flip recon, same discipline as everything else in this file.
+
+### 2026-08-14 — mcc_includes backfills follow the evidence already on the row
+**Decision:** Populating `earn_rates.mcc_includes` on an `mcc_defined` row is governed
+by what the row's own `condition_text` — the verified capture from the issuer document —
+already contains, in three tiers. **Tier A**, the text cites MCC numerals ("(MCC 5541,
+5542)"): populate exactly the cited numbers; this completes ingestion of an
+already-captured fact, and matches the pre-existing convention on CIBC Dividend VI gas
+`350c583a`. **Tier B**, the text quotes the network's official MCC classification names
+verbatim ("grocery stores and supermarkets", "eating places, restaurants", "service
+stations", "drugstores/pharmacies"): populate via the deterministic name→number lookup
+through the network standard, recording the derivation per row in the delta, and have
+the issuer's next weekly batch spot-confirm. **Tier C**, generic prose ("eligible dining
+purchases", "as classified by Visa MCC", issuer app-category labels like AUTO TOP-3):
+populate NOTHING — assigning numbers there is inventing a card fact (rule 7); the row
+goes to the verify lane for an issuer-document pull.
+**Why:** the merchant-path assumption (previous entry) made these arrays load-bearing
+for ranking, and 67 live rows had them NULL. The line between "moving a captured fact
+into a typed column" and "guessing what the issuer meant" is exactly the line between
+tiers B and C: name→number through a published standard is deterministic; prose→number
+is judgment. Pass 1 (2026-08-14, delta
+`2026-08-14__earn_rates__mcc_includes_backfill_p1.sql`, 15 rows: 5×A + 10×B, guarded on
+`mcc_includes IS NULL`, rowcount-asserted, audited) took pricing coverage from 88 to
+103 of 145 `mcc_defined` rows, verified by post-apply recon. The 42-row residue is all
+tier C and stays fail-closed — disclosed as suppressed on every tap — until issuer docs
+land. **Implications:** ingestion should populate `mcc_includes` at capture time
+whenever either A- or B-tier evidence exists; a backfill delta always enumerates ids,
+quotes its evidence per row, and asserts its rowcount; and two Scotia Momentum
+"recurring bill" rows are flagged for the batch to reconsider `condition_type` — their
+text defines eligibility by billing mechanism, not MCC.
