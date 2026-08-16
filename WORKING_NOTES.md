@@ -378,20 +378,33 @@ trap** — worth a sweep.
 EV spend accumulates in the gas bucket rather than a second one. The double-cap risk I raised at
 onboarding is inert. The `ev_charging` rows are redundant on the merchant path.
 
-**Two things stayed blocked, both bigger than Neo — these need your call:**
+**Both blockers CLOSED 2026-08-16 on Mike's call.** Delta
+`2026-08-16__categories_mcc_mappings__retail_shopping_and_recurring.sql`.
+**ALL NINE NEO CARDS NOW SCORE.**
 
-1. **"Shop" has no CardCoach category.** Neo's Shop bucket is ~90 MCCs across department stores,
-   electronics, clothing, hardware, books, digital goods, direct marketing, florists, pet shops.
-   There is no `retail_shopping` and it does not collapse into one existing category. Either
-   create the category (taxonomy + `mcc_category_mappings` + app category chips) or fan it out
-   across several. **Both Shop & Dine plans stay `load_only`** — their Food-and-drink half is
-   now loaded and correct at 2%/5%, the Shop half is not.
-2. **`recurring_bills` is an unmapped category, project-wide.** Of Neo's 11 Recurring codes only
-   5815-5818 (→ `streaming`) and 5968 (→ `online_retail`) are mapped, and **none** point at
-   `recurring_bills`; 4812/4814/4899/4900/6300/7997 are unmapped outright. So Neo's 2%/4%
-   recurring bonus does not price — **and neither does any other issuer's**. Adding those
-   mappings is ranking-affecting in both directions per the 2026-08-14 decision, so it is gated
-   work with a pre-flip recon, not a backfill.
+1. **`retail_shopping` created.** 79 of Neo's 94 Shop MCCs had no existing mapping and were
+   claimed. The other 15 were deliberately left alone — `mcc_category_mappings` is
+   `UNIQUE(mcc, valid_from)`, so claiming an already-mapped code *moves* it and revokes pricing
+   from whoever relied on it: 5200/5211/5231/5251/5261 stay `home_improvement`,
+   5399/5964-5969 stay `online_retail`, 5816-5818 stay `streaming`. Neo Shop resolves on 79/94;
+   a holder earns base rate at the other 15. Under-crediting one issuer beats silently
+   de-crediting five. Both Shop & Dine plans went `load_only` → `scoreable` (2% $500/mo World,
+   3% $1,000/mo World Elite).
+
+2. **`recurring_bills` mapped — after defusing a live regression.** The pre-flip recon found
+   **Scotia Momentum Visa Infinite (4%) and Scotiabank Momentum Visa (2%)**, both live and
+   scoreable, typed `mcc_defined` with `mcc_includes` NULL. They priced *only* because the
+   category had no mappings; the first mapping would have made them match nothing and go dark
+   silently. Re-typed both to `preauthorized_only` in the same transaction — which is what
+   Scotia's other two Momentum rows and every other issuer's recurring row already use, and what
+   #25 had already flagged. Then mapped the 5 free codes: 4814 telecom, 4899 cable, 4900
+   utilities, 6300 insurance, 7997 clubs. (5815-5818 and 5968 left with streaming/online_retail.)
+   **Net: Scotia ×4 unchanged, MBNA ×2 and Neo ×2 now price, zero regressions** — verified
+   against every recurring row in the catalogue.
+
+**Rule 9(a) miss, declared:** the `retail_shopping` step wrote `mcc_category_mappings` without
+snapshotting that table first. Snapshot taken immediately after, before the recurring step. The
+Shop write is purely additive and reversible by `valid_from`; recorded rather than quietly fixed.
 
 **Left deliberately unchanged:** `condition_type` on the gas/grocery/ev rows. Neo's cashback is
 genuinely MCC-defined so `mcc_defined` would be the truthful value, but flipping it makes those

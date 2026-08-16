@@ -1,0 +1,71 @@
+-- DELTA 2026-08-16 — Neo Financial, part 5: new `retail_shopping` category + recurring_bills mapped
+-- STATUS: APPLIED to production 2026-08-16 via MCP execute_sql, guarded, both steps.
+-- Authorised by Mike in-session (create Shop; add recurring; re-type Scotia first).
+--
+-- ############ RULE 9(a) MISS, DECLARED ############
+-- The retail_shopping step wrote mcc_category_mappings WITHOUT snapshotting that table first.
+-- Snapshot mcc_category_mappings_snapshot_20260816_neo2 (RLS-secured) was taken immediately after,
+-- BEFORE the recurring step, so it captures post-Shop / pre-recurring state. The Shop write is
+-- purely additive and reversible without it:
+--   DELETE FROM mcc_category_mappings WHERE category_id='retail_shopping' AND valid_from='2026-08-16';
+-- Recording rather than quietly fixing, per the discipline that made rule 9(a) exist.
+--
+-- ############ WHY THE RECON MATTERED ############
+-- mcc_category_mappings is UNIQUE(mcc, valid_from): one MCC has exactly ONE active category. So a
+-- code already mapped elsewhere cannot be added to a new category — it must be MOVED, which revokes
+-- pricing from whoever relied on it. And per the 2026-08-14 decision, adding the FIRST mapping to a
+-- previously-unmapped category flips it from blanket-fallback to strict intersection, which can
+-- revoke pricing from mcc_defined rows carrying no MCC list. Both traps were live here.
+--
+-- === STEP 1: retail_shopping ===
+-- Neo's "Shop" bucket is 94 MCCs. 79 had no existing mapping -> claimed. 15 were already mapped and
+-- were deliberately LEFT ALONE:
+--   5200,5211,5231,5251,5261            -> home_improvement  (lumber, hardware, garden)
+--   5399,5964,5965,5966,5967,5968,5969  -> online_retail     (general merch, direct marketing)
+--   5816,5817,5818                      -> streaming         (digital goods)
+-- Neo Shop resolves on 79/94. A Neo Shop & Dine holder earns base rate at the other 15. Under-
+-- crediting one issuer is the safe direction; silently de-crediting five others is not.
+-- 4812 (Telephone Equipment) appears in BOTH Neo's Shop and Recurring lists and went to
+-- retail_shopping on the semantic read that equipment is a retail purchase while 4814
+-- (Telecommunication Services) is the recurring bill.
+-- Earn rows added: World Shop & Dine 2% cap $500/mo; World Elite Shop & Dine 3% cap $1,000/mo.
+-- Both Shop & Dine plans moved load_only -> scoreable. ALL NINE NEO CARDS NOW SCORE.
+--
+-- === STEP 2: recurring_bills, with a regression defused first ===
+-- PRE-FLIP RECON FOUND: Scotia Momentum Visa Infinite (4% recurring) and Scotiabank Momentum Visa
+-- (2%) — both live and scoreable — were condition_type='mcc_defined' with mcc_includes NULL. They
+-- priced only because recurring_bills had no mappings at all. The first mapping would have made
+-- them match nothing and go dark, silently.
+-- FIX APPLIED FIRST, IN THE SAME TRANSACTION: re-typed both to preauthorized_only. Evidence — the
+-- other two Scotia Momentum recurring rows already use it, as does every other issuer's recurring
+-- row (BMO x4, CIBC x2, TD x7, Desjardins x4, Simplii, Tangerine x2, National Bank x2), and
+-- WORKING_NOTES #25 had already flagged these two: "their text defines eligibility by billing
+-- mechanism, not MCC."
+-- MAPPED (5 free codes): 4814 telecom, 4899 cable/satellite, 4900 utilities, 6300 insurance,
+--   7997 country & athletic clubs.
+-- NOT CLAIMED: 5815-5818 (streaming), 5968 (online_retail) — moving them would revoke pricing.
+--
+-- NET EFFECT, verified post-apply across every recurring row in the catalogue:
+--   Scotia x4    unchanged, still price via preauthorized_only (4%, 2%, 1%, 1%)
+--   MBNA x2      NOW PRICE via MCC intersection (2%)
+--   Neo x2       NOW PRICE via MCC intersection (2% World, 4% World Elite)
+--   everyone else  untouched (preauthorized_only / other)
+--   ZERO regressions.
+
+BEGIN;
+-- Guards asserted: recurring_bills had 0 mappings; exactly 2 mis-typed Scotia rows existed.
+-- Post-guards asserted: 5 recurring_bills mappings; 0 Scotia rows still mcc_defined; 0 rows
+-- anywhere left mcc_defined-with-no-MCC-list on this category; no MCC holds two active mappings.
+-- Full applied text is in the session transcript. Read-back:
+--   SELECT m.category_id, count(*) FROM mcc_category_mappings m WHERE m.valid_to IS NULL
+--   GROUP BY 1 ORDER BY 2 DESC;
+COMMIT;
+
+-- ROLLBACK:
+--   DELETE FROM mcc_category_mappings WHERE valid_from='2026-08-16'
+--     AND category_id IN ('retail_shopping','recurring_bills');
+--   UPDATE earn_rates SET condition_type='mcc_defined' WHERE ... (the 2 Scotia rows; see snapshot
+--     earn_rates_snapshot_20260816_neo2 for pre-values)
+--   DELETE FROM earn_rates WHERE category_id='retail_shopping';
+--   DELETE FROM categories WHERE id='retail_shopping';
+--   UPDATE card_products SET scoring_status='load_only' WHERE id LIKE '%shop_dine%';
