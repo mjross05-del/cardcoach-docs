@@ -362,13 +362,41 @@ Neo Financial is live as the 16th issuer — 9 `card_products`, 26 `earn_rates`,
 Seven of nine score today. Settled reasoning is in `PIPELINE_AND_DECISIONS.md` (2026-08-16);
 what remains open is here.
 
-**Unblocks the most, do first — the MCC schedule.** `legal.neo.cc/cashback-categories`
-redirects to `MCC Code Descriptions.pdf` (4 pages, per-card MCC lists). Page 1 read in the
-chrome lane: Neo Mastercard gas = 5541/5542/5552, grocery = 5411; the Neo World / World
-Elite "Shop & Dine" section starts there and runs on. Pages 2–4 not transcribed. Reading
-it clears the `Shop` and `Food and drink` mappings and takes **both Shop & Dine plans out
-of `load_only`** (2 of the 4). Screenshot-transcribing ~200 MCC codes is not acceptable
-accuracy — save the PDF and read it off disk.
+**MCC schedule — READ AND APPLIED 2026-08-16.** Both Neo disclosures and the 4-page MCC
+schedule are now on disk. Neo publishes per-plan lists: Gas 5541/5542/5552, Grocery 5411,
+Dine 5811-5814, Recurring 4812/4814/4899/4900/5815-5818/5968/6300/7997, Shop ~90 retail codes.
+Delta `2026-08-16__earn_rates__neo_mcc_schedule_p2.sql`; Neo is now 31 earn_rates.
+
+**It caught a defect I shipped this morning.** MCC 5814 (Fast Food Restaurants) maps to
+`coffee_fastfood`, **not** `dining`. The United dining row I loaded carried all four Dine codes
+on category `dining`, so under the merchant MCC assumption it could never fire at a fast-food
+merchant — the category-vs-mapping intersection fails. Split into `dining` {5811,5812,5813} +
+`coffee_fastfood` {5814}. **Any issuer whose dining enumeration includes 5814 has the same
+trap** — worth a sweep.
+
+**Gas/EV shared-pool concern retired.** All three Neo gas codes map to `gas`, 5552 included, so
+EV spend accumulates in the gas bucket rather than a second one. The double-cap risk I raised at
+onboarding is inert. The `ev_charging` rows are redundant on the merchant path.
+
+**Two things stayed blocked, both bigger than Neo — these need your call:**
+
+1. **"Shop" has no CardCoach category.** Neo's Shop bucket is ~90 MCCs across department stores,
+   electronics, clothing, hardware, books, digital goods, direct marketing, florists, pet shops.
+   There is no `retail_shopping` and it does not collapse into one existing category. Either
+   create the category (taxonomy + `mcc_category_mappings` + app category chips) or fan it out
+   across several. **Both Shop & Dine plans stay `load_only`** — their Food-and-drink half is
+   now loaded and correct at 2%/5%, the Shop half is not.
+2. **`recurring_bills` is an unmapped category, project-wide.** Of Neo's 11 Recurring codes only
+   5815-5818 (→ `streaming`) and 5968 (→ `online_retail`) are mapped, and **none** point at
+   `recurring_bills`; 4812/4814/4899/4900/6300/7997 are unmapped outright. So Neo's 2%/4%
+   recurring bonus does not price — **and neither does any other issuer's**. Adding those
+   mappings is ranking-affecting in both directions per the 2026-08-14 decision, so it is gated
+   work with a pre-flip recon, not a backfill.
+
+**Left deliberately unchanged:** `condition_type` on the gas/grocery/ev rows. Neo's cashback is
+genuinely MCC-defined so `mcc_defined` would be the truthful value, but flipping it makes those
+rows fail closed on the stateless path — a live scoring change across three scoreable cards.
+That is a decision, not a backfill.
 
 **FX percent — CLOSED 2026-08-16, same day, by verify run `25c45942` (chrome_lane).**
 **Neo charges 3%, not the Canadian-standard 2.5%.** Applied 19:11:59Z, Mike-approved, 9/9,
