@@ -35,7 +35,7 @@ auto for narrow guarded facts, gated proposals for everything structural.
 | Thu | TD Bank |
 | Fri | CIBC (+ Journie loyalty reverify) — BMO explicitly excluded (walled) |
 | Sat | Rogers + MBNA + Desjardins + National Bank |
-| Sun | Canadian Tire + PC Financial + Simplii + Tangerine (+ PC/Triangle loyalty reverify) |
+| Sun | Canadian Tire + PC Financial + Simplii + Tangerine + Neo Financial (+ PC/Triangle loyalty reverify) |
 | Fri 5 p.m. | Chrome lane, Mike present (~15–20 min): BMO coverage + facts, RBC tier thresholds, in-application FX boxes, Blue Rewards/AIR MILES transition watch |
 
 Effective cadence: every tracked issuer touched weekly. Loyalty-stack offers carry a
@@ -1071,3 +1071,101 @@ whenever either A- or B-tier evidence exists; a backfill delta always enumerates
 quotes its evidence per row, and asserts its rowcount; and two Scotia Momentum
 "recurring bill" rows are flagged for the batch to reconsider `condition_type` — their
 text defines eligibility by billing mechanism, not MCC.
+
+### 2026-08-16 — Neo Financial onboarded as the 16th issuer; plans are products, partner cashback is not an earn rate
+**Decision:** Neo Financial joins the catalogue as issuer `neo-financial` with **nine**
+`card_products` rows, not five. Neo World and Neo World Elite each ship in three reward
+plans — Shop & Dine, Gas & Grocery, Everywhere — sold separately with separate rate
+sheets, so **a plan is a product**: a wallet holding "Neo World Elite" is unscoreable
+until we know which plan, and collapsing the three onto one canonical row would misprice
+two thirds of holders. The same reasoning already governs Rogers Red's tier variants.
+**Decision:** Neo's headline "up to 5x at thousands of Neo partners" is **excluded from
+`earn_rates` entirely**. It is merchant-funded, varies by partner and offer, and Neo
+publishes no per-purchase rate for it — there is no fact to store, and storing an average
+would be inventing one (rule 7). It is offers territory if it is anywhere. Verification
+batches should not file fact_checks against it.
+**Decision:** the caps are Tier 1b and they are on the **compare page**, not the product
+pages. Footnote 1 of `/credit-cards` is the single source for every category cap and every
+post-cap rate across all seven cashback products; the individual product pages state that a
+limit exists and then defer to the Neo app. Post-cap rates equal each card's base rate, so
+every capped category is an ordinary falling tier — no new engine behaviour. Neo World
+Elite – Everywhere is the one case needing the ENG-floors machinery: two `base` rows with
+disjoint windows over `window_bucket='card'` (2% on [0, $4,000), 1% above).
+**Decision:** four of the nine land `load_only`, each for a stated reason, and each reason
+is a tracked [VERIFY] rather than a judgement call. Both **Shop & Dine** plans, because
+their "Shop" and "Food and drink" categories are MCC-defined in Neo's MCC schedule and
+that schedule is not yet transcribed — base rates loaded, category rows withheld rather
+than guessed. Both **carrier co-brands** (United MileagePlus, Cathay Asia Miles), because
+their point valuations fail Tier 2.
+**Point valuation — Tier 2 FAILED, recorded as a failure not a gap.** Neither United
+MileagePlus nor Asia Miles publishes a cents-per-point value, so Tier 2 applies. Condition 2
+does not clear: only **two** independent publishers state a figure in Canadian cents
+(Prince of Travel and Milesopedia — 1.6 for MileagePlus, 1.5 for Asia Miles), they report
+identical figures with no disclosed method, and the rule says in terms that two sources are
+not consensus. Frugal Flyer appears to be a third but its CAD figure is an FX conversion of
+its own USD figure and its roundup contradicts its own programme page (1.5 vs 1.6 CAD on
+Cathay). Every other recognised source is USD-denominated, and §2a currency discipline
+forbids converting. So **no `point_valuations` rows were written** — absent, not estimated.
+`reward_programs.default_cents_per_point = 0` on both new programmes is a **fail-closed
+placeholder** forced by `reward_programs_cents_per_point_rule`, which forbids NULL on a
+points programme; it is not a valuation and must not be read as one. Zero cannot inflate a
+ranking, and both cards are `load_only` regardless.
+**Why this matters beyond Neo:** the schema cannot currently express "this is a points
+programme and we do not know what a point is worth." Every existing points programme
+carries a `default_cents_per_point`, so the constraint has never bitten. It bites the moment
+a new carrier currency arrives without three CAD sources, which is the normal case for
+airline co-brands. Worth deciding whether the constraint should admit NULL.
+**Access posture:** `legal.neo.cc` and `static.production.neofinancial.com` are both
+robots-disallowed to the cloud fetcher, so every Tier 1 document (cardholder agreement,
+disclosure + fee schedule, rewards policy, MCC schedule) is chrome-lane only, while
+`www.neofinancial.com` and `cathay.neofinancial.com` are open. Neo is therefore recorded
+`wall_status='walled'`, `preferred_channels={chrome_assisted}` — the first issuer where the
+*product* pages are open but the *legal* host is walled. Footnotes on neofinancial.com sit
+behind a "Legal stuff" accordion and are invisible to `get_page_text` until clicked; that,
+not the paywall, was what made the caps look unpublished on first pass.
+**Carried [VERIFY] items:** FX percent (unpublished on all nine — `fx_fee_percent` NULL,
+following the 2026-08-02 unsourced-FX precedent); the MCC schedule (unblocks both Shop &
+Dine plans); the gas/EV shared-pool gap (Neo shares one monthly limit across two CardCoach
+categories and `earn_rates` has no pool column, so both rows carry the full cap and a user
+splitting spend over-earns in the model); the Amazon half of the retail-shopping exclusion
+(merchant-level, no row); and the Cathay 4x `earn_rate_eligible_merchants` row.
+**Applied:** deltas `2026-08-16__issuers_card_products__neo_financial_onboarding.sql` and
+`2026-08-16__earn_rates__neo_financial_p1.sql`. Snapshots `*_snapshot_20260816_neo`,
+RLS-secured. Pre/post guards asserted in both transactions. `verify.issuer_notes` seeded
+with the access posture, the accordion quirk, the plan-structure trap and all six open items.
+
+### 2026-08-16 (b) — Neo carrier valuations go live provisionally; "unconfirmed" becomes a storable state
+**Decision (Mike, same day, superseding the load_only posture in the entry above):** use the
+two matching CAD figures we can actually see — United MileagePlus **1.6**, Asia Miles **1.5**
+— mark them unconfirmed, and revisit with a deeper dive. Both carrier cards move
+`load_only` → `scoreable`. Neo is now 7 of 9 scoreable.
+**How "unconfirmed" is represented, and why it matters:** these rows are stored with
+`source_tier` **NULL**, not `'tier2'`. That is not a formatting choice — the database already
+enforces the governance rule (`pv_tier2_needs_three_sources`: an active row claiming `tier2`
+must carry `source_count >= 3`), so a two-source tier2 row is rejected outright. The
+constraint did exactly its job. What was missing was not enforcement but a *vocabulary*: the
+table could express "Tier 2 compliant" and could express "absent", and had no way to say
+"we are using this, and we know it is not yet good enough." `source_tier` NULL +
+`confidence='low'` + `source_count=2` + attached evidence rows + an explicit UNCONFIRMED
+banner in `source_notes` is that third state. **Anything reading `point_valuations` for
+public claims must filter on `source_tier IS NOT NULL`** — an unconfirmed row is a working
+value, not a verified fact, and rule 7 still forbids presenting it as one.
+**Only the `realistic` tier is written.** Two identical data points give no basis for a
+spread; manufacturing conservative and aggressive figures would invent precision. The engine
+already falls back to realistic and warns, so the absence is safe and self-announcing.
+**The placeholder problem resolves as a side effect.** `reward_programs.default_cents_per_point`
+went 0 → 1.6 / 1.5, so the fail-closed zeros from the previous entry are gone. The underlying
+schema gap is *not* closed and will return: `reward_programs_cents_per_point_rule` still
+forbids NULL on a points programme, so the next carrier currency that arrives without a
+usable figure will face the same forced choice between a fake zero and a fake number. Worth
+deciding whether that constraint should admit NULL before the next co-brand, not during it.
+**Found on the post-apply probe, worth recording:** both Gas & Grocery plans' `recurring_bills`
+rows are `mcc_defined` with no `mcc_includes` and therefore fail closed — correct tier-C
+behaviour under the 2026-08-14 evidence-tier decision, but it means Neo's MCC schedule now
+unblocks **three** things rather than two: both Shop & Dine plans and both recurring-bills
+rows. United's grocery and dining rows do price (MCCs populated and mapped); its flights row
+and Cathay's 4x row stay fail-closed for want of an airline-MCC enumeration and an
+`earn_rate_eligible_merchants` entry respectively.
+**Applied:** delta `2026-08-16__point_valuations__neo_carrier_provisional.sql`, guarded, with
+a post-state assertion that no Neo valuation claims `tier2`. Live probe confirms Cathay at
+1.5c/$ base and United at 1.2c/$ base (0.75 x 1.6), and Cathay foreign-currency at 3c/$.

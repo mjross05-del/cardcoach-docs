@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-08-14 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-08-16 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -34,6 +34,7 @@ Last updated: 2026-08-14 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#22** Loyalty stacking Phase 1 — **ACTIVATED 2026-08-02** (flag flipped 13:41 UTC, delta `deltas/2026-08-02__runtime_flags__loyalty_offer_stacking_on.sql`; all three gates closed; rule 5 superseded-in-part). Remaining tail in section below: counsel review before QC GA, batch parking reviews now carry live-data weight. Phase 1.1 (member-earn display + attribution notice) DISPATCHED 2026-08-02 for an Opus 5 session: `dispatches/DISPATCH_member_earn_display_2026-08-02.md` (DATA-019/API-014/APP-018; #1 invariant: response-level optional fields only — no new explanation-item types while the current build is live).
 - **#25** API-011 disclosure slices (`mcc_defined` suppression) — **Slice 1 SHIPPED 2026-08-14**: `recommend-card-v2` v21, commit `f1a7158`. Adds `conditionalNotApplied[]` per recommendation plus two success-log fields. Client rendering of the field landed in the app receipt 2026-08-16 (contracts + EN/FR; ships in 1.0.3); here-v2 does not emit it yet — that port is the natural Slice 2, decided by the same exported `earnRowPrices` predicate that prices the rows (settled: see the 2026-08-14 entry in `PIPELINE_AND_DECISIONS.md`). Ranking byte-identical — RCSS `topCardId`/`cardCount` matched the same-day pre-deploy baseline on live taps; Kelsey's had no same-day v20 tap to compare against, so that half is unmeasured rather than verified. Governing doc is `HANDOFF_mcc_gating_accuracy_strategy.md` §6, which is **not filed anywhere on the machine** — searched 2026-08-14 by filename and by content across `~/dev`, `~/Documents`, `~/Downloads`, `~/Desktop`; only the rising-tiers and cpp-valuation handoffs exist. Its slice list beyond Slice 1 and its D-series decisions are unrecorded, so recover it (or ask Mike) before running Slice 2+; file it at this repo's root next to `HANDOFF_engine_rising_tiers_2026-08-12.md`. Execution record for what actually shipped, explicitly not a substitute for the strategy: `dispatches/NOTE_mcc_gating_slice1_2026-08-14.md`. The `default_category_id` runtime write-back listed here is DONE (`86c6110`). **MERCHANT-PATH ASSUMPTION ACTIVATED 2026-08-14** — the core accuracy gap this program targeted is closed ahead of the missing strategy doc: commit `42d4dc0`, `recommend-card-v2` **v23** + `recommend-here-v2` **v22** (use those for drift checks), flag `merchant_mcc_assumption` flipped ON by delta the same day (see the PIPELINE decision entry of 2026-08-14; ordered test, NOT blanket fallback; flip-off = no-deploy rollback). **`mcc_includes` BACKFILL PASS 1 APPLIED 2026-08-14** (delta `deltas/2026-08-14__earn_rates__mcc_includes_backfill_p1.sql`, audited, rowcount-asserted 15): populated only rows whose MCCs were already evidenced ON the row — 5 tier-A (condition_text cites numerals: MBNA ×4, Costco gas/EV) + 10 tier-B (condition_text quotes verbatim network MCC class names; deterministic name→number lookup recorded per row; issuer batches spot-confirm on their next weekly pass — CIBC is Friday). Now **103/145 `mcc_defined` rows price** (80 mapping + 23 fallback), verified by post-apply recon. Includes CIBC dining `c0cfce4c` [5812,5813,5814] and grocery `f382d9d7` [5411], so **Kelsey's and RCSS now exercise the assumption** — expect `mccAssumptionAppliedIds` to carry those ids on the next taps. **Residue: 42 rows, verify lane** — all generic prose ("eligible dining purchases", "as classified by Visa MCC", "AUTO TOP-3", Amex classification language); assigning numbers there would invent card facts (rule 7 — see the 2026-08-14 evidence-tier decision entry). Biggest holders: CIBC Adapta auto-top-3 family (~16 rows incl. all fallback-category rows), BMO Eclipse family (~7), CIBC Aeroplan/Aventura "eligible X" rows (~9), Scotia Amex "as classified by Amex" (~5), Scotia Momentum recurring (2 — text defines by billing mechanism, not MCC; batch should reconsider their `condition_type`). Local seed.sql parity not done (same standing gap as #23). Recon repro: join live `earn_rates` (condition_type=`mcc_defined`, valid) against active `mcc_category_mappings` per category. Also still open: **D3 user-facing copy**, which gates all client rendering — the API now ships `categoryMccAssumption` + `mccAssumptionApplied[]`/`conditionalNotApplied[]` but nothing reaches users until D3; engine-contracts type additions (ride the D3-gated client commit); the `assumptions` response key stays occupied by `fuelAssumptions` (Slice 5 collision sidestepped via the distinct `categoryMccAssumption` key — Slice 5 itself unresolved); folding stateless onto the shared `_shared/categoryMccAssumption.ts` loader (parked, own commit + verify:api-011 run).
 - **#26** Merchant category proposal queue — **code CLOSED 2026-08-14, the batch has never run.** All 10 request-path self-heal writes on `merchant_entities.default_category_id` are gone: `recommend-card-v2` ×1 (`86c6110`, v22), then `recommend-here-v2` ×6 and `resolve-place` ×3 (`cc445e2`, deployed v21 / v15). All three functions now write nothing to `merchant_entities`. Three of the nine were dead (the legacy-alias normalization branches: guard is `normalized !== stored`, all 344 non-null rows are canonical, `classifyPlace` only emits canonical slugs) and were deleted; the six that carried real signal — filling a null category, refining `dining` → `coffee_fastfood`/`food_delivery` — now record to `verify.merchant_category_observations` via `public.propose_merchant_category` (SECURITY DEFINER, service_role only; migrations `20260814193000` + `20260814200000`). Each call site still uses the classified category for its own request, so no response changed. Review surface: `verify.v_merchant_category_review`. Batch: `PROMPT_merchant_category_apply.md`. **THE OPEN RISK IS NOW THE OPPOSITE OF WHAT IT WAS.** The writes are gone but nothing drains the queue: the batch is unscheduled and has never executed, and the queue is still empty because no traffic has exercised the new path. `recommend-card-v2` has **no classifier fallback**, so every entity with a null `default_category_id` (113 at 2026-08-14) is scored base-rates-only on every tap until the first gated apply runs — a queue nobody drains is strictly worse than the self-heal was. **Lane exercised end-to-end on live traffic 2026-08-15**: Mike's Harvey's taps hit a Jan-22 hand-seed entity (NULL category) — proposal recorded (`fill_null → dining`, deduped ×2), Mike approved in chat, applied via manual Phase A with audit (delta `2026-08-14__merchant_entities__category_55388951.sql`); his ranking was base-rates-only until the apply, proving the drain-urgency live. **Batch SCHEDULED 2026-08-14**: local Claude Code scheduled task `merchant-category-apply`, Mondays 07:01 (runs when the app is open; fires on next launch otherwise — port the self-contained `PROMPT_merchant_category_apply.md` into the Cowork rotation beside the issuer batches if machine-independence is wanted). First run needs its Supabase MCP tool approvals — use "Run now" once to pre-approve, or the 7am run stalls silently on a permission prompt. Cross-check that it is running: `merchant_graph_guardrail`'s `placed_null_category` count should fall. Design note for anyone extending this: these rows **cannot** live in `verify.apply_queue` — `fact_check_id` is NOT NULL against `verify.fact_checks`, which requires `card_id`/`fact_key`, and a merchant-category proposal has neither (the `cc445e2` commit message claimed otherwise and is corrected by `e3b084f`). Why unattributed merchant-graph writes are expensive: `DESIGN_place_resolution_v1.md` §1.4; the old site catalogue is at that file's line 27.
+- **#28** Neo Financial onboarding — landed 2026-08-16 (16th issuer, 9 cards, **7 scoreable**). Carrier point valuations applied PROVISIONALLY on Mike's ruling and are **unconfirmed — a deeper dive is owed**; 5 other carried [VERIFY] items. Section below.
 - **#27** MCC gating data debt — 52 active `mcc_defined` rows with no `mcc_includes` fail closed and never price (sweep 2026-08-16, `DB_MCC_SWEEP_WORKLIST_2026-08-16.md`; 42 fillable, 10 in unmapped categories). Section below.
 
 ---
@@ -353,3 +354,78 @@ Why nothing else moved: on snapshot-less surfaces (stateless-v1 always sends no 
 - **QA-009: DONE 2026-08-01** — 30-scenario golden pack built + independently verified on branch `feat/qa-009-golden-pack` (commit `12f47fe`; suite 199/199; merge via the merge dispatch, step 6).
 - **WS-7: DRAFTED 2026-08-01** — `COMPLIANCE_loyalty_stacking_pack_2026-08-01.md` (string review, trademark attribution EN/FR, Quebec/Law 25 checklist). NEEDS COUNSEL SIGN-OFF before flag flip; one APP-017 follow-up: in-app attribution notice screen.
 - **Merge/push/cloud-apply prompt ready:** `dispatches/DISPATCH_MERGE_AND_CLOUD_APPLY_2026-08-01.md` — paste into Claude Code on the laptop.
+
+## #28 — Neo Financial onboarding: carried [VERIFY] items (landed 2026-08-16)
+
+Neo Financial is live as the 16th issuer — 9 `card_products`, 26 `earn_rates`, 2
+`card_exclusions`, `verify.issuer_notes` seeded, added to the **Sunday** batch rotation.
+Seven of nine score today. Settled reasoning is in `PIPELINE_AND_DECISIONS.md` (2026-08-16);
+what remains open is here.
+
+**Unblocks the most, do first — the MCC schedule.** `legal.neo.cc/cashback-categories`
+redirects to `MCC Code Descriptions.pdf` (4 pages, per-card MCC lists). Page 1 read in the
+chrome lane: Neo Mastercard gas = 5541/5542/5552, grocery = 5411; the Neo World / World
+Elite "Shop & Dine" section starts there and runs on. Pages 2–4 not transcribed. Reading
+it clears the `Shop` and `Food and drink` mappings and takes **both Shop & Dine plans out
+of `load_only`** (2 of the 4). Screenshot-transcribing ~200 MCC codes is not acceptable
+accuracy — save the PDF and read it off disk.
+
+**FX percent — all nine cards, `fx_fee_percent` NULL.** Neo publishes no FX figure on any
+product page; it is presumably in the Disclosure Statement and Fee Schedule (Except Quebec)
+(2026-06-01), which is robots-walled. Same fail-closed posture as Amex consumer FX and every
+BMO card. Not a wall trigger, but it is the second-largest issuer-wide FX hole in the DB.
+
+**Point valuations — PROVISIONAL and UNCONFIRMED, and the deeper dive is owed.**
+RESOLVED-FOR-NOW 2026-08-16 on Mike's ruling: use the two matching figures, mark them
+unconfirmed. United MileagePlus **1.6 CAD** and Asia Miles **1.5 CAD** are live on the
+`realistic` tier; both carrier cards moved `load_only` → `scoreable`; the
+`default_cents_per_point = 0` placeholders are gone. Delta
+`2026-08-16__point_valuations__neo_carrier_provisional.sql`.
+
+**These rows are not rule-compliant and must not be cited as issuer-verified.** Tier 2
+condition 2 needs three independent sources; there are two (Prince of Travel, Milesopedia),
+they report identical figures, neither cites the other, and neither discloses a method or
+says whether its CAD figure is native or converted. Stored honestly: `source_tier` NULL
+(**not** `tier2` — the constraint `pv_tier2_needs_three_sources` enforces the rule at the
+database and would have rejected the claim), `confidence='low'`, `source_count=2`, four
+`point_valuation_sources` evidence rows attached. Only the `realistic` tier exists;
+conservative and aggressive are absent because two identical points give no basis for a
+spread, so users on those tiers fall back to realistic with a warning.
+
+**What the dive needs to produce:** a third genuinely independent CAD-denominated source,
+*or* a worked-redemption band in the Aeroplan style, *or* a governance amendment admitting a
+two-source case. If none lands, revert both cards to `load_only` and expire the rows
+(`valid_to`, never DELETE). Already checked and empty — don't start here: NerdWallet Canada,
+Ratehub, The Points Standard, Rewards Canada, Points Nerd, creditcardgenius, MoneySense,
+Loonie Tree. Already excluded with reasons: Frugal Flyer (FX-derived and self-contradictory)
+and every USD publisher (§2a forbids converting).
+
+**Recurring-bills bonus does not price yet — found on the post-apply probe.** Both Gas &
+Grocery plans carry a `recurring_bills` row (2% on World, 4% on World Elite) with
+`condition_type='mcc_defined'` and no `mcc_includes`, so both fail closed and pay base rate.
+That is correct tier-C behaviour per the 2026-08-14 decision, not a defect — but it means
+the **MCC schedule now unblocks three things, not two**: both Shop & Dine plans *and* both
+recurring-bills rows. Neo's footnote 1 says recurring payments are "earned on the MCC
+categories, which can be found here", pointing at the same PDF. United's grocery and dining
+rows are fine — `mcc_includes` populated and mapped, so they price on the authed merchant
+path (they read as base-rate-only on the stateless web path, which has no merchant; expected).
+United's 1.25x flights row and Cathay's 4x row stay fail-closed by design: the first is a
+Star Alliance airline-MCC enumeration we don't have, the second needs its
+`earn_rate_eligible_merchants` entry.
+
+**Gas/EV shared pool — a real modelling gap, not a Neo quirk.** Neo treats "gas &
+electric vehicle charging" as ONE category with ONE shared monthly limit ($500 on Neo
+Mastercard, $1,000 on World and World Elite). `earn_rates` has no shared-pool column, so
+`gas` and `ev_charging` each carry the full inline cap and a user splitting spend across
+both over-earns in the model. Flagged in-row on all six affected rows. BMO's
+gas/EV rows have the same shape and may have the same latent issue — worth a look.
+
+**Two small ones.** The Amazon half of "Purchases on Amazon and wholesale are not eligible
+for retail shopping cashback" is merchant-level and has no row (the wholesale half is a
+`card_exclusions` row on `wholesale_club`). And the Cathay 4x row is
+`condition_type='merchant_list_only'` with no `earn_rate_eligible_merchants` entry for
+cathaypacific.com/ca yet — same class of gap as #23, and it fails closed until filled.
+
+**Watch item:** Neo publishes separate Quebec disclosures and QC-specific APRs, and Cathay
+is not sold in Quebec at all (already modelled: `availability_scope='regional'`, QC excluded
+from `available_provinces`). The Sunday batch should watch for QC carve-outs on the other eight.
