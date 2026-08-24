@@ -63,4 +63,4 @@ Close the run (`status='complete'`, `finished_at=now()`), and emit, in order:
 
 `recommend-card-v2` has **no classifier fallback**: it reads `merchant_entities.default_category_id` directly. An entity with a NULL category is scored with no category bonus at all — base rates only — every time a user taps it. As of 2026-08-14 that was 113 entities. The old request-path self-heals hid this by fixing rows silently as users wandered past; the whole point of moving it here is that the fix is now reviewed and attributable, not that it stopped happening. A queue nobody drains is strictly worse than the self-heal was.
 
-`public.merchant_graph_guardrail` (check `placed_null_category`) independently lists entities that have place rows but no category. It is the cross-check on this lane: if it stays flat while proposals pile up unapplied, this loop is not running.
+`verify.merchant_graph_guardrail` (check `placed_null_category`) independently lists entities that have place rows but no category. It is the cross-check on this lane: if it stays flat while proposals pile up unapplied, this loop is not running.
