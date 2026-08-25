@@ -1,7 +1,7 @@
 # Build 84 — the run sheet
 
 **Date:** 2026-08-25 · **For:** Mike (the only machine with EAS auth) · **Spec:** `SPEC_build_84_2026-08-25.md`
-**Branch:** `feat/pro-tier-and-statement-import` · **11 commits** `48ae454 … b812781`
+**Branch:** `feat/pro-tier-and-statement-import` · **13 commits** `48ae454 … 7fcc709`
 **State:** all code and database work is DONE and committed. What follows is the part that needs your machine.
 
 ---
@@ -10,7 +10,7 @@
 
 | | |
 |---|---|
-| Branch vs `main` | **72 ahead, 0 behind** — `main` is an ancestor, so merging is a **fast-forward**. No conflicts are possible. |
+| Branch vs `main` | **74 ahead, 0 behind** — `main` is an ancestor, so merging is a **fast-forward**. No conflicts are possible. |
 | Test suite at HEAD | **106 suites · 1285 tests · 0 failures** |
 | `tsc --noEmit` | 0 errors |
 | `eslint src` | **0 errors**, 183 pre-existing warnings |
@@ -179,3 +179,32 @@ can settle:
   revenue, still not a gate on this build, and it gets more expensive every month it runs.
 - Record build IDs, fingerprints, commit and submission IDs in the release record; close the
   Android handoff checklist; put the iOS 15 drop in the release notes.
+
+---
+
+## 8 · Loose ends, closed 2026-08-25
+
+Everything this lane touched is committed. What is deliberately left, and why:
+
+| | |
+|---|---|
+| `card_coach_website/*`, `supabase/config.toml`, `supabase/functions/affiliate-click/`, `PENDING_affiliate_clicks.sql` | **The affiliate lane.** Untouched, uncommitted, exactly as found. |
+| `PIPELINE_AND_DECISIONS.md`, `REVENUE.md` (docs repo) | Other lanes' uncommitted edits. Left as found. |
+| A dozen untracked docs in `cardcoach-docs` | Predate this lane. Only this lane's four files were committed. |
+| `_to_delete/cc_snapshot.tar.gz`, `dev_tmp_ent002_draft.sql`, `git-locks-20260825/` | Scratch this session produced. Already in the junk drawer, matching the existing `git-locks-2026082{1,2,4}` convention. Safe to bin. |
+| `_to_delete/cowork-android-lane/` | Now carries `MERGED_2026-08-25.md`, mapping each of the five patches to the commit it landed as. **Do not re-apply them.** The 105 MB `CardCoach-1.2.0-vc6.aab` was never needed and can go. |
+
+Fixed while tidying, both real:
+
+- **`verify_bill_002_provider_readiness.mjs` was untracked** while `package.json` referenced it — so `pnpm verify:bill-002` worked on one machine and failed everywhere else. Same shape as the `registration.snippet.ts` that a comment referenced and nobody ever merged. Committed (`86b6ecf`).
+- **`RELEASE_1.2.0`'s lineage section and `HANDOFF_pro_lane` §4.5 were left wrong by this work** and are corrected (`7fcc709`) — the first said the Android work existed on one machine, the second did not yet know that `jest.setup.ts` pins `useSafeAreaInsets` to all-zero and thereby deletes the arithmetic it is meant to test.
+
+Verified at HEAD, all five components of `pnpm verify:ui` run individually:
+`eslint src` 0 errors · `tsc --noEmit` 0 errors · i18n parity OK · **106 suites /
+1285 tests / 0 failures** · sheet-layout PASS. Plus `verify:widget-001` PASS and
+`expo config --type prebuild` evaluating at 1.3.0 with 16 plugins.
+
+Production re-checked: 5 allowlisted, **25 active comps across 5 users** expiring
+2026-11-23, signup trigger installed, pro resolves to 5 keys, `billing_paywall`
+and `statement_import_write` false, `receipt_scanner` / `statement_import` /
+`ambient_widget` true, `online_merchant` inactive.
