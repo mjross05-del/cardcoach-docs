@@ -1,120 +1,149 @@
-Take the CardCoach build-84 release lane to the finish. Everything is committed and
-verified; what's left needs a shell with network and my Expo credentials, which a cloud
-session doesn't have. That's you.
+# PROMPT — build 84 execution: verify, merge, version, build both, submit both (code runtime)
 
-## Where things stand
+Authored by the 2026-08-25 Cowork session. You are a Claude Code session on
+Mike's machine. Five jobs: run the one gate that needs a single process,
+fast-forward main, set the Android build number, EAS-build both platforms at
+84, verify the iOS artifact, submit both. Then file a report. Nothing else.
 
-Repo: `~/dev/CardCoachv2` (git root — the mobile app is the `mobile_app_codebase/`
-subdirectory, not its own repo). Branch `feat/pro-tier-and-statement-import`, **77 commits
-ahead of main, 0 behind**, fast-forward clean. Marketing version is already `1.3.0` in
-`app.config.ts`. Target: **build 84 on both platforms** — the whole point of the lane is that
-"build N" means the same number on iOS and Android from here on.
+## State when this prompt was written (verify, don't trust)
 
-Already run and green, so don't redo them piecemeal: eslint 0 errors, `tsc` 0 errors,
-`verify_i18n_parity` PASS, `verify_sheet_layout` PASS, and the full jest suite at
-**107 suites / 1287 tests / 0 failures** (run in shards — `pnpm verify:ui` is step 1 below
-precisely because it hasn't been run as one process).
+- `~/dev/CardCoachv2` — the git root. The mobile app is the
+  `mobile_app_codebase/` **subdirectory**, not its own repo.
+- Branch **`feat/pro-tier-and-statement-import` = 1bd52e4**, on top of
+  c99e42d, on top of ea7d988. **main = 67e7945**, 77 behind, 0 ahead —
+  fast-forward is clean.
+- Working tree dirty with **another lane's** files: `mobile_app_codebase/
+  supabase/config.toml` and three `card_coach_website/site/*`. **Leave them.**
+  Do not commit, stash-drop, or revert them.
+- `app.config.ts` `version: "1.3.0"` — already correct, do not re-bump.
+  `runtimeVersion.policy: "fingerprint"`.
+- Gates re-verified by the Cowork session on this tree tonight: eslint 0
+  errors, `tsc` 0 errors, verify:i18n-parity ✓, verify:sheet-layout ✓, jest
+  **107 suites / 1287 tests / 0 failures** — but jest ran in 6 shards and
+  `verify:ui` has never run as one process. That is Step 1.
+- `~/dev/cardcoach-docs` = 005c0cb. Background: `SPEC_build_84_2026-08-25.md`,
+  `RUNBOOK_build_84_2026-08-25.md`, `WORKING_NOTES.md` #24.
 
-Background if you want it, in `~/dev/cardcoach-docs`: `SPEC_build_84_2026-08-25.md`,
-`RUNBOOK_build_84_2026-08-25.md`, `RUNSHEET_build_84_commands_2026-08-25.md` (the command
-list this prompt is drawn from), and `WORKING_NOTES.md` #24. Read them only if something
-below doesn't match reality — they're context, not instructions.
-
-## Two traps. Both silent. Do not skip past these.
-
-**1. `autoIncrement` will give you 85.** `apps/mobile/eas.json` has `autoIncrement: true` on
-the `production` profile and `cli.appVersionSource: "remote"`. EAS reads the stored remote
-number and **adds one**. So set the remote version to **83**, not 84, and let the build
-increment into 84. Confirm with `build:version:get` before building, and **watch the number
-EAS prints when the build starts — if it says 85, cancel it.** Getting this wrong breaks the
-one property this release exists to establish.
-
-**2. Don't `git checkout main`.** `mobile_app_codebase/supabase/config.toml` and three
-`card_coach_website/site/*` files are modified and uncommitted — they belong to a different
-lane (affiliate-click). One of the 77 commits touches `config.toml`, so the checkout will
-refuse. Move the ref instead; it's the same fast-forward and never touches the working tree.
-**Do not commit, stash-drop, or revert those files** — they aren't mine to touch.
-
-## The sequence
+## Step 0 — git artifacts + preconditions
 
 ```bash
-# 1. The gate that hasn't run as one process
-cd ~/dev/CardCoachv2/mobile_app_codebase
-pnpm verify:ui                      # ~4 min. Must be green before anything else.
+find ~/dev/CardCoachv2/.git -maxdepth 3 \( -name '*.lock' -o -name 'tmp_obj_*' \) -delete
+git -C ~/dev/CardCoachv2 log --oneline -3 feat/pro-tier-and-statement-import  # expect: 1bd52e4, c99e42d, ea7d988
+git -C ~/dev/CardCoachv2 rev-list --left-right --count main...feat/pro-tier-and-statement-import  # expect: 0	77
+```
 
-# 2. Fast-forward main without a checkout
+Any mismatch → STOP and report.
+
+## Step 1 — the gate that has never run as one process
+
+```bash
+cd ~/dev/CardCoachv2/mobile_app_codebase && pnpm verify:ui   # ~4 min, exit 0
+```
+
+Not green → STOP and report.
+
+## Step 2 — fast-forward main WITHOUT a checkout
+
+```bash
 cd ~/dev/CardCoachv2
 git merge-base --is-ancestor main feat/pro-tier-and-statement-import \
   && git branch -f main feat/pro-tier-and-statement-import \
-  && echo "main -> $(git rev-parse --short main)"
-
-# 3. Pin to 83 (see trap 1)
-cd mobile_app_codebase/apps/mobile
-npx eas-cli build:version:set -p ios       # enter 83
-npx eas-cli build:version:set -p android   # enter 83
-npx eas-cli build:version:get -p ios
-npx eas-cli build:version:get -p android   # both must read 83
-
-# 4. Build
-npx eas-cli build -p ios     --profile production
-npx eas-cli build -p android --profile production
-
-# 5. Prove the widget actually shipped — iOS only, and do not skip it
-cd ~/dev/CardCoachv2/mobile_app_codebase
-node scripts/verify_widget_native.mjs <ios-build-id>
-
-# 6. Submit
-cd apps/mobile
-npx eas-cli submit -p ios --latest --profile production        # → App Store Connect 6757937693
-npx eas-cli credentials -p android                              # production → Google Service Account
-npx eas-cli submit -p android --latest --profile production     # → internal track
+  && git rev-parse --short main    # expect: 1bd52e4
 ```
 
-## Why step 5 is not optional
+`git checkout main` will refuse — another lane has `config.toml` dirty and
+one of the 77 commits touches it. The `--is-ancestor` guard makes this
+ff-only; if it refuses, the branch diverged → STOP and report.
 
-Build 82 shipped **without** the widget's native storage module and nothing noticed for a
-week. `@bacons/apple-targets` ships `ExtensionStorageModule`, the only route from JS to
-`UserDefaults(suiteName:)` — and its JS half degrades to stub methods that are literally
-empty functions when the native half is absent. So the app publishes snapshots,
-`writeSnapshot` returns `true`, and the lock screen shows its first-run tile forever.
-Autolinking resolving the module locally proves nothing: it listed the module while the
-shipped binary contained zero occurrences of the string. `verify_widget_native.mjs`
-downloads the IPA and greps the real binary. This build raises the iOS floor 15.5 → 16.4,
-which is the fix for exactly that failure — step 5 is how you confirm it took.
+## Step 3 — build numbers. READ THIS, the two platforms are NOT symmetric.
 
-**If step 5 fails, stop and tell me. Do not submit iOS.**
+`eas.json` has **`autoIncrement: true`** on `production` with
+`appVersionSource: "remote"`. EAS takes the stored remote number and **adds
+one**. So the number you SET is one below the number you GET.
 
-## Authorization and stop conditions
+iOS shipped 82 and orphaned 83; Android shipped versionCode 5 and orphaned 6.
+So iOS is already parked where it needs to be and **Android is not**.
 
-I've approved the builds and both submits for build 84 — you don't need to ask again before
-spending compute or pushing to TestFlight and the internal Play track. Stop and ask me if:
+```bash
+cd ~/dev/CardCoachv2/mobile_app_codebase/apps/mobile
+eas build:version:get -p ios       # expect 83 -> autoIncrement lands on 84. DO NOT SET IT.
+eas build:version:get -p android   # expect 6
+eas build:version:set -p android   # enter 83, so it increments to 84
+eas build:version:get -p android   # expect 83
+```
 
-- `pnpm verify:ui` is not green
-- either build reports a number other than 84
-- `verify_widget_native.mjs` fails
-- the fast-forward guard in step 2 refuses
-- anything wants to modify files outside this lane
+If iOS reads anything other than 83, STOP and report — do not guess.
 
-## One thing I can't answer for you
+**The comment block in `app.config.ts` says `eas build:version:set -p ios
+# -> 84`. That is naming the target, not the value to type.** Typing 84
+ships 85.
 
-The records disagree on the **Play service-account key**.
-`mobile_app_codebase/docs/app-store/RELEASE_android_1.x_HANDOFF.md` has its checklist Steps
-2a–2d all unticked; `cardcoach-docs/WORKING_NOTES.md` says the Google Cloud and Play Console
-side was executed 2026-08-24 (project-scoped policy override, key minted, Play permissions
-granted) with only the EAS upload left. Look for the JSON before assuming either. If it
-exists, step 6's `eas credentials` is all that's needed; if not, you're doing handoff §Step 2
-first, and the Android submit waits.
+## Step 4 — build both at 84
 
-**Whichever it turns out to be, tick the checklist in the handoff.** This lane already lost
-real time to one stale checkbox: #24b claimed Google sign-in provider config was the gating
-Android blocker, five documents repeated it, and it had been done and working the whole time.
-Leave the record true.
+```bash
+cd ~/dev/CardCoachv2/mobile_app_codebase
+eas build --platform ios     --profile production --non-interactive
+eas build --platform android --profile production --non-interactive
+```
 
-Also open, not yours: Alex still needs to accept the Apple Program License Agreement. It
-doesn't block TestFlight; it blocks every App Store submission after it.
+**Watch the build-number line EAS prints at the start of each. Both must say
+84.** Anything else → cancel and report. Record both build IDs and
+fingerprints.
 
-## When you're done
+## Step 5 — prove the widget shipped (iOS only, NOT optional)
 
-Give me the two build IDs, the two submit results, and the `verify_widget_native` output.
-Then update `cardcoach-docs/RUNBOOK_build_84_2026-08-25.md` with what actually shipped —
-build numbers, artifact IDs, and anything that went differently from this prompt.
+```bash
+cd ~/dev/CardCoachv2/mobile_app_codebase
+node scripts/verify_widget_native.mjs <ios-build-id>
+```
+
+Build 82 shipped without `ExtensionStorageModule` and nothing noticed for a
+week: the JS half degrades to empty stub functions, so `writeSnapshot`
+returns true and the lock screen shows its first-run tile forever.
+Autolinking resolving it locally proves nothing — it listed the module while
+the shipped binary had zero occurrences. This script downloads the IPA and
+greps the real binary. This build raises the iOS floor 15.5 → 16.4, which is
+the fix; this is how you confirm it took.
+
+**Fails → STOP. Do not submit iOS.**
+
+## Step 6 — iOS → TestFlight
+
+```bash
+cd ~/dev/CardCoachv2/mobile_app_codebase
+eas submit --platform ios --latest --profile production
+```
+
+ASC App ID 6757937693, team AF887JD7ZG. "What to test": Pro surfaces end to
+end, the Android-parity fixes, widget draws on the lock screen. Do NOT
+promise Apple sign-in on Android — that button is hidden in this build.
+App Store version creation stays with Alex; he has still not accepted the
+Apple Program License Agreement (blocks App Store, not TestFlight).
+
+## Step 7 — Android → Play internal (GATED — do not improvise past the gate)
+
+Records disagree on whether the Play service-account key exists.
+`mobile_app_codebase/docs/app-store/RELEASE_android_1.x_HANDOFF.md` has
+checklist Steps 2a–2d unticked; `cardcoach-docs/WORKING_NOTES.md` says the
+Cloud + Play Console side was executed 2026-08-24 with only the EAS upload
+left. **Look for the JSON before assuming either.**
+
+```bash
+eas credentials -p android    # production -> Google Service Account -> upload
+eas submit --platform android --latest --profile production   # internal track
+```
+
+Key exists → upload it, submit, delete the local JSON copy. Key does not
+exist → report "Android AAB built at 84, waiting on handoff Step 2" and stop
+this step. **Either way, tick the checklist in the handoff.** This lane
+already lost real time to one stale checkbox — #24b claimed Google sign-in
+config was the gating Android blocker, five documents repeated it, and it had
+been done and working the whole time.
+
+## Step 8 — report
+
+Both build IDs + fingerprints + confirmed build numbers, the
+`verify_widget_native` output, TestFlight status, Android gate state. Update
+`cardcoach-docs/RUNBOOK_build_84_2026-08-25.md` with what actually shipped
+and anything that went differently from this prompt. Post the report back to
+Mike.
