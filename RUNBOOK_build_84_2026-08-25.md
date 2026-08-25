@@ -42,16 +42,17 @@ the floating pin is still there.
 
 ---
 
-## 2 · Console work — no rebuild, and A2 gates the tester round
+## 2 · Console work — no rebuild
 
-These are the only things standing between build 84 and a tester opening it. **A2 in particular
-must land before any Android tester touches the build**: Google is the *first* button on Android's
-auth screen and it throws today.
+**Updated 2026-08-25.** A2 and A3 are both closed, and A2 turned out never to have been open —
+Google sign-in was already fully configured and a live authorize round trip minted a session.
+Nothing about auth gates the tester round any more. What is left below is **A11 and D6**.
 
 | | What | Where |
 |---|---|---|
-| **A2** | Google sign-in provider. OAuth **web** client in `cardcoach-auth` (web, not Android — Supabase brokers the flow), consent screen published to production, redirect URI `https://hrzpznlpmxxrbtwskacu.supabase.co/auth/v1/callback`, then client ID + secret into Supabase → Auth → Providers → Google. | GCP Console + Supabase |
-| **A3** | Apple-on-Android. Android's Apple button routes to **web** OAuth, which needs a Services ID + secret — a different configuration from iOS's native path. Check Supabase → Auth → Providers → Apple: if only a bundle-id client is listed, either configure it or tell me and I will hide the button and wire `screens.auth.choice.appleUnavailable`, which already exists in both catalogues and is connected to nothing. | Supabase |
+| ~~**A2**~~ | ✅ **DONE — was already done.** Consent screen In production/External; Supabase Google provider enabled, ID `638080256275-j8qme1ga1b6…` + secret populated; `cardcoach://auth/callback` allowlisted; live `/auth/v1/authorize?provider=google` completed and minted a session (which also proves the redirect URI is registered). **Nothing for you to do.** | — |
+| ~~**A3**~~ | ✅ **DONE — checked, and it was the bad case, so I hid it.** Apple *Client IDs* holds only `com.cardcoach.mobile` (a bundle ID). Correct for iOS's native path, useless for the web flow Android takes — the button was a guaranteed `invalid_client`. `renderAppleButton()` now returns `null` off iOS and Android shows `appleUnavailable`, rewritten to *"Sign in with Apple works on iPhone and iPad only. On Android, use Google or your email address."* Test added. **Nothing for you to do** unless you want Apple-on-Android back, which needs a Services ID — handoff §Step 1b. | — |
+| **A12** | *Optional, cosmetic.* Supabase → Auth → URL Configuration → **Site URL** is still `http://localhost:3000`. Not a blocker (email confirmation is off; password reset passes its own `redirectTo`), but it is `{{ .SiteURL }}` in the email templates. Change it when cardcoach.ca deploys. | Supabase |
 | **A11** | Play key onto EAS. Then delete the local JSON. | `eas credentials -p android` → production → Google Service Account |
 | **D6** | Alex accepts the Apple Program License Agreement. Does not block TestFlight; blocks every App Store submission after it. | developer.apple.com → Agreements |
 
