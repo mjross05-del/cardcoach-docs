@@ -209,3 +209,99 @@ Production re-checked: 5 allowlisted, **25 active comps across 5 users** expirin
 2026-11-23, signup trigger installed, pro resolves to 5 keys, `billing_paywall`
 and `statement_import_write` false, `receipt_scanner` / `statement_import` /
 `ambient_widget` true, `online_merchant` inactive.
+
+---
+
+## 9 · What actually shipped — execution record, 2026-08-25
+
+Executed by a Claude Code session on Mike's machine against `~/dev/CardCoachv2`. **Both
+platforms are built at 84 and submitted.**
+
+### The artifacts
+
+| | iOS | Android |
+|---|---|---|
+| EAS Build ID | `e1785be9-ce0d-4d60-8752-601411b5ce90` | `5a97eef4-0c67-4876-ae19-d101be343164` |
+| Build number | **84** | **84** (versionCode) |
+| Marketing version | 1.3.0 | 1.3.0 |
+| Fingerprint (= Runtime Version) | `05ca321829ca70d5ab53b3651a5d2c6a72337b45` | `c5e5c012e7299776adcd64c6b05fe62a8eeb9c4b` |
+| Commit | `1339030c8d0be54759139f5bd846210cfd772080` | `1339030c8d0be54759139f5bd846210cfd772080` |
+| Submission ID | `bd031282-51ea-412f-b70d-9163603d3df5` | `df23dbf4-3710-4eb7-8d41-987f7bccf160` |
+| Destination | TestFlight (Apple processing) | Play **internal**, `Release Status: completed` |
+| Artifact | [.ipa](https://expo.dev/artifacts/eas/sWrBXBvSRctRooWn58v3o_0uNPl_y9B9eVL4HUwl-OA.ipa) | [.aab](https://expo.dev/artifacts/eas/ADj8o84P6OyTi90NEUwrQoqgpZnQWIN06pd24cUJzXk.aab) |
+
+Both from the **same commit** — invariant #8 honoured. The two fingerprints differ from each
+other, which is correct: the policy is `fingerprint`, computed per platform.
+
+### §4 gate — the reason this build exists — PASSED
+
+```
+[WIDGET-NATIVE] checking build e1785be9-ce0d-4d60-8752-601411b5ce90
+  ✓ ExtensionStorage present in the app binary (4 occurrences)
+  ✓ the app is provisioned for group.com.cardcoach.mobile
+  ✓ the widget extension is provisioned for group.com.cardcoach.mobile
+[WIDGET-NATIVE] PASSED — this build can actually write to the widget's App Group.
+```
+
+**4 occurrences against build 82's zero.** The 15.5 → 16.4 deployment-target raise did what
+it was for: the pod is no longer filtered out of autolinking and the widget's only route to
+`UserDefaults(suiteName:)` is in the shipped binary.
+
+---
+
+## 10 · What went differently from the prompt
+
+**1. `verify:ui` is flaky as a single process — 3 pass / 2 fail over 5 runs.** It is green
+(twice consecutively on the final tree), but it is not *reliably* green, and that is the real
+answer to "it has never run as one process". Neither failure is a product bug; both are
+wall-clock assertions that lose a race when the machine is loaded, and neither reproduces in
+isolation:
+
+- `src/lib/__tests__/resilience.test.ts` › *transitions to half-open after reset timeout*.
+  `CircuitBreaker.getState()` derives state lazily from `Date.now() - lastFailureTime >=
+  resetTimeoutMs`. The test set `resetTimeoutMs: 100`, called `onFailure()`, then asserted
+  `"open"` **on real timers**, installing fake timers only on the next line. Any pause >100 ms
+  between those two adjacent statements — a V8 GC under a loaded 107-suite run — flips it to
+  `"half-open"` early. Passed 3/3 in isolation, 8/8 standalone.
+  **Fixed during this run** by moving `jest.useFakeTimers()` above the breaker construction,
+  exactly matching the sibling test below it, which is not flaky for that reason. Uncommitted.
+- `src/__tests__/MyCardsScreen.test.tsx:278` › *adds every selected card with a null last4*.
+  A `waitFor` timeout. Its own source comment at line 276 already says it "is enough in
+  isolation but not always when jest runs suites in parallel workers, which made this the one
+  intermittently red test in a full run." Still true. **Not fixed** — left for a decision.
+
+Both `verify:ui` failures landed in the jest step that runs immediately **after** the heavy
+eslint step, while standalone `npx jest` went 8/8 green — consistent with memory pressure
+from lint rather than anything in the tests' own logic.
+
+**2. `scripts/verify_widget_native.mjs` was broken and could not run.** It shelled out to
+`eas-cli build:view <id> --json --non-interactive`, but `--non-interactive` is not a flag on
+`build:view` in eas-cli 22.4.0 (which is also what `eas-cli@latest` resolves to today) — it
+exits `Nonexistent flag: --non-interactive`. So the §4 gate would have hard-failed for anyone
+who ran it, on any build, for reasons having nothing to do with the widget. Dropping the flag
+is sufficient; `--json` alone puts pure JSON on stdout. **Fixed and the gate then passed.**
+Uncommitted. A gate nobody can run is worth as little as a gate nobody runs.
+
+**3. The Android gate was not a gate.** Step 7 said records disagreed on whether the Play
+service-account key exists. It exists at `~/secrets/cardcoach-play-service-account.json` —
+**and it was already uploaded to EAS credentials**, 2026-08-24, Private Key ID
+`cd256d1030a34947e5e9277c935724d65ea5d55c`, matching the local file. So handoff Step 2d was
+done as well as 2a–2c; nothing needed uploading. Both records undersold reality. Handoff doc
+corrected with the evidence.
+
+**4. `--what-to-test` cannot be set from the CLI on this plan.** The first iOS submit failed
+with *"Changes cannot be sent for review automatically... Changelog submission is currently
+available for Enterprise plan only."* Resubmitted without it and it succeeded. **The "What to
+test" text still needs typing into the TestFlight UI by hand.**
+
+**5. The prompt's paths were slightly off.** `eas.json` lives in `apps/mobile`, not
+`mobile_app_codebase`, so Steps 3/4 must run from `apps/mobile`. `build:version:set` is
+interactive-only with no `--version` flag; it was driven through a pty and **both values
+re-read as 84 before either build started**.
+
+**6. Left undone, deliberately** — see the build 84 report:
+- `main` is fast-forwarded **locally only**: `1339030`, **80 commits ahead of `origin/main`,
+  unpushed**. Pushing was not asked for.
+- The local service-account JSON was **not deleted**. It is redundant (the key is on EAS) and
+  removing it is a one-line `rm` left for Mike.
+- The Android first-submit failure mode never fired: `changesNotSentForReview` stayed `false`.
