@@ -53,6 +53,13 @@ Step 2): no `~/secrets/...json`, no `serviceAccountKeyPath` in `eas.json`.
 #24b (Google OAuth provider config) also remains open before any Android
 tester touches a build.
 
+> **Correction appended 2026-08-25.** The sentence above was wrong, and stayed
+> wrong across five documents. #24b was already configured — consent screen In
+> production, Supabase Google provider enabled with ID and secret, and a live
+> authorize round trip that minted a session. It never blocked a tester. Left in
+> the body because this is a dated record of what was believed on 2026-08-16;
+> see WORKING_NOTES #24b for the verified position.
+
 ## Post-release events (same evening — part of this record)
 
 1. **False alarm: "retheme not applied."** Mike's first TestFlight launch
