@@ -1,22 +1,26 @@
 # PROMPT — build 84 execution: verify, merge, version, build both, submit both (code runtime)
 
 Authored by the 2026-08-25 Cowork session. You are a Claude Code session on
-Mike's machine. Five jobs: run the one gate that needs a single process,
-fast-forward main, set the Android build number, EAS-build both platforms at
-84, verify the iOS artifact, submit both. Then file a report. Nothing else.
+Mike's machine. Six jobs: run the one gate that needs a single process,
+fast-forward main, set both build numbers to 84, EAS-build both platforms,
+verify the iOS artifact, submit both. Then file a report. Nothing else.
 
 ## State when this prompt was written (verify, don't trust)
 
 - `~/dev/CardCoachv2` — the git root. The mobile app is the
   `mobile_app_codebase/` **subdirectory**, not its own repo.
-- Branch **`feat/pro-tier-and-statement-import` = 1bd52e4**, on top of
-  c99e42d, on top of ea7d988. **main = 67e7945**, 77 behind, 0 ahead —
+- Branch **`feat/pro-tier-and-statement-import` = 1339030**, on top of
+  1bd52e4, on top of c99e42d. **main = 67e7945**, 78 behind, 0 ahead —
   fast-forward is clean.
 - Working tree dirty with **another lane's** files: `mobile_app_codebase/
   supabase/config.toml` and three `card_coach_website/site/*`. **Leave them.**
   Do not commit, stash-drop, or revert them.
 - `app.config.ts` `version: "1.3.0"` — already correct, do not re-bump.
   `runtimeVersion.policy: "fingerprint"`.
+- **`autoIncrement` is gone** from `eas.json`'s production profile (1339030).
+  Build numbers are now set explicitly, once per train. Any doc telling you
+  not to hand-set the Android versionCode predates this — `RELEASE_1.0.3_
+  RUNBOOK.md` is one, and it is a dated record, not current guidance.
 - Gates re-verified by the Cowork session on this tree tonight: eslint 0
   errors, `tsc` 0 errors, verify:i18n-parity ✓, verify:sheet-layout ✓, jest
   **107 suites / 1287 tests / 0 failures** — but jest ran in 6 shards and
@@ -28,8 +32,8 @@ fast-forward main, set the Android build number, EAS-build both platforms at
 
 ```bash
 find ~/dev/CardCoachv2/.git -maxdepth 3 \( -name '*.lock' -o -name 'tmp_obj_*' \) -delete
-git -C ~/dev/CardCoachv2 log --oneline -3 feat/pro-tier-and-statement-import  # expect: 1bd52e4, c99e42d, ea7d988
-git -C ~/dev/CardCoachv2 rev-list --left-right --count main...feat/pro-tier-and-statement-import  # expect: 0	77
+git -C ~/dev/CardCoachv2 log --oneline -3 feat/pro-tier-and-statement-import  # expect: 1339030, 1bd52e4, c99e42d
+git -C ~/dev/CardCoachv2 rev-list --left-right --count main...feat/pro-tier-and-statement-import  # expect: 0	78
 ```
 
 Any mismatch → STOP and report.
@@ -48,35 +52,31 @@ Not green → STOP and report.
 cd ~/dev/CardCoachv2
 git merge-base --is-ancestor main feat/pro-tier-and-statement-import \
   && git branch -f main feat/pro-tier-and-statement-import \
-  && git rev-parse --short main    # expect: 1bd52e4
+  && git rev-parse --short main    # expect: 1339030
 ```
 
 `git checkout main` will refuse — another lane has `config.toml` dirty and
-one of the 77 commits touches it. The `--is-ancestor` guard makes this
+one of the 78 commits touches it. The `--is-ancestor` guard makes this
 ff-only; if it refuses, the branch diverged → STOP and report.
 
-## Step 3 — build numbers. READ THIS, the two platforms are NOT symmetric.
+## Step 3 — set both to 84
 
-`eas.json` has **`autoIncrement: true`** on `production` with
-`appVersionSource: "remote"`. EAS takes the stored remote number and **adds
-one**. So the number you SET is one below the number you GET.
-
-iOS shipped 82 and orphaned 83; Android shipped versionCode 5 and orphaned 6.
-So iOS is already parked where it needs to be and **Android is not**.
+`autoIncrement` was removed from `eas.json`'s production profile in 1339030,
+so the number you set is the number that ships. No arithmetic, nothing to
+watch for.
 
 ```bash
 cd ~/dev/CardCoachv2/mobile_app_codebase/apps/mobile
-eas build:version:get -p ios       # expect 83 -> autoIncrement lands on 84. DO NOT SET IT.
-eas build:version:get -p android   # expect 6
-eas build:version:set -p android   # enter 83, so it increments to 84
-eas build:version:get -p android   # expect 83
+eas build:version:set -p ios       # enter 84
+eas build:version:set -p android   # enter 84
+eas build:version:get -p ios       # expect 84
+eas build:version:get -p android   # expect 84
 ```
 
-If iOS reads anything other than 83, STOP and report — do not guess.
-
-**The comment block in `app.config.ts` says `eas build:version:set -p ios
-# -> 84`. That is naming the target, not the value to type.** Typing 84
-ships 85.
+Both must read 84 before you build. (For context if something looks off:
+iOS was at 83 and Android at versionCode 6 — autoIncrement had been moving
+each platform only on its own builds, which is exactly how they drifted that
+far apart. That is why it is gone.)
 
 ## Step 4 — build both at 84
 
@@ -86,9 +86,8 @@ eas build --platform ios     --profile production --non-interactive
 eas build --platform android --profile production --non-interactive
 ```
 
-**Watch the build-number line EAS prints at the start of each. Both must say
-84.** Anything else → cancel and report. Record both build IDs and
-fingerprints.
+**Confirm the build-number line EAS prints at the start of each says 84.**
+Anything else → cancel and report. Record both build IDs and fingerprints.
 
 ## Step 5 — prove the widget shipped (iOS only, NOT optional)
 
