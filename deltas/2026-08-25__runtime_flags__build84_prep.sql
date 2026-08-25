@@ -1,0 +1,52 @@
+-- Delta · runtime_flags · build-84 preparation
+-- APPLIED 2026-08-25 to production (hrzpznlpmxxrbtwskacu), Mike's in-session
+-- approval (asks 3 and 4 of SPEC_build_84_2026-08-25.md answered directly).
+--
+-- Two flags off. Neither changes anything an entitled user can do; both stop
+-- the app making a promise it cannot keep.
+--
+-- 1. statement_import_write -> false
+--    ASK 3. Mike: "is this not needed for the statement reader feature? if
+--    confident no, then turn it off." Confirmed no, from source:
+--    FLAG_STATEMENT_IMPORT_WRITE appears in apps/mobile/src/ at exactly three
+--    lines - keys.ts:70 (the constant), :135 (a comment), :171 (membership in
+--    ALL_FLAG_KEYS so the context fetches it). There is NO call site, and
+--    nothing in the app calls import-spend-v1 at all. keys.ts:133-138 says so
+--    itself: the write flag "does not gate access to the feature, it gates one
+--    side effect inside it".
+--    The reader - pick file, parse on device, resolve-descriptors-v1,
+--    analyze-spend-v1, result screen, "categorize the rest" picker - runs
+--    entirely on statement_import, which stays TRUE.
+--    Off is also the safe direction. The flag's own note warns that ON makes
+--    imported rows visible to maintain_user_spend_snapshots, which would move a
+--    user's cap position and earned-value totals retroactively with no purchase
+--    having happened. Flip back only when the save affordance exists and the
+--    backfill semantics are decided.
+--
+-- 2. billing_paywall -> false
+--    ASK 4. The paywall was live while the app could not take a dollar: no
+--    RevenueCat project, no store products, and neither CARDCOACH_REVENUECAT_IOS_KEY
+--    nor its Android twin in ANY EAS environment. All 80 accounts saw an Upgrade
+--    CTA leading to "Not on sale just yet".
+--    Off means showUpsell is false everywhere (useFeatureGate.ts:89), so
+--    ProLockCard and the Settings Upgrade row render nothing.
+--    It does NOT affect entitled users: useFeatureGate.available never consults
+--    billing_paywall, so comped testers keep full Pro. Flip back on when
+--    RevenueCat offerings are live in production (RUNBOOK_pro_go_live step 10).
+--
+-- Read-path impact: no schema change, no function change, no edge-function
+-- redeploy. Both flags are read by the client's batched runtime_flags select
+-- and by isRuntimeFlagEnabled server-side; both fail closed, so the new value
+-- is the same shape the code already handles.
+--
+-- Rollback (either or both):
+--   UPDATE public.runtime_flags SET enabled = true, updated_at = now()
+--    WHERE key IN ('statement_import_write','billing_paywall');
+
+UPDATE public.runtime_flags
+   SET enabled = false, updated_at = now()
+ WHERE key IN ('statement_import_write', 'billing_paywall');
+
+-- Verification (expect both false):
+--   SELECT key, enabled, updated_at FROM public.runtime_flags
+--    WHERE key IN ('statement_import_write','billing_paywall');
