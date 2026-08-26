@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-08-16 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-08-25 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -28,6 +28,9 @@ Last updated: 2026-08-16 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#17** Waitlist endpoint (site v2 funnel) — OPEN (Mike, ~5 min; scaffold shipped 2026-07-05, see section below)
 - **#18** Email routing on cardcoach.ca — not started (Mike, ~10 min; gates the domain-flip push)
 - **#19** Site git wiring / deploy-channel cutover — wiring DONE 2026-07-05; G3 domain move pending (was a duplicate #16, renumbered 2026-07-08)
+- **#29** Per-source staleness cadence has no home in verify — OPEN, design question (found 2026-08-25, from the Stage 2 retirement)
+- **#30** Source URLs in `verify.issuer_notes.doc_locations` drift silently; superseded PDFs still return 200 — Tangerine corrected + RUNBOOK v1.4 + all 37 URLs swept 2026-08-25 (RBC hub dead); drift *detection* still open
+- **#31** Robots-disallowed sources of truth (Tangerine WE FX + all Neo legal docs) — OPEN, needs one cross-issuer ruling from Mike
 - **#20** Web app v1 (free recommendation surface) — approved 2026-07-13 (D1); P1 pending keys
 - **#21** www.cardcoach.ca dead-ends — needs www→apex redirect
 - **#23** merchant_list_only eligible lists — BACKFILLED PASS 1 + CHAIN BINDING FIX, 2026-08-02 (second live find: Google location-suffixed names minted orphan entities; 3 places re-pointed by delta, durable fix MERGED b13595f + migration applied to cloud (48 chains) + resolve-place v13 DEPLOYED with live 200s 2026-08-02; LAST STEP: `npx supabase functions deploy recommend-here-v2` on Mike's machine — 287KB closure exceeds the MCP deploy channel) (108 pairs / 21 of 31 rows; delta `deltas/2026-08-02__earn_rate_eligible_merchants__backfill_p1.sql`). Was EMPTY in production — every list-gated earn row failed closed everywhere; found via Mike's live Superstore test. Remaining: 10 rows deliberately fail-closed (network/classifier-defined); PC list is officially NON-EXHAUSTIVE (Provigo/YIG/Dominion/T&T unnamed in any official text — Sunday batch watches for an official enumeration); local seed.sql parity not done; Sunday/Sunday+Monday batches now maintain these lists via gated proposals.
@@ -351,6 +354,20 @@ Why nothing else moved: on snapshot-less surfaces (stateless-v1 always sends no 
 - **Adjacent:** PC Financial Mastercard (standard) grocery row is `merchant_list_only` at 10 pts/$ == its base — a no-op as modeled; re-verify the real Loblaw-banner rate. Also: Android carousel showed 2 cards for a 3-card wallet (2026-08-16 09:04, mike@card.coach) — recheck on the current wallet; if it repeats, ticket as client/API drop.
 - **Client side (landed 2026-08-16):** the app now renders `conditionalNotApplied` ("bonus not counted — couldn't verify it applies at this store") in the Why This Card receipt, so suppression is visible instead of reading as "no bonus". recommend-here-v2 does NOT emit the field yet — porting the disclosure to it is the natural Slice 2.
 - **Owner:** verify/apply loop (rule 9 discipline) for the backfill; Mike for the policy call.
+- **Related, issuer-evidenced (found 2026-08-25):** both Tangerine Money-Back cards carry
+  `hotels_motels` `mcc_includes = {7011}`, but the issuer's own program terms §7 read
+  "Hotels-Motels … (MCC 7011, 3500-3828)" — the hotel-brand block is unmodelled. These rows are
+  **not** among the 52 above (they are non-empty, and both cards are `load_only`, so nothing is
+  live-suppressed today). **Deliberately not written**, because the fix is a modelling decision,
+  not a data entry: no `earn_rates` row anywhere uses the 3500-3828 block, and the codebase's
+  convention for brand-code blocks is representative codes rather than enumeration — `travel`
+  maps MCC 3000 "Airlines" as the head of the 3000-3299 block plus 3009 "Air Canada"
+  specifically, not 300 enumerated rows. Enumerating 329 integers here would be the first of its
+  kind. It also would not price: `hotels_motels` is one of this item's unmapped categories, so
+  the assumption side has no MCCs to intersect regardless. **Decide with the rest of this item** —
+  whether brand blocks get a range representation, a head-code convention, or the fail-open
+  policy alternative above. Source: `2_Money-Back_Rewards_Program_Terms_and_Conditions_FINAL.pdf`
+  §7, the corrected `mb_rewards_terms` doc_location (#30).
 
 *Add new open items above this line. Close = delete. Settled = move to the decisions log.*
 
@@ -498,3 +515,111 @@ cathaypacific.com/ca yet — same class of gap as #23, and it fails closed until
 **Watch item:** Neo publishes separate Quebec disclosures and QC-specific APRs, and Cathay
 is not sold in Quebec at all (already modelled: `availability_scope='regional'`, QC excluded
 from `available_provinces`). The Sunday batch should watch for QC carve-outs on the other eight.
+
+
+## #29 — Per-source staleness cadence has no home in the verify engine (found 2026-08-25)
+
+- **Status:** OPEN, design question. Surfaced while retiring the Stage 2 registry.
+- **Context:** the retired registry CSV carried a `fetch_cadence` column — `monthly` for
+  product pages, `quarterly` for Tier-1 PDFs — encoding that different source types go stale
+  at different rates. The verify engine rotates **per issuer**, weekly, and checks whatever
+  that issuer's cards need. Nothing carries the per-source-type tolerance forward.
+  `verify.v_card_freshness` is per card; `verify.fact_checks` is per fact. Neither says "this
+  fact's source is a quarterly-revised PDF, so a 5-week-old read is fine" or "this one came
+  off a product page that changes monthly."
+- **Why it matters:** the per-fact freshness model is what makes the "issuer-verified" claim
+  durable. Right now every fact inherits its issuer's rotation slot regardless of how volatile
+  its source actually is. That is probably fine today at weekly rotation — it is over-checking
+  the PDFs rather than under-checking the pages — but it means we cannot answer "when does
+  this fact expire?" except by issuer.
+- **Sharpened by #30:** cadence assumes you are re-reading the *right* document. The Tangerine
+  case showed a recorded source URL drifting to a superseded revision while still returning
+  200 — a staleness mode no cadence policy detects, because the fetch succeeds every time.
+- **Next action:** Mike to decide whether per-source cadence earns a column (e.g. an expected
+  revision interval on the evidence or fact-check row) or whether per-issuer weekly rotation
+  is simply sufficient and the concept dies with the registry. Not a blocker either way.
+
+## #30 — Recorded source URLs drift silently; a 200 is not a currency check (found 2026-08-25)
+
+- **Status:** Tangerine corrected; **the general question is open**.
+- **What happened:** a proposal to patch the retired registry's Tangerine rows prompted a
+  check of the underlying documents. Three of `verify.issuer_notes.doc_locations`' Tangerine
+  entries pointed at superseded PDF revisions — the Money-Back program terms were the
+  **September 2024** revision, predating the 2025-10-25 amendment that added the Foreign
+  Currency Spend, Fitness and Sports Clubs and E-Games categories. All the superseded URLs
+  return **200**. Tangerine leaves old revisions served indefinitely; only its
+  cardholder-agreement index distinguishes current from stale.
+- **Blast radius this time: none.** `earn_rates` for both Money-Back cards already carried the
+  post-amendment categories and cite the correct source document. The recorded *location* had
+  drifted, not the facts. But the next Tangerine run would have reconciled Money-Back facts
+  against year-old terms, and a false "changed" on three categories was one run away.
+- **The general risk:** `doc_locations` is written by runs and read by runs. Nothing validates
+  that a stored URL is still the one the issuer currently links, and the usual failure signal —
+  a 404 — never fires. Both the registry and `doc_locations` arrived at their wrong URLs the
+  same way: resolving a document by filename pattern instead of re-reading the issuer's index.
+  The RUNBOOK already says to treat hints as accelerants and navigate fresh if one 404s; the
+  gap is that it has no instruction for a hint that resolves but is the wrong vintage.
+- **(a) DONE 2026-08-25 — RUNBOOK v1.4.** Three amendments to `RUNBOOK_verify_batch.md`:
+  §3.2 a hint that resolves is not thereby current, confirm against the issuer's index before
+  citing a stored PDF, never resolve a document by editing a filename pattern; §3.6 evaluate
+  robots.txt against the **final** URL after redirects; §9.1 re-validate every cited
+  `doc_locations` entry at close, mark dead ones `DEAD <date>` rather than deleting.
+- **Sweep DONE 2026-08-25** — all 37 URLs in `doc_locations` across 7 issuers that record any,
+  robots-respecting, 1.5 s per-host spacing. Results:
+  - **RBC `documentation_hub` is DEAD (404)** — `/credit-cards/documentation.html`, and
+    `/credit-cards/agreements-and-documents.html` 404s too. The `/credit-cards/documentation/pdf/`
+    prefix under it still serves files, so only the index page is gone. Marked `DEAD 2026-08-25`
+    in `doc_locations` with instructions to navigate fresh from `/credit-cards/` (200). **Not
+    replaced by guesswork** — the next RBC run finds the real hub.
+  - **No other dead links.** The remaining 36 resolve.
+  - **Aged documents, currency unconfirmed** (old is not automatically wrong — flagged for a
+    run to check against each issuer's index): Canadian Tire `we_summary_2022_linked_live`
+    (PDF created 2022-06-27, the key name already admits it), NationalBank `rewards_plan_rules`
+    (2025-02-18) and `fx_information_box_pdf` (source file is `..._FR_v2.indd`, an **FR**
+    artifact recorded as the EN FX box — worth a look), RBC `petro_terms_personal` (2025-01-08).
+  - **Neo Financial's documents cannot be currency-checked within crawl policy.** Every
+    `legal.neo.cc/*` link 302s to `static.production.neofinancial.com`, whose robots.txt is
+    `Disallow: /`. The recorded note said exactly this and was right. Structurally the same
+    problem as the Tangerine FX widget: the only public copy of the document sits behind a
+    disallowed path. Neo's cardholder agreement and rewards policy are both dated June 2025
+    while its disclosure/fee schedule is 2026-06-01, so there *may* be newer versions — and we
+    have no compliant way to tell. **Same ruling needed as #31.**
+  - **Sweep integrity note.** The first pass of the checker had a control-flow bug: it tested
+    the redirect destination against robots.txt only for non-PDF bodies, so the five Neo PDFs
+    were fetched before the check ran. Content was discarded unused and the script fixed; the
+    §3.6 RUNBOOK amendment above generalises the lesson. Recorded because a sweep that policed
+    crawl policy while breaking it should not pass silently.
+- **(b) still open:** whether to record a revision date or sha256 alongside each stored URL so
+  drift is *detectable* rather than found by hand. The sweep is a manual substitute for this and
+  does not scale to weekly. Mike's call.
+
+## #31 — Robots-disallowed sources of truth: one ruling needed, not one per issuer (2026-08-25)
+
+- **Status:** OPEN. **Mike's call — a crawl-policy/compliance decision, not a data one.**
+- **The pattern:** for some facts the only public issuer-controlled statement sits behind a
+  robots.txt-disallowed path. The engine fails closed, correctly, and then re-derives the same
+  dead end every run. Two live instances, found independently:
+  - **Tangerine World Elite `fx_fee_percent`** — 4 consecutive fail-closed runs. The `wec_fee`
+    widget states "Foreign currency conversion 2.50%", but its only URL 302s into
+    `/en/static`, which robots.txt disallows. **Document search is now exhausted** (2026-08-25):
+    six issuer PDFs checked including the April 2026 cardholder agreement; none states a rate,
+    and both agreements defer to an unpublished account-specific Disclosure Statement. There is
+    no better document to find.
+  - **Neo Financial, every legal document** — `legal.neo.cc/*` 302s to
+    `static.production.neofinancial.com`, robots.txt `Disallow: /`. Cardholder agreement,
+    disclosure and fee schedules, rewards policy, MCC schedule. We cannot confirm any of them
+    is current within policy (see #30).
+- **Why one ruling:** these were logged as separate issuer quirks, and the Tangerine one reads
+  as a Tangerine problem. It isn't. Any issuer that serves legal PDFs off a disallowed CDN
+  produces it, and the answer should not vary by who we happened to hit first.
+- **The question:** when the *requested* path is robots-allowed but the redirect target is not
+  (or the document host blanket-disallows), is the artifact usable as issuer evidence?
+  - **(a) Usable** — robots governs crawling, and a single fetch of a linked legal document a
+    customer is expected to read is not crawling. Closes Tangerine WE FX at 2.50 immediately and
+    unblocks Neo currency checks.
+  - **(b) Not usable** — current stance. Then both close only by founder manual capture, and
+    that needs to be a scheduled lane with an owner, not an escalation note that recurs weekly.
+- **Either way:** stop spending run budget re-deriving it. Both are now recorded in
+  `verify.issuer_notes.quirks` as settled dead ends with the search that was done.
+- **Next action:** Mike rules (a) or (b). If (b), decide who owns the manual-capture lane and
+  how often it runs.
