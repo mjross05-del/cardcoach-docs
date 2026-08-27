@@ -5,8 +5,16 @@ consolidates both Phase 4 PDFs — the full spreadsheet dump and its executive s
 into one reference. It supersedes any earlier affiliate-only framing.
 
 Built: May 2026 · Currency: CAD throughout · Horizon: 24-month projection (M1 = July 2026)
-Last updated: 2026-07-31 (pointer + lanes corrections authored 2026-07-16, landed 2026-07-31)
+Last updated: 2026-08-16 (paid-tier correction; pointer + lanes corrections authored 2026-07-16, landed 2026-07-31)
 Last consolidated: 2026-07-16
+
+> **CORRECTION (Mike, 2026-08-16) — plan vs. shipped reality.** The thesis line above
+> ("free web + paid iOS") describes the *modelled* architecture, not the app that shipped.
+> **The iOS app is live and free.** No subscription, no purchase flow, no entitlement
+> storage exists in the product today — `profiles` carries id/email/display_name/created_at
+> and nothing else, and no IAP library is installed. Everything below the "three numbers"
+> remains a projection from the Phase 4 v2 model; none of it has been realised as revenue.
+> Read every subscription figure in this file as forecast, not run-rate.
 
 > **Note on the old model.** Earlier project notes framed revenue as affiliate-only with a
 > "$100k ARR / ~30 conversions a week" target. That framing is **stale** — this v2 model is
@@ -144,6 +152,24 @@ is $40–90 — confirm during onboarding).
 
 - **Welcome bonus impact** — pipeline not built.
 - **Pro tier** — out of scope. Current pricing IS the iOS monetization. (Note: this is consistent with treating any "Pro tier" marketing as premature — see live-site compliance, `WORKING_NOTES.md` #13.)
+
+  **REOPENED (Mike, 2026-08-16).** A paid tier is now in scope and is being built. Its first
+  feature is the receipt scanner (specs `API-017_receipt_parse.md`, `APP-021_receipt_capture.md`,
+  gated by `ENT-001_entitlements.md`), built complete and shipped inert behind a runtime flag
+  and a per-user entitlement. Consequences to hold in mind:
+  - **The model below does not include it.** No pricing, take-rate, conversion or churn
+    assumption for a paid tier exists in `CardCoach_Phase4_Revenue_Model_v2.xlsx`. Any
+    revenue attributed to it would be invented, which rule 7 forbids. The model needs a
+    deliberate amendment before a paid-tier number is quoted anywhere.
+  - **The app being free today changes the funnel this model assumes.** The 24-month
+    projection prices iOS as paid from M1; it has been free instead. Treat the subscription
+    line as unstarted rather than tracking-to-plan.
+  - **`WORKING_NOTES.md` #13 should be revisited, not closed.** The live site marketing a
+    deferred Pro tier becomes *less* premature once a tier is real — but "real" means
+    purchasable, and there is no purchase flow yet. The compliance item stands until there is.
+  - **Naming is deliberately open.** The build gates on a named entitlement key
+    (`receipt_scanner`), never a "Pro" boolean, so tier name, price and contents can be
+    decided without touching feature code.
 - **Customer acquisition cost** — no paid acquisition modeled; burn is operational only. Any paid acquisition flips the math.
 - **Refunds / chargebacks / App Store deflections** — apply a 5–10% haircut for a more cautious bottom line.
 - **Android** — assumed same pricing/dynamics; not modeled separately (same 15% under Google Play's small-business program).
@@ -170,3 +196,15 @@ live there; these are specific to making the model real.
 `CardCoach_Phase4_Revenue_Model_v2.xlsx` in `01_CORE/data/`. If revenue
 strategy shifts materially, log the decision in `PIPELINE_AND_DECISIONS.md` and update this
 file.*
+
+---
+
+## Tie-ordering independence note (recorded 2026-08-16, per API-016 spec downstream item)
+
+When two or more cards tie on value (API-016 rounded-net tie groups), the order
+among them is: annual fee ascending (NULL last), then display name, then card
+product id — decision D2, Mike, 2026-08-16. **This rule contains no affiliate,
+commission, or partner input, and none may be added to it.** Order among
+equal-value cards is exactly where commission bias would be invisible to users;
+this note exists so the rule predates the surface. Any future proposal to alter
+within-tie ordering must be evaluated against this section and recorded here.

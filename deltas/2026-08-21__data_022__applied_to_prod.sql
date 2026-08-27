@@ -1,0 +1,61 @@
+-- DELTA — DATA-022 applied to production (2026-08-21)
+--
+-- Rule 9(b): every applied change is also cut to a dated delta file. This is the
+-- record, not the mechanism — the change was applied via MCP apply_migration and
+-- the local migration files were renamed to the remote versions in the same turn
+-- (rule 9(e)).
+--
+-- Project: card_coach_advanced (hrzpznlpmxxrbtwskacu)
+-- Authorised by: Mike, 2026-08-21, "D1-14 signed off, run the verify scripts,
+-- deploy it all, fix lane f".
+-- Governing design: cardcoach-docs/DESIGN_statement_import_v1.md (D1-D14 signed
+-- off 2026-08-21).
+--
+-- APPLIED, in order:
+--   20260821034436  data_022_p0_pre_apply_snapshot
+--   20260821034519  data_022_p1_entitlement_and_flags
+--   20260821034555  data_022_p2_statement_imports
+--   20260821034611  data_022_p3_transactions_batch_tag
+--
+-- PRE-STATE (read immediately before the first write, rule 9(f)):
+--   runtime_flags rows for statement_import / statement_import_write : 0
+--   entitlement_catalog row for statement_import                     : 0
+--   public.statement_imports                                          : absent
+--   transactions.import_batch_id                                      : absent
+--   transactions                                                      : 103 rows
+--   merchants                                                         : 60 rows
+--
+-- POST-STATE (asserted by each migration's own DO block, and re-read after):
+--   statement-import flag rows                    : 2
+--   ...of which ENABLED                           : 0     <= the whole point
+--   v_tier_entitlements for 'pro'                 : 6     (was 5)
+--   public.statement_imports                      : present, RLS enabled+forced,
+--                                                   0 write grants to anon/authenticated
+--   transactions.import_batch_id                  : present, nullable, ON DELETE SET NULL
+--   transactions                                  : 103 rows, unchanged
+--   transactions with import_batch_id NOT NULL    : 0
+--
+-- READ-PATH IMPACT: none. Both gates are false, so no shipped surface changes
+-- behaviour. The advisor sweep after apply reported zero lints naming
+-- statement_imports; the 12 ERROR and 7 WARN lints present are pre-existing
+-- (SECURITY DEFINER views, mutable search_path on older trigger functions) and
+-- were confirmed against the same project before this change.
+--
+-- ROLLBACK: supabase/rollback/data_022_down.sql. While both flags are false and
+-- statement_imports is empty this is a clean reverse. Prefer the no-deploy
+-- rollback (flip the flags, which are already off) over dropping anything.
+--
+-- SNAPSHOTS taken by p0, retained until DATA-022 is settled:
+--   runtime_flags_snapshot_20260821
+--   entitlement_catalog_snapshot_20260821
+--   billing_tier_entitlements_snapshot_20260821
+--   transactions_snapshot_20260821
+-- All four are RLS-enabled with no policy and REVOKEd from anon/authenticated.
+--
+-- NOT DONE HERE, deliberately: no flag was flipped. statement_import stays dark
+-- until an APP-024 build is in the field (extraction runs on device, so the flag
+-- cannot precede the build). statement_import_write stays dark pending the
+-- backfill semantics in DESIGN §9.3.
+
+-- This file is a record. Re-running the migrations is idempotent; there is
+-- nothing to execute here.

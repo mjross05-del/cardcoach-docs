@@ -1169,3 +1169,296 @@ and Cathay's 4x row stay fail-closed for want of an airline-MCC enumeration and 
 **Applied:** delta `2026-08-16__point_valuations__neo_carrier_provisional.sql`, guarded, with
 a post-state assertion that no Neo valuation claims `tier2`. Live probe confirms Cathay at
 1.5c/$ base and United at 1.2c/$ base (0.75 x 1.6), and Cathay foreign-currency at 3c/$.
+
+---
+
+### 2026-08-16 — Mobile app theme: "2a locked design" superseded by CardCoach Final Spec rebrand
+**Decision:** The mobile app's theme tokens (`apps/mobile/src/theme/theme.ts`) and the
+pinned values in `brandKit.test.ts` now follow the **CardCoach Final Spec** token card
+(`design_handoff_cardcoach_rebrand/CardCoach Final Spec.dc.html`, turn-0 card + final
+pass rows `4a` light / `5a` dark). The "2a locked design" palette those tests previously
+pinned is superseded. Executed as RETHEME-001 per
+`cardcoach-docs/PROMPT_retheme_rebrand_2026-08-16.md`, on the
+`feat/api016-app020-tie-disclosure` branch, shipping with APP-020 in 1.0.3.
+**What moved:** light headings become indigo ink (`textHeading` token, new); dark body
+warms to parchment `#EDE4D6` with ivory reserved for headings; dark muted `#A79D8F`,
+indigo accent `#9FB0DE`, money text `#4CC79A`, tangerine text `#F08B63`; Surface 2
+`#322A22` dark; bottom bars/sheets get their own `sheet`/`sheetBorder` tokens
+(`#FFFFFF` / `#211B15` + ivory 10%); the dock keeps one `#2B3A67` bar in both modes with
+a solid-ivory active pill; hairlines go two-tier (10% page / 8% in-card); the gold
+pill/ring ramp changes from goldDark→goldLight to gold→goldLight; the dark gold glow
+drops to 35%.
+**Why:** Mike's instruction in the 2026-08-16 Cowork session (API-016/APP-020):
+"rethemed to match the design exactly." The Final Spec card states "Every color in the
+mocks is on this card — build from these tokens, nothing inferred."
+**Implications:** Card artwork (network gradients, card ink `#FDF8F3`, gold chip) is
+mode-independent and did NOT move. Any future color work must trace to the Final Spec
+card, not 2a. Structural deltas the frames show beyond color (e.g. the orange "+" FAB)
+are logged in the RETHEME-001 report, not built.
+
+---
+
+### 2026-08-16 — Corrections + ratifications (Cowork session, Mike's answers on the open decisions)
+
+**Correction — the orange "+" FAB was never missing.** The RETHEME-001 entry above says
+structural deltas like the FAB were "logged, not built." Wrong: `nowV2.recordTransaction`
+has existed on the Now screen all along (conditional on the ready state, which is why the
+Cowork session's recon — and therefore the retheme prompt — missed it). It opens the
+transaction-recording modal and already conforms to the Final Spec: tangerine fill
+`theme.colors.primary` #E8734A (mode-independent, per the token card), 56pt, bottom-right.
+No follow-up spec needed. Error origin: the Cowork session's prompt, not the retheme run.
+
+**Ratified (Mike, 2026-08-16) — APP-020 tie-frame deviations from the mock stand:**
+(1) tie badge/chips are purchase-anchored ("all earn $2.00"), never per-$100 — per-$100
+normalization can differ at the displayed cent between tied cards (invariant 13);
+(2) receipt member rows are name-only — per-member rate blurbs under "all earn the same"
+would contradict the tie header;
+(3) rule-1 differentiator copy is tier-anchored, never certainty-ranked (invariant 17).
+The mock remains the geometry/color authority; these three content rules supersede its copy.
+
+**Decided (Mike, 2026-08-16) — MCC suppression fix = backfill via verify lane** (not
+engine fail-open): the 42 fillable rows go as per-issuer gated deltas after per-card
+source-clause checks; the 5 unmapped categories get mcc_category_mappings proposals
+covering the last 10 rows. Fail-closed stance on empty mcc_includes is retained.
+
+**Decided (Mike, 2026-08-16) — tie_disclosure flips ON after TestFlight 1.0.3 is live**
+and the production probe is green (preconditions in migration 20260816185557). Old 1.0.2
+clients strip the fields and render the dense ranking unchanged in shape.
+
+**Decided (Mike, 2026-08-16) — a paid tier is in scope; the receipt scanner is its first
+feature.** Supersedes `REVENUE.md` §"What this model does NOT cover" ("Pro tier — out of
+scope"), corrected in the same session. Two clarifications of record: the iOS app shipped
+**free** (the model's "paid iOS" line is forecast, never run-rate), and the revenue model
+contains no paid-tier assumption, so no paid-tier revenue figure may be quoted until the
+model is deliberately amended — quoting one would be an invented fact under rule 7.
+Specs: `API-017_receipt_parse.md` (server, parse-only, writes nothing), `APP-021_receipt_capture.md`
+(mobile, needs a native OCR module so it cannot ship over EAS Update), `ENT-001_entitlements.md`
+(the gating primitive). Build stance: complete and inert behind two gates — a global
+`runtime_flags.receipt_scanner` and a per-user entitlement. Feature code tests a named
+entitlement key, never a "Pro" boolean, so tier name/price/contents stay undecided.
+
+**HELD (2026-08-16) — ENT-001 DDL signed off by Mike, then held unapplied by the executing
+session on discovering a collision.** Do not apply `20260816220000_ent_001_user_entitlements.sql`
+until the overlap below is arbitrated. The sign-off was given before the collision was known;
+this note records why the session did not proceed on it.
+
+The collision: `runtime_flags.online_merchant_resolution` (seeded TRUE, DATA-020/API-018)
+carries the note *"the operative gate is the Pro entitlement check in `_shared/entitlements.ts`,
+which refuses every caller until the Pro tier ships."* That file did not exist in the repo,
+and no entitlement storage exists in the database — `profiles` has no plan column, and no
+`user_entitlements` table exists. So **two concurrent lanes were converging on one undefined
+primitive at one file path**, with no way to see each other (rule 9(f)). Had both landed, the
+second commit would have silently redefined the first lane's paywall — a paid feature served
+free, or a free feature returning 403, with no failing test on either side.
+
+Resolution taken: the ENT-001 artefacts (migration, rollback, `_shared/entitlements.ts`, the
+mobile `useEntitlement` hook) are parked in `.agent_scratchpad/ENT-001_proposed/`, out of every
+live path. `_shared/runtimeFlags.ts` (a generic flag reader, no entitlement semantics) was left
+in place as non-conflicting. **Mike to arbitrate one entitlement design across both lanes before
+either ships.** ENT-001's proposal, for that decision: `user_entitlements` rows keyed by a named
+string, with `source`/`expires_at`/`revoked_at`, RLS read-own and writes revoked from
+`authenticated` so a user cannot grant themselves a paid feature.
+
+**INCIDENT (2026-08-16) — remote/local migration drift, rule 9(e) class.** Four migrations were
+applied to production (`20260817013135` places_provider, `013156` merchant_domains, `013209`
+earn_rates_channel_includes, `013236` runtime_flag) that had no local files at the time of
+discovery, alongside a `merchant_domains` table, a `v_active_merchant_domains` view and an
+`earn_rates.channel_includes` column. This is the exact failure rule 9(e) documents — remote
+history ahead of `supabase/migrations/` breaks `db push` and `db reset` for every other lane.
+The originating session appeared to be landing the local files during the same window, so the
+drift may already be closed; **verify with `supabase db pull` before the next migration from any
+lane**, and confirm all four have local files. Recorded here because no other lane can see it.
+
+**RESOLVED (2026-08-17) — the ENT-001 collision, and a direct answer to the online-merchant
+lane.** The hold recorded above is lifted. Mike's instruction (2026-08-16): build and
+implement the receipt scanner, Pro-gated.
+
+**To the online-merchant session, answering the question in your `_shared/entitlements.ts`
+header ("if the session that removed it did so deliberately, this file is safe to delete
+again"): please do NOT delete it. Keep your restored copy — it is now the shared file.**
+
+What actually happened, since your header's reconstruction is close but not quite right: the
+file did not vanish to a git race. The receipt-scanner session wrote it, then deliberately
+moved it to `.agent_scratchpad/ENT-001_proposed/` on discovering that
+`runtime_flags.online_merchant_resolution` already declared a Pro gate at that exact path
+with nothing built behind it. Two lanes were converging on one undefined primitive and could
+not see each other (rule 9(f)); parking it was the safe move, not a deletion. Your restore
+was the right call and your version is now canonical — it is a strict superset (both
+`receipt_scanner` and `online_merchant` keys), so the receipt-scanner lane has adopted it
+rather than reinstating its own. **One file, one design, two keys. Neither lane should
+rewrite it; add keys only.**
+
+One behavioural change you should know about, because it touches your gate: **the ENT-001
+schema is now applied.** Your header notes that while the schema was unapplied "the relation
+does not exist, every call takes the error path, and every caller is refused." That was true
+and is no longer how the refusal happens. `v_active_user_entitlements` now exists and returns
+zero rows, so `hasEntitlement` still returns false for every caller — **identical refusal,
+reached through the success path instead of the error path.** Your gate is unchanged in
+behaviour; what changes is that it stops emitting an error log per call, and that a grant can
+now actually be issued. `resolve-merchant-v1` needs no edit.
+
+Granting access before billing exists (both lanes, service role only):
+
+```sql
+INSERT INTO public.user_entitlements (user_id, entitlement_key, source, expires_at, note)
+VALUES ('<uuid>', 'online_merchant', 'manual', now() + interval '90 days', 'tester');
+```
+
+Two keys stay independently grantable on purpose, per D1: the receipt scanner and online
+mode can be priced, bundled, trialled or withdrawn separately without either feature's code
+learning what a tier is.
+
+---
+
+### 2026-08-26 — Robots-disallowed issuer documents ARE usable as evidence (both redirect shapes)
+**Decision (Mike, 2026-08-26):** when the requested path is robots-allowed but the fetch
+resolves into a disallowed location, the artifact **is usable as issuer evidence**. Robots
+governs crawling; a single fetch of a linked legal document a customer is expected to read is
+not crawling. The ruling covers **both shapes**, which had been treated as one problem and are
+not:
+- **Same-host prefix** — an allowed path 302s into a disallowed prefix on the same issuer host
+  (Tangerine `/content/.../wec_fee.html` → `/en/static/widgets/wec_fee`, `Disallow: /en/static`).
+- **Cross-host blanket** — an allowed host 302s to a separate document host whose robots.txt is
+  `Disallow: /` (Neo `legal.neo.cc/*` → `static.production.neofinancial.com`).
+
+**Why it was needed:** these were logged as separate issuer quirks, so the engine failed closed
+and re-derived the same dead end weekly — Tangerine World Elite `fx_fee_percent` for four
+consecutive runs. The document search was genuinely exhausted first: six issuer PDFs including
+the 2026-04-22 cardholder agreement were downloaded and text-searched on 2026-08-25 and none
+states a rate; both cardholder agreements defer to an account-specific Disclosure Statement
+Tangerine does not publish. There was no better document to find, so this was a policy question
+or nothing.
+
+**Applied same day, through the gated path — a ruling is not a write authorisation:**
+`verify.apply_queue` **e98beb56**, approved by Mike by name, applied under run
+**d3da1bac-b11a-4bad-8441-071498fbfb23**, apply_session `5e348a00`, write_audit
+**9dd55489-660a-4bba-b88f-7270091802ae**, rule-1 snapshot
+`public.card_products_snapshot_apply_20260826`. `ca_tangerine_rewards_world_elite_mastercard`
+`fx_fee_percent` NULL → **2.50**, guarded on `fx_fee_percent is null`, `rows_affected` 1.
+Active cards with NULL FX: 41 → 40.
+
+**Evidence quality, recorded honestly:** single artifact. The `wec_fee` widget body never names
+the card. Attribution rests on the lineup link labelled "Tangerine Rewards World Elite
+Mastercard" pointing at `wec_fee.html`, plus the `$120 primary / $30 authorized-user` rows
+inside that same fee table matching `annual_fee_cad = 120.00` on the card. Both Tangerine
+Money-Back cards were confirmed at 2.50 in the same run **from allowed sources**, so 2.50 is
+Tangerine's issuer-wide rate, not an inference from one page. Evidence `cef00a23`, sha256
+`a4df8a85ec509b4e…`, in `verification-evidence`.
+
+**Scope discipline — what this does NOT fix.** 41 of 148 active cards had `fx_fee_percent` NULL
+(Amex 13, TD 12, MBNA 6, RBC 6, Scotia 2, BMO 1, Tangerine 1). **Only Tangerine's cause was
+ever diagnosed.** This ruling closes Tangerine, unblocks Neo currency checks, and sets the
+precedent for whichever of the remaining 40 turn out to share the shape. It is not a 41-card
+fix and must never be quoted as one. Diagnosing the other 40 is open work (WORKING_NOTES).
+
+**Also recorded:** `verify.parking` `396e93c4-a9de-4f0d-849a-50dc3ea57dd9` closed
+(`status = closed_by_ruling`); `verify.issuer_notes.quirks` updated for **Tangerine** (the
+08-16 and 08-23 notes removing WE FX from the retry list are superseded — it goes back on the
+normal rotation) and for **NeoFinancial** (the whole legal corpus is now currency-checkable;
+next Neo run re-checks the June-2025 agreement and rewards policy against a 2026-06-01
+disclosure). `RUNBOOK_verify_batch.md` §3.6 carries the operative rule.
+
+---
+
+### 2026-08-26 — MCC brand-code blocks are enumerated, not represented by a head code
+**Decision (Mike, 2026-08-26):** when an issuer's terms name an MCC **brand block** as a range,
+the range is **enumerated** into `mcc_includes`. Not a head-code stand-in, not a new range type
+in the schema.
+
+**Applied same day:** both Tangerine Money-Back cards' `hotels_motels` rows go
+`{7011}` → `{3500..3828, 7011}` = **330 codes**, per Money-Back program terms §7
+*"Hotels-Motels … (MCC 7011, 3500-3828)"*, sourced from the corrected `mb_rewards_terms`
+doc_location. `verify.apply_queue` **867c3106**, `origin = 'convention_ruling'` (no fact_check
+by design — the ruling is the whole case), write_audit
+**37ec79ef-2ad2-48b7-af74-ac17b2136ead**, `rows_affected` 2, rule-1 snapshot
+`public.earn_rates_snapshot_apply_20260826`.
+
+**What this changes today: nothing about pricing.** `hotels_motels` has **zero** rows in
+`mcc_category_mappings`, so the assumption side has nothing to intersect regardless of what the
+row holds, and both cards are `load_only`. The write makes the row *true* now and *correct* the
+moment the category gets mapped.
+
+**The precedent this sets, stated so nobody has to rediscover it:** this is the first enumerated
+brand block in the schema. The existing convention was the opposite — `mcc_category_mappings`
+represents `travel` with MCC 3000 "Airlines" (head of the 3000-3299 airline brand block) plus
+3009 "Air Canada", five rows rather than three hundred. **That mapping is now inconsistent with
+this ruling.** Bringing the airline block into line means ~300 more integers on `travel`. Filed
+as open work, not done here, and deliberately not left implicit.
+
+---
+
+### 2026-08-26 — Per-source fetch cadence dies with the retired registry
+**Decision (Mike, 2026-08-26):** per-issuer weekly rotation is sufficient. The retired Stage 2
+registry's `fetch_cadence` column (monthly for product pages, quarterly for Tier-1 PDFs) gets
+**no successor** — no expected-revision-interval field on the evidence or fact-check row.
+
+**What we accept by deciding this:** every fact inherits its issuer's rotation slot regardless of
+how volatile its source is, and "when does this fact expire?" remains answerable per issuer, not
+per fact. The error runs in the safe direction — weekly rotation **over**-checks the quarterly
+PDFs rather than under-checking the monthly pages.
+
+**Recorded so it is not re-raised as an oversight.** The concept was considered on its merits and
+dropped deliberately. Reopen it only if a user-facing "verified as of" claim needs to be per-fact
+rather than per-issuer, which is the one thing the missing column would actually buy.
+
+---
+
+### 2026-08-26 — Stored source URLs get a drift signal: sha256 AND issuer revision date
+**Decision (Mike, 2026-08-26):** each `verify.issuer_notes.doc_locations` entry records, beside
+the URL, both a **sha256** of the fetched bytes and the **issuer-stated revision/effective date**
+of the document. Detection becomes mechanical instead of procedural.
+
+**Why both, not either.** They catch different failures. The sha256 catches *"the file changed
+under a stable URL"* — a silent in-place revision. The revision date catches *"the index now
+links a different vintage than what we stored"* — which is the failure that actually occurred:
+on 2026-08-25 three Tangerine `doc_locations` entries pointed at superseded revisions and **all
+three returned 200**. The Money-Back program terms were the September 2024 revision, predating
+the 2025-10-25 amendment that added the Foreign Currency Spend, Fitness and Sports Clubs and
+E-Games categories. Nothing broke — `earn_rates` already carried the post-amendment categories —
+but the next Tangerine run would have reconciled live facts against year-old terms, and a false
+"changed" on three categories was one run away. Issuers leave old revisions served indefinitely,
+so the 404 that the engine watches for never fires.
+
+**This supersedes nothing in RUNBOOK v1.4 — it mechanises it.** §3.2 (a hint that resolves is not
+thereby current) and §9.1 (re-validate every cited entry at close, mark dead ones `DEAD <date>`)
+remain in force and remain the fallback where a document states no revision date. The judgement
+recorded in the ruling: v1.4 is a procedural control on an agent's diligence, and the manual
+37-URL sweep that proved the point does not scale to weekly.
+
+**The honest cost, accepted:** two more fields to keep truthful, and **a stale sha256 is its own
+kind of lie**. §9.1 therefore requires that a run which cites an entry either refreshes both
+fields or marks them unverified this run — carrying a sha256 forward untouched while claiming the
+document was checked is the failure mode this creates, and it is worse than having no field.
+
+---
+
+### 2026-08-26 (addendum) — sizing the robots ruling honestly: it diagnoses to ZERO extra cards
+Recorded the same day as the ruling above, because the ruling is easy to oversell and the
+sizing work was done immediately rather than deferred.
+
+**40 of 148 active cards still carry `fx_fee_percent` NULL** after the Tangerine close (Amex 13,
+TD 12, MBNA 6, RBC 6, Scotia 2, BMO 1). Every one of the 40 was checked against
+`verify.fact_checks`: **none is robots-blocked, and none was never attempted.** The robots ruling
+fixed exactly one card and opened one issuer's document corpus. It is not a 41-card fix and must
+not be described as one.
+
+What the 40 actually are:
+- **Deliberate rule-7 withdrawals, correct as NULL.** Two audited sweeps pulled unsourced `2.50`
+  values — 2026-08-02 (15 cards) and 2026-08-16 17:51 UTC (Mike-approved, in `verify.write_audit`,
+  covering TD, Amex business, RBC More Rewards, Scotia GM and Tangerine WE). The pattern in both:
+  the cited clause describes the **conversion mechanism** ("we will convert it to Canadian currency
+  at an exchange rate determined by the payment network") and never states a percentage. The 2.50
+  had been pattern-matched rather than read — the same correlated dual-pass failure behind the
+  2026-07-27 Amex error corrected on 07-28.
+- **RBC 6 — #23a staleness, and explicitly NOT a robots case.** Their evidence is per-card InfoBox
+  PDFs inside the application flow; the blocker is the standing no-application-flow rule. The
+  robots ruling does not reach them. They belong to the Friday chrome lane, whose charter already
+  names "in-application FX boxes".
+- **Scotia 2** — pass disagreement plus unreachable public product pages (404s): a URL problem.
+  **BMO 1** — legacy card behind the domain bot wall. **2 USD-billed cards** are NULL by the
+  2026-07-29 USD convention, not by failure.
+
+**The one actionable finding:** 10 of TD's 12 NULL cards are `scoreable` with
+`application_status = 'open'` — live cards whose FX cost the engine cannot price. That is the
+largest block of live FX blindness in the catalogue, and it is blocked only on finding a TD
+document that states a rate.
