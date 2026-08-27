@@ -305,3 +305,90 @@ re-read as 84 before either build started**.
 - The local service-account JSON was **not deleted**. It is redundant (the key is on EAS) and
   removing it is a one-line `rm` left for Mike.
 - The Android first-submit failure mode never fired: `changesNotSentForReview` stayed `false`.
+
+---
+
+## 11 · Build 85 — the one 84 made necessary (2026-08-25 → 08-27)
+
+Build 84 shipped, and then three things landed that could not reach it.
+
+### Why 85 had to exist
+
+**Two independent native changes**, either of which alone forces a binary:
+
+1. `f3b9134` rewrote the receipt camera copy. The old string — *"The photo is never
+   uploaded and never saved."* — was true while OCR ran on device. API-017/APP-021 make
+   the app upload the image and possibly send it outside Canada, so the sentence would
+   have become a false statement to users **and a false Play data-safety declaration**.
+   InfoPlist strings are baked into the binary.
+2. `9500bea` (APP-021) added **`expo-image-manipulator`**, a brand-new native module. A
+   new pod can never be delivered over the air.
+
+`eas fingerprint:compare` against build 84 confirmed the delta rather than assuming it —
+`05ca3218…` → `d7a02945…`. Worth recording: **`locales/*.json` contents are NOT fingerprint
+sources.** The iOS fingerprint has 53 sources and `locales/en.json` is not among them; only
+`expoConfig` is, and it carries the *path*, not the text. A copy fix touching only the
+localized permission strings would leave the fingerprint unchanged, look OTA-compatible,
+and silently never reach anyone. This one was caught only because `app.config.ts` changed
+alongside.
+
+### The artifacts
+
+| | iOS | Android |
+|---|---|---|
+| Build ID | `2a459328-852c-48bd-985f-a1d02a4225dc` | `1de60406-4167-4f1b-8769-b731a413ddb0` |
+| Number | **85** | **85** |
+| Fingerprint | `d7a02945185f31ed97bdf402abdfe5250b241869` | `e1a30960a1e12f8892c8c22ba7baa502ab99545c` |
+| Commit | `599e6de` | `599e6de` |
+| Submission | `c6c8ef45-974a-4bd3-a481-8eeeccee6da9` | `4c35ffc9-58f1-4275-8260-3f83f20c033b` |
+| Landed | TestFlight, 08-27 | Play internal, 08-27 |
+
+**iOS shipped two days ahead of Android.** iOS 85 went out 08-27; Android sat unsubmitted at
+84 until it was noticed while writing the tester email. Android testers were a build behind
+without anyone knowing. `eas submit:list` is the check — it is the only place the two
+platforms are shown side by side.
+
+### Gates
+
+`verify_widget_native` PASSED (`ExtensionStorage` ×4, App Group on both app and extension).
+Supplementary artifact check on the new pod, because build 82's lesson is that autolinking
+can list a module while the binary has none of it: `ImageManipulatorModule` ×3,
+`ExpoImageManipulator` ×26, `MLKitTextRecognition` ×3 — all present.
+
+### What nearly blocked it
+
+**Four eslint errors from `9500bea` failed the gate before jest ever ran** (`tsc` clean,
+109 suites / 1300 tests green underneath). Two were real raw paddings; two were false
+positives — `height: 2000` on a mock *image* object, which the rule cannot distinguish from
+a style. Fixed in `599e6de`: the paddings now compose `spacing[3] + spacing[0.5]` for 14,
+the idiom `ReceiptProvenanceBanner` already uses, so **the values did not change**; the
+fixtures got a scoped disable rather than edited numbers, since one exists precisely to test
+an oversized image.
+
+### Edge functions — deployed, and the command in §5 is wrong
+
+`0a32bfd` (classification rung order) is an edge function and reaches production by deploy,
+not by build. Deployed 08-27: `resolve-place` v21, `recommend-here-v2` v30, both ACTIVE.
+
+**A bare `supabase functions deploy` FAILS** on CLI 2.116 — the server-side bundler does not
+pick up `supabase/functions/deno.json` and dies on `@supabase/supabase-js` and `zod` with
+*"Relative import path not prefixed with / or ./ or ../"*. The working command is:
+
+```bash
+npx supabase functions deploy resolve-place recommend-here-v2 \
+  --import-map supabase/functions/deno.json
+```
+
+### Testers
+
+`tester_allowlist` is now **6** — `lisapietras63@gmail.com` added 08-27 (`build-85 tester
+round`). She had no account, so nothing was granted; the signup trigger
+`on_auth_user_created_tester_grant` is enabled and will comp her on registration. Verified
+there is still no second route to Pro: 81 accounts, 6 allowlisted, and every active
+entitlement traces to `manual`/`tester_allowlist`.
+
+**She is an Android tester, so she needs a Play internal tester slot** — the allowlist grants
+Pro, not the app. Still outstanding on the console side.
+
+An Android tester checklist was published as an artifact, grouped by whether each item is a
+fixed Android regression, new behaviour, or a known non-bug.
