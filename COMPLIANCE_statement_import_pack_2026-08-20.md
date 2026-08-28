@@ -14,6 +14,15 @@ path… Both the `/en/` and `/fr/` policy pages need it."* Checked against the l
 2026-08-20. Three of those four assumptions are wrong, and this is a pre-existing gap that
 statement import merely surfaces:
 
+> **STATUS 2026-08-27 — FLAGGED AND DEFERRED, not resolved.** Mike: "leave legal
+> for now, flag it." Everything in §0 below was re-verified on 2026-08-27 and
+> still holds: 25 flat English files, no `/en/` or `/fr/`, and `/privacy` and
+> `/legal` still point at each other for a document neither contains. Note the
+> escalation since this pack was written: `runtime_flags.statement_import` is now
+> `enabled = true` (2026-08-21 03:45:19 UTC), so the Quebec launch-blocker below
+> is no longer held back by the flag — the entitlement is the only gate. Tracked
+> as WORKING_NOTES #37. Do not start this work without Mike.
+
 1. **There is no privacy policy with a collection list.** `site/privacy.html` is a
    five-block plain-English summary ("We never ask for your bank login", "We don't sell your
    data"). It has no enumeration of what is collected, no stated purposes, no retention

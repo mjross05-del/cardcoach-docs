@@ -69,7 +69,7 @@ Have a **phone number that answers**, with a professional voicemail. Fintel:
 approve your affiliate application."* FlexOffers requires **SMS verification** and
 will not waive it.
 
-### 2.3 Resolve the legal-entity name — DO THIS FIRST
+### 2.3 Resolve the legal-entity name — ✅ RESOLVED 2026-08-27
 
 `how-we-make-money.html` publishes JSON-LD claiming
 `"legalName": "CardCoach Inc."`. Everything else on record says the operating
@@ -85,6 +85,19 @@ legitimacy failure.
 application, and the banking details agree. If `CardCoach Inc.` does not exist,
 the JSON-LD is a false statement of corporate identity and should be corrected
 regardless of the affiliate lane.
+
+> **RESOLVED — Mike, 2026-08-27: the legal name IS `CardCoach Inc.`**
+> The JSON-LD on `how-we-make-money.html` is therefore **correct as published**
+> and needs no change. This section's premise — that "one of those is wrong" —
+> is closed: `CardCoach Inc.` exists and is the entity to name on network
+> applications and banking documentation.
+>
+> What this does NOT settle, and is left open deliberately: wherever project
+> notes describe the operating entity as **Warm Logic**, those references now
+> need reconciling against `CardCoach Inc.` (relationship between the two,
+> and which name belongs on which document). That is a records question, not a
+> site-correctness question, and nothing on the live site is misstated today.
+> No site edit is required by this item.
 
 ### 2.4 Do not claim a live Android app
 
