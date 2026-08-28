@@ -4,7 +4,7 @@
 **Status:** ready to submit once the four pre-flight items below are done.
 
 The affiliate links have been live since 2026-08-11. What is missing is not
-plumbing — it is a commercial relationship. Every one of the 96 outbound links
+plumbing — it is a commercial relationship. Every one of the 126 outbound links
 in `apply-links.js` is `network:"direct", sponsored:false`, which means the
 traffic already flowing to issuers earns nothing. This packet exists to close
 that in the smallest number of moves.
@@ -122,7 +122,7 @@ Same facts every network asks for, verified against the live database on
 | Points programs with maintained valuations | **28** |
 | Live site pages | **25** |
 | Long-form fact-checked articles | **14** |
-| Cards with an outbound issuer link today | **96** |
+| Cards with an outbound issuer link today | **126** (was 96 when this packet was written; AFF-002 added 30 on 2026-08-24, verified 2026-08-27) |
 
 **Traffic.** State it honestly and do not estimate. None of the three networks
 publishes a traffic minimum; all three publish content and legitimacy criteria,

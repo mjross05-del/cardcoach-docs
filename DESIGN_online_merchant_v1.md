@@ -1,7 +1,13 @@
 # DESIGN — Online Merchant Recommendation v1 (Pro)
 
-Date: 2026-08-17 · Status: DRAFT for review · Author: Cowork session (Claude)
-Sign-off needed on: D1–D9 (§2) before any code is written.
+Date: 2026-08-17 · Status: **SHIPPED — see §7a.** · Author: Cowork session (Claude)
+Sign-off was needed on: D1–D9 (§2) before any code was written.
+
+> **CORRECTION 2026-08-27.** The header said "DRAFT for review" and "before any code is
+> written" while §7a of this same file lists five migrations applied to production on
+> 2026-08-17, a 140-merchant catalogue seeded, and `runtime_flags.online_merchant_resolution`
+> seeded true. Verified: that flag is **enabled = true** (updated 2026-08-17 01:32:36 UTC).
+> §7a is the accurate section; this header was never bumped.
 
 **Scope note (Mike, 2026-08-17):** this ships inside the paid **Pro** feature set. Pro does not
 exist yet — there is no entitlement infrastructure anywhere in the tree (§1.8). Nothing here is

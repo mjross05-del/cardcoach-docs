@@ -1135,9 +1135,16 @@ re-read live state before any write; this doc's counts are from 2026-08-20 and w
 ## 7a. Build status — 2026-08-21
 
 Built in one session at Mike's direction ("you are now head of the design and
-implementation"). Everything below is **inert in production**: both runtime flags are
-seeded `false`, the migrations carry `STATUS: NOT YET APPLIED`, and the mobile entry point
-renders nothing until a flag and an entitlement both resolve true.
+implementation").
+
+> **CORRECTION 2026-08-27 — this paragraph contradicted the header above and was wrong.**
+> It said the work was "inert in production": flags seeded `false`, migrations
+> `NOT YET APPLIED`. Verified against production 2026-08-27, none of that is true:
+> the DATA-022 migrations are applied (`20260821034436` / `034519` / `034555` / `034611`,
+> `public.statement_imports` exists), and `runtime_flags.statement_import` is
+> **enabled = true** since 2026-08-21 03:45:19 UTC. The header's "Schema APPLIED to
+> production" is the accurate line; this one was left behind when the schema landed the
+> following day. The gate is now the entitlement, not the flag.
 
 ### Landed
 

@@ -1,5 +1,21 @@
 # DISPATCH — Statement import: loose ends after the 2026-08-21 build
 
+> **SUPERSEDED IN PART — read this before Lane G. Verified against production 2026-08-27.**
+> Two "State on arrival" facts below were already false when this file was committed, and
+> acting on them would re-apply applied work:
+>
+> * **DATA-022 p1–p3 ARE APPLIED.** Migrations `20260821034436`, `...034519`, `...034555`,
+>   `...034611` are in `supabase_migrations`; `public.statement_imports` exists. The delta
+>   `deltas/2026-08-21__data_022__applied_to_prod.sql` records the apply. **Lane G's
+>   "Apply DATA-022 p1–p3" instruction is closed — do not run it.**
+> * **D1–D14 ARE SIGNED OFF** (Mike, 2026-08-21), as `DESIGN_statement_import_v1.md`'s
+>   header records. The line below saying they are "not yet signed off" is stale.
+> * `runtime_flags.statement_import` is **enabled = true** (since 2026-08-21 03:45:19 UTC),
+>   not dark.
+>
+> Everything else in this dispatch still stands. Rule 9(f) applies more than ever: re-read
+> live state before any write.
+
 For: a coding runtime on `CardCoachv2/mobile_app_codebase`, or a fresh Cowork session.
 Governing doc: `cardcoach-docs/DESIGN_statement_import_v1.md` — read §7a (Build status)
 first; it is the accurate inventory of what exists. D1–D14 in §2 are **not yet signed off**,

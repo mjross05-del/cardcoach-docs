@@ -1,3 +1,14 @@
+-- =========================================================================
+-- STATUS NOTE ADDED 2026-08-27 — THIS TEMPLATE IS SPENT. DO NOT USE.
+-- tie_disclosure was flipped ON at 2026-08-16 21:49:43 UTC and the flip is
+-- fully recorded in the sibling 2026-08-16__runtime_flags__tie_disclosure_on.sql.
+-- Production reads enabled = TRUE, verified 2026-08-27.
+-- This file's "DO NOT APPLY until every precondition is met" language and its
+-- ____-__-__ date blanks make it read as a pending action to anyone who finds
+-- it without the sibling. It is kept only as the shape to copy for a FUTURE
+-- flag flip.
+-- =========================================================================
+
 -- Flip tie_disclosure ON (date: ____-__-__ — fill at flip time).
 --
 -- FOR cardcoach-docs/deltas/ — DO NOT APPLY until every precondition in

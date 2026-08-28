@@ -1,3 +1,14 @@
+-- =========================================================================
+-- STATUS NOTE ADDED 2026-08-27 — PRE-STATE ASSERTION IS STALE; THIS WILL ABORT.
+-- The file asserts exactly 48 curated chains as its pre-state (post-state 80).
+-- Production now has 59 is_chain rows, verified 2026-08-27, and 2 of this
+-- file's own 32 targets have already been flagged by some other route.
+-- Running it today raises "pre-state: expected 48 curated chains, found 59"
+-- and rolls back. That is the guard working as designed, not a safety problem
+-- -- but the delta is no longer applicable as written and needs its targets
+-- and counts recomputed against live state before it means anything.
+-- =========================================================================
+
 -- Chain curation p1: is_chain on 32 head-of-statement Canadian brands.
 --
 -- STATUS: **PROPOSED — NOT APPLIED.** Nothing in this file has been run.

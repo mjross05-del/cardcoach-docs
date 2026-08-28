@@ -1,3 +1,17 @@
+-- =========================================================================
+-- STATUS NOTE ADDED 2026-08-27 — THIS FILE NO LONGER DESCRIBES PRODUCTION.
+-- This delta seeds receipt_scanner OFF and asserts a post-state of
+-- enabled = false ("Ships DARK"). Production now reads:
+--     receipt_scanner  enabled = TRUE   (updated_at 2026-08-17 02:42:50 UTC)
+-- The flip happened the same day this was applied and NO "ON" delta was ever
+-- filed, so this file is currently the only record of the flag and it states
+-- the opposite of the truth. Its own header asks for that ON delta: "The ON
+-- delta belongs beside this file when flipped, per the tie_disclosure /
+-- loyalty_offer_stacking pattern." That is still outstanding.
+-- Do not re-run this file to "restore" the documented state — it would turn a
+-- live feature off.
+-- =========================================================================
+
 -- DELTA 2026-08-17 — seed runtime_flags.receipt_scanner = false (rule 9(b)).
 --
 -- APPLIED 2026-08-17 02:42:50 UTC via MCP apply_migration, remote version

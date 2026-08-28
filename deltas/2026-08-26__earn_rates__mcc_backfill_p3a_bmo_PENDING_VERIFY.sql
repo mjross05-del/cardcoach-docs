@@ -1,3 +1,18 @@
+-- =========================================================================
+-- SAFETY NOTE ADDED 2026-08-27 — THIS FILE IS ALL-OR-NOTHING, NOT PER-ROW.
+-- The header promises per-row gating: "apply per row as its source-clause
+-- check closes", "A row ships when its [ ] source-clause check below is
+-- closed by the verify lane", "An unchecked row does not ship."
+-- THE FILE DOES NOT IMPLEMENT THAT. It is a single BEGIN ... COMMIT
+-- containing every UPDATE, followed by a DO block that raises unless ZERO
+-- mapped-category rows remain empty for the whole issuer. Running it ships
+-- EVERY row in it, including every row whose [ ] checkbox is still open, and
+-- the final assertion will fail the transaction if any row was deliberately
+-- withheld.
+-- To honour the stated discipline, either run one UPDATE at a time by hand as
+-- its checkbox closes, or split this file per row before running anything.
+-- Do not run it whole and assume the checkboxes protected you.
+-- =========================================================================
 -- earn_rates.mcc_includes backfill, pass 3a — BMO (11 rows)
 -- Generated 2026-08-26. SUPERSEDES the 2026-08-16 pass-2 file for this issuer set,
 -- which was written against 43 rows and went stale while it sat: the debt grew from

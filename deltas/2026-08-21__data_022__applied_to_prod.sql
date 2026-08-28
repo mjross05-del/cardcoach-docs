@@ -1,3 +1,16 @@
+-- =========================================================================
+-- STATUS NOTE ADDED 2026-08-27 — THE FLAG CLAIM BELOW IS NO LONGER TRUE.
+-- This file's post-state block reads "statement-import flag rows: 2, ...of
+-- which ENABLED: 0  <= the whole point", and its closing section says
+-- "statement_import stays dark until an APP-024 build is in the field."
+-- Production now reads:
+--     statement_import  enabled = TRUE  (updated_at 2026-08-21 03:45:19 UTC)
+-- Note the updated_at is identical to the p1 migration timestamp, so there is
+-- no separate trace of when or by whom it was turned on, and no ON delta was
+-- filed. The migrations this file records ARE applied and that half is
+-- accurate; only the "stays dark" claim is stale.
+-- =========================================================================
+
 -- DELTA — DATA-022 applied to production (2026-08-21)
 --
 -- Rule 9(b): every applied change is also cut to a dated delta file. This is the

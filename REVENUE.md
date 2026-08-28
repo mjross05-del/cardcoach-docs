@@ -10,9 +10,18 @@ Last consolidated: 2026-07-16
 
 > **CORRECTION (Mike, 2026-08-16) — plan vs. shipped reality.** The thesis line above
 > ("free web + paid iOS") describes the *modelled* architecture, not the app that shipped.
-> **The iOS app is live and free.** No subscription, no purchase flow, no entitlement
-> storage exists in the product today — `profiles` carries id/email/display_name/created_at
-> and nothing else, and no IAP library is installed. Everything below the "three numbers"
+> **As of 2026-08-16** the iOS app was live and free: no subscription, no purchase flow,
+> no entitlement storage — `profiles` carried id/email/display_name/created_at and nothing
+> else, and no IAP library was installed.
+>
+> **SUPERSEDED 2026-08-27 — do not read the paragraph above in the present tense.** All
+> three claims have since been overtaken, verified against production: `ENT-001` is applied
+> (`20260817024243`), `public.user_entitlements` holds **50 granted rows** and
+> `v_active_user_entitlements` exists; `react-native-purchases ^10.7.1` has been in
+> `apps/mobile/package.json` since 2026-08-21, alongside `PaywallScreen.tsx`,
+> `BillingProvider.tsx` and `ProLockCard.tsx`. See `RUNBOOK_pro_go_live_2026-08-24.md`,
+> which states the paywall is live and advertising a tier the app cannot yet sell.
+> What remains true is only the last sentence: Everything below the "three numbers"
 > remains a projection from the Phase 4 v2 model; none of it has been realised as revenue.
 > Read every subscription figure in this file as forecast, not run-rate.
 
@@ -75,6 +84,17 @@ robust to a slow SEO ramp, because revenue no longer rides almost entirely on we
 
 - **Monthly:** $3.99 CAD
 - **Annual:** $34.99 CAD (~$2.92/mo equivalent — a 27% discount)
+
+> **PRICE DRIFT, noted 2026-08-27 — the model and the product configuration disagree.**
+> The products named in `RUNBOOK_pro_go_live_2026-08-24.md` and
+> `mobile_app_codebase/docs/runbooks/BILL-001_revenuecat_setup.md` are
+> `cardcoach_pro_monthly` at **$4.99/month** and `cardcoach_pro_annual` at
+> **$39.99/year** — roughly 25% above the figures above. Nothing is shipped and no SKU is
+> live at any price, so neither number is wrong about the world; but every subscription
+> figure in this file (the $45,848 line, the M6 and M9 break-evens, the $6,153/mo at M24)
+> is computed from $3.99/$34.99 and therefore understates the modelled product as now
+> configured. Per the REOPENED block, no revised figure may be quoted until the Phase 4
+> xlsx is deliberately amended — this note records the gap without inventing a number.
 - **App Store cut:** modeled at **15%** (Apple Small Business Program), not the 30% standard. SBP is opt-in but free; CardCoach qualifies under $1M annual revenue. **Confirm enrollment before launch — leaving 15% on the table is real money.**
 
 ---
