@@ -1666,3 +1666,22 @@ Back beats it at groceries) confirmed the rows price. Public claim moves to **17
 HSBC still holds none). Site: `apply-links.js` +4 direct entries, `best-card.js` gap-finder skips non-offered cards;
 mobile: `Wealthsimple` added to the picker's preferred issuer order; `apps/web` H29 filter tightened. The Sunday
 task prompt's `ISSUER_BATCH` is a Cowork-local edit Mike makes by hand (add the token `Wealthsimple`).
+
+### 2026-09-02 (addendum) — Wealthsimple: an independent re-read confirms every money fact; Visa Infinite + is `limited`, not `open`
+**What happened:** after the onboarding above, a second, independent pass over all ten Wealthsimple sources (fresh
+prompts, WebFetch only, no third-party sites) confirmed every stored rate, fee and FX value, and corrected one status
+fact: the "only available in limited quantities" sentence sits in the FAQ answer that matches applicants "to either a
+Visa Infinite + card or a Visa Infinite Privilege card" — it covers the programme, not Privilege alone. **Visa
+Infinite + moves `open` → `limited`** (delta `2026-09-02__card_products__wealthsimple_p3_status_and_notes_APPLIED.sql`;
+`verify.issuer_notes` snapshotted in place first). No ranking effect — `limited` still pitches and still scores.
+**Also recorded, no stored fact changed:** the closure of the original 2% card is *inferred* (no page says "closed to
+new applications"; the help centre offers only +, Privilege and the 1% beta and calls the original "our previous Visa
+Infinite card") — the row's verify note now says so; the 1% card's disclosure never contains "1%" (the mapping rests
+on the agreements index and the `cardholder-agreement-core` slug); the first month's fee is waived for everyone and
+Quebec's first year is a promotional $220 — both welcome-class, parked, sticker stays $240; household-based
+(Premium/Generation) fee waivers ended 2026-04-28 and are honoured for existing holders "until further notice"; the
+1% card is virtual-only during the beta; the help centre's generic "Wealthsimple doesn't charge FX fees" line is
+contradicted for the 1% card by its own disclosure (2.5%) and benefits article — the disclosure governs.
+**Unrelated find while checking catalogue invariants:** `ca_national_bank_mycredit_standard_mastercard` is the only
+active scoreable card with no active `base` earn row (two category rows, scalar `base_earn` 0.5). Pre-existing; not
+touched here — WORKING_NOTES #48(e).
