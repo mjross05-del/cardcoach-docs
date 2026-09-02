@@ -176,8 +176,11 @@ Some earn rates only apply under specific conditions:
 - **`portal_only`** — You must make the purchase through the issuer's online shopping portal
 - **`preauthorized_only`** — Only applies to recurring/preauthorized payments
 - **`merchant_list_only`** — Only applies at specific merchants (checked via the `earn_rate_eligible_merchants` join table)
+- **`mcc_defined`** — The issuer defines the category by merchant codes; prices on the category-typical MCC assumption (API-011) when the row's MCC list intersects it
+- **`user_selected`** — The cardholder picks a limited number of bonus categories (Tangerine "choose 2"); nothing tells the engine which, so these fail closed
+- **`auto_top_n`** *(DATA-023, 2026-09-02)* — The issuer pays the bonus in the cardholder's N highest-spend categories of the period, decided after the fact (CIBC Adapta: top 3). Priced from this month's spend on the card: the row prices when fewer than N other eligible issuer categories have at least as much spend once the purchase is counted in; ties fail closed. Rows in one issuer category that spans two of ours share a `condition_group`. Only the app's own request paths hold spend facts — the web ranking and the stateless catalog path fail it closed.
 
-The engine records these conditions on the earn rate via the `condition_type` field. Rates with conditions are noted in the explanation so users understand any requirements.
+The engine records these conditions on the earn rate via the `condition_type` field. Every unfamiliar or unanswerable condition fails closed — an unanswerable condition loses the rate, never wins it. Rates with conditions are noted in the explanation so users understand any requirements.
 
 **Where it comes from:** The `condition_type` column on `earn_rates`, with eligible merchants in `earn_rate_eligible_merchants`
 

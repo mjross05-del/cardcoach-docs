@@ -1606,3 +1606,11 @@ fees, transit & rideshare. Full record: BLOG_OPERATIONS.md 2026-09-02.
 **Follow-ups (not decisions):** the 21 older OG images still carry "The Playbook · card.coach" in the footer;
 `make_og.py` in the staging folder regenerates them. If Mike stages publication over weeks, each post needs a re-render
 on its real launch date.
+
+### 2026-09-02 (late) — Mike rules on the three open items: the name pass applies, Adapta gets a condition type, retention review becomes a monthly task
+**Rulings (Mike, chat):** the 39-row merchant-category name pass — "approved" (all); CIBC Adapta — "add condition type"; the monthly snapshot-retention chore — "go with your rec".
+**Landed:**
+- Name pass applied: run `4b0ccfa5`, 39 guarded UPDATEs with one write_audit each, guardrail `placed_null_category` 45 → 6 (the six with no honest category), entities NULL 77 → 38 (the other 32 have no place row).
+- **DATA-023 `auto_top_n`** — the issuer assigns the bonus after the fact to the N categories with the most spend in the period. Modelled where the facts are: `earnRowPrices` ranks the purchase's issuer category against the card's other Spend Categories from this month's `user_spend_snapshots`, purchase counted in; a row prices when fewer than N other groups have at least as much. Ties fail closed; so does every caller without spend facts (the web ranking, the stateless catalog path, analyze-spend, card value), which is deliberate — nobody's month is not a fresh month. Compound CIBC categories pool through `condition_group`. Migration `20260902182121`; 33 rows retyped (run `7d3e0c1a`); spec `docs/planning/specs/DATA-023_auto_top_n.md`. Live after the next edge deploy.
+- Retention review: scheduled task "CardCoach — monthly snapshot retention review", 1st of each month 14:00 UTC, read-only — it lists `snapshots.v_retention_candidates` with the drop SQL for Mike; nothing drops on its own.
+**Decision recorded (lane):** the top-N estimate is allowed to under-credit and never to over-credit — the same posture as `user_selected`, `mcc_defined` and the region gate. A user who records no spend sees the bonus price as a first purchase of the month would; that is what the issuer's rule says for a period with fewer than N categories in play, and it is the honest reading of the data on hand.
