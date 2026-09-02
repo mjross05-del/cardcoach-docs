@@ -1,6 +1,11 @@
 # CardCoach Pro — the go-live sequence
 
-**Date:** 2026-08-24 · **Owner:** Mike · **Lane:** revenue
+> **SUPERSEDED PRICES (banner added 2026-09-02).** The $4.99/$39.99/7-day figures in this document are the
+> BILL-001 draft configuration. The decided prices are **$7.99/mo, $59.99/yr, 14-day trial** —
+> `PRICING_TIERS_2026-08-28.md` §5A and the 2026-09-01 decision in `PIPELINE_AND_DECISIONS.md`. The app renders
+> whatever the stores serve, so the store configuration is the runtime truth.
+
+**Date:** 2026-08-24 · **Owner:** Mike · **Lane:** revenue · Last updated: 2026-09-02 (price banner)
 **Supersedes nothing.** `docs/runbooks/BILL-001_revenuecat_setup.md` remains
 correct for everything it covers. This document exists because BILL-001 starts
 at step 2 — "App Store Connect and Play Console" — and assumes the accounts are

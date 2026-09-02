@@ -5,7 +5,7 @@ This file is the "why things are the way they are" reference. The process sectio
 the current system; the decisions section is **append-only** — add new entries, never
 rewrite old ones.
 
-Last updated: 2026-08-14 · Owner: Mike (data integrity, governance, review)
+Last updated: 2026-09-02 · Owner: Mike (data integrity, governance, review)
 Status: **Daily scheduled batches operational (first runs week of 2026-07-27). The Stage 1–3 script pipeline is RETIRED (2026-08-01 decision entry) — see the historical note at the end of Part 1.**
 
 ---
@@ -1537,3 +1537,19 @@ An earlier run of this model had the **hard paywall (T9) topping every column, a
 - Prices are the 2026-08-28 decision — **$7.99/mo, $59.99/yr, 14-day trial** — not the $4.99/$39.99/7-day figures the two older runbooks still print.
 - `cardcoach.ca/terms` is a 404 and `/privacy` is an overview; both are App Review inputs for a subscription app.
 - Record: `RUNBOOK_store_accounts_and_revenuecat_2026-09-01.md`.
+
+### 2026-09-02 — Full review lane: findings resolved in one pass; one lane from here (Mike)
+**Trigger:** Mike asked for a thorough review of the app, engine, edge functions, database, site, docs and ops after months of solo work with Claude runtimes, then: "prioritize, plan, and resolve these issues one by one — this is your lane", and later "assume the work of the Opus lane, I'll retire it" (all other runtimes stopped 2026-09-02).
+**Record:** `REVIEW_full_2026-09-02.md` (26 findings, 19 to-dos) and its artifact; commits on monorepo `main` `141d32b`…`0ac6b3f`; docs repo this commit.
+**Decisions and what landed:**
+- **Views are `security_invoker`; API roles cannot write catalog tables** (SEC-001, applied and verified in production). Anything that needs a write grant is enumerated in the migration; nothing else gets one.
+- **The engine reads `card_caps`** (CAPS-001). Pooled, annual and whole-card caps now bind ranking; `card_caps` wins over an inline earn-row cap on the same axis; Rogers subscriber-uplift caps and dual-cap second legs are deliberately not modelled (under-consuming a cap is the safe direction).
+- **The affiliate ledger is guarded in the database, not in function memory** (AFF-002): the platform serves consecutive requests from fresh isolates, so an in-memory limiter proved useless; `affiliate_click_record` enforces a 60/min site-wide ceiling and a 5 s per-card cooldown. No IP is stored, by design.
+- **Per-user budgets on the four paths that spend money** (SEC-002): Places search/resolve, Now-screen recommendations, receipt parsing. Fail-open on a counter outage — it is a cost guard, not an authorisation gate.
+- **Billing:** a RevenueCat grant with no expiry is deferred to `billing-sync`, never granted open-ended; the app offers no upsell on a build that cannot sell; purchase confirmation waits for the entitlement to land.
+- **CI enforces what only ran by memory** (F-12): Deno tests, engine bundle = source, EN/FR parity, N+1 gate, disclosure gate, migration ledger. A missing Deno is now a failure, not a pass.
+- **Migration history is reconciled and gated** (F-13): rule 9(e) tightened in `PROJECT_RULES.md`; `APPLIED_MIGRATIONS.txt` is the committed ledger.
+- **Legal surfaces exist** (F-15): full privacy policy on `/privacy` (named privacy contact, US storage disclosed, receipt retention stated honestly), subscription terms on `/legal`, `/terms` redirects, links in the paywall and Settings.
+- **DATA-018 p2 fuel-grade scoping merged** from the retired branch, migration renamed to the recorded version.
+- **Corrections to the review itself:** `recommend-cards-stateless-v1` is live (cardcoach.ca's /best-card calls it) — not dead as F-16 said; Alex is not "stepped back" for App Store purposes: he is the Account Holder until the app transfer.
+**Left for Mike (handoff, in order):** push the two repos; deploy the changed edge functions (`config.toml` now pins the import map); switch `~/dev/CardCoachv2` back to `main`; decide receipt retention (#40); undeploy the dead functions (#42); the store-account chain (D-U-N-S `203843635` in hand → Organization enrolment → Paid Apps → Google Payments profile); secrets (RevenueCat webhook secret, EAS); the Places quota cap; affiliate applications.

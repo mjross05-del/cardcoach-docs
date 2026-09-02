@@ -1,6 +1,10 @@
+> **ARCHIVED 2026-09-02.** This tracker's last content change was 2026-07-01 (the app launched 2026-08-10;
+> every stage below is either done or superseded). Kept for the record; do not update it. What needs doing
+> lives in `WORKING_NOTES.md`.
+
 # LAUNCH_TRACKER.md — The Playbook go-live sequence
 Updated 2026-07-01. Check items off as they complete. Owner key: [M]ike · [CW] Cowork · [C]laude chat.
-Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
+Last updated: 2026-09-02 (archived to attic/; content unchanged since 2026-07-01)
 
 ## Stage 1 — Project knowledge complete  ← YOU ARE HERE
 - [x] Rule 3 supersedence clause added to project instructions

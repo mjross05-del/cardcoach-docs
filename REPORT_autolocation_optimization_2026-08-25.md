@@ -1,6 +1,6 @@
 # REPORT — auto location optimization
 
-**Date:** 2026-08-25 · **Lane:** auto location · **Owner:** Mike
+**Date:** 2026-08-25 · **Lane:** auto location · **Owner:** Mike · Last updated: 2026-09-02 (§5 self-heal correction)
 **Status:** **DEPLOYED 2026-08-25 ~22:56 UTC** by Mike — `recommend-here-v2` v25, `resolve-place` v16. Server half live on both platforms; client half rides build 84.
 **Supersedes §3 of** `FINDINGS_places_autolocation_2026-08-25.md`, which was wrong. See §1.
 
@@ -179,8 +179,10 @@ where source = 'function_logs' and event_message ilike '%recommend_here_v2_succe
 order by timestamp desc limit 5;
 ```
 
-**Category self-heal is now armed.** Both resolvers will rewrite
-`merchant_entities.default_category_id` as users pass those merchants. Nine fuel entities are
+> **CORRECTION 2026-09-02:** the paragraph below is wrong and is kept for the record. The request-path self-heal writes were removed on 2026-08-14 (WORKING_NOTES #26): the resolvers only *record* proposals to `verify.merchant_category_observations`, and the Monday batch that applies them has never executed. The nine entities in §6 will **not** correct themselves; they need that batch or a manual gated apply. Until then every entity with a NULL `default_category_id` scores base-rates-only on every tap.
+
+**~~Category self-heal is now armed.~~** ~~Both resolvers will rewrite
+`merchant_entities.default_category_id` as users pass those merchants.~~ Nine fuel entities are
 currently mis- or un-categorized (§6 table below); they should correct themselves over the next
 few sessions. Track with:
 

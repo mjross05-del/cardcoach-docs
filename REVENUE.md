@@ -1,6 +1,6 @@
 # CardCoach Revenue Model — v3
 
-**Built:** 2026-08-28, replacing Phase 4 v2 (May 2026) · **Currency:** CAD throughout
+**Built:** 2026-08-28, replacing Phase 4 v2 (May 2026) · **Currency:** CAD throughout · Last updated: 2026-09-02 (§3 configured-prices correction)
 **Horizon:** 24 months, M1 = **Sep 2026** · **Live model:** `01_CORE/data/CardCoach_Revenue_Model_v3.xlsx`
 **Companion:** `PRICING_TIERS_2026-08-28.md` — the structures, weighed
 **Reproduce with:** `01_CORE/data/model_v3/final_numbers.py` for §1, §3–§5 and the growth and
@@ -133,9 +133,11 @@ the Apple account-structure decision.
 
 ## 3. Pricing
 
-**Configured today:** `cardcoach_pro_monthly` **$4.99** and `cardcoach_pro_annual`
-**$39.99**, gates off. The v2 price drift note is now closed: v3 prices $4.99/$39.99
-as the baseline and the $3.99/$34.99 figures are retired.
+**Configured today (2026-09-01, RevenueCat):** Play products `cardcoach_pro:monthly` **$7.99** and
+`cardcoach_pro:annual` **$59.99** with a 14-day trial; App Store products pending the new team
+(2026-09-01 decision). Gates off. The $4.99/$39.99 pair was BILL-001's draft configuration and the
+v3 model's *baseline* scenario — not what is configured; the $3.99/$34.99 figures are retired.
+(Corrected 2026-09-02; this paragraph used to say $4.99/$39.99 was configured.)
 
 **Recommended: Free + Pro — the structure that already exists.**
 

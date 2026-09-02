@@ -1,7 +1,15 @@
 # CardCoach — Source of Truth
 
 **Open this file first. Always.**
-Last updated: 2026-08-01 · Owner: Mike
+Last updated: 2026-09-02 · Owner: Mike
+
+> **2026-09-02 — read this block first; where it conflicts with anything below, it governs.**
+> - The company is **CardCoach Inc.** (Ontario). "Warm Logic" below is the pre-incorporation working brand; the legal, privacy and store surfaces say CardCoach Inc. and so should new docs.
+> - **What is real and built:** the iOS app (App Store, Alex's team until the app transfer — see the 2026-09-01 decision), the Android app (Play internal testing, build 85), the scoring engine + Deno edge functions on Supabase project `hrzpznlpmxxrbtwskacu` (AWS us-east-1), the verification batches, cardcoach.ca (26 pages, affiliate lane live), and the database: **128 recorded migrations** as of 2026-09-02 — the ledger is `mobile_app_codebase/supabase/APPLIED_MIGRATIONS.txt` in the monorepo, and CI (`verify:migration-history`) fails when the migrations directory and the ledger disagree.
+> - **Live in production (runtime_flags):** loyalty offer stacking (`loyalty_offer_stacking`, on since 2026-08-02), MCC assumption routing (`merchant_mcc_assumption`, on since 2026-08-14), online merchant resolution, receipt scanner, statement import (read), tie disclosure, ambient widget. **Off:** `billing_paywall`, `card_slot_limit`, `auto_location_gate`, `network_acceptance`, `statement_import_write`. The line below saying stacking and MCC routing are "not active" is retired.
+> - **Since 2026-09-02 the engine reads `card_caps`** (CAPS-001: pooled, annual and whole-card caps folded onto earn rows before ranking); the site's `/best-card` tool scores through `recommend-cards-stateless-v1`, which is therefore live, not dead.
+> - **Lanes:** every Claude runtime other than the review lane was retired 2026-09-02; there is one lane. Alex is not "stepped back" in the sense of gone: he is still the Apple Account Holder of the team the app ships from and must initiate the app transfer (2026-09-01 decision).
+> - **Files:** `README.md` is `SCHEMA_HANDOFF_README.md` here; `stage2_fetcher.py` is not in this repo (retired; archive only); `card_sources_seed_enriched.csv` lives in the monorepo under `card_coach_business_docs/01_CORE/CardCoach/Reverify Script/`, not here. The review that established all of this: `REVIEW_full_2026-09-02.md`.
 
 This is the only file that tells you what to trust. If any other document points you
 at a filename, check it against the lists below before you go looking for it. Most of
@@ -11,8 +19,8 @@ the old references are dead — see "Files that DO NOT exist" at the bottom.
 
 ## The 30-second orientation
 
-CardCoach is a Canada-only, issuer-verified credit card recommendation product under
-the **Warm Logic** brand. Three things are real and built:
+CardCoach is a Canada-only, issuer-verified credit card recommendation product of
+**CardCoach Inc.** ("Warm Logic" was the working brand before incorporation). Three things were real and built when this section was written — the 2026-09-02 block above lists what is real now:
 
 1. **The database** — a live Supabase schema (48 tables, 18 views, 43 migrations). Real. Done. The asset.
 2. **The verification batches** — daily scheduled runs (per-issuer weekday rotation + Friday chrome lane) that keep card data current, with evidence and audit in the Supabase `verify` schema. Operational since late July 2026. *(The old 3-stage script pipeline is retired — 2026-08-01 decision entry in PIPELINE_AND_DECISIONS.md.)*
@@ -38,8 +46,7 @@ plain Markdown, each one actually is what it says it is.
 | `BRAND.md` | Warm Logic brand: palette, type, logo, voice, rules. | Rarely |
 | `REVENUE.md` | The revenue model (v3 as of 2026-08-28; Phase 4 v2 retired): free web + paid iOS. | Rarely — on strategy shifts |
 
-Seven files. Plus `SCHEMA.md` and `README.md` (real, on disk, keep), and the recovered —
-now retired — `stage2_fetcher.py`. If you find yourself maintaining an eighth governance
+Seven files. Plus `SCHEMA.md` and `SCHEMA_HANDOFF_README.md` (real, on disk, keep). `stage2_fetcher.py` is retired and is **not** in this repo (2026-09-02 correction). If you find yourself maintaining an eighth governance
 doc, ask whether it belongs inside one of these instead.
 
 ---
@@ -47,9 +54,9 @@ doc, ask whether it belongs inside one of these instead.
 ## What's real on disk (don't reinvent these)
 
 **Database**
-- Live Supabase instance — 48 tables, 18 views, 43 migrations (as of 2026-04-15 schema generation).
+- Live Supabase instance — 128 recorded migrations as of 2026-09-02 (ledger: `mobile_app_codebase/supabase/APPLIED_MIGRATIONS.txt`); the "48 tables, 18 views, 43 migrations" figure was the 2026-04-15 schema generation.
 - `SCHEMA.md` — human-readable schema reference. **Real, on disk, trustworthy.**
-- `README.md` — schema handoff notes. **Real, on disk.**
+- `SCHEMA_HANDOFF_README.md` — schema handoff notes (the file older docs call `README.md`). **Real, on disk.**
 - `schema.public.sql` lives in Alex's repo at `docs/schema-handoff/2026-04-15/`; regenerable via `supabase db dump`.
 
 **Brand**
@@ -63,7 +70,7 @@ doc, ask whether it belongs inside one of these instead.
 - **Deploy workflow:** edit locally in the `01_CORE/site/` git worktree → commit → **push to `main` → Cloudflare Workers Builds auto-deploys**. Branch pushes give preview URLs. Zip uploads are retired; zips in `00_COWORK/_OUTPUTS/` serve as point-in-time records only. *(Corrected 2026-07-05.)*
 
 **Card data**
-- `card_sources_seed_enriched.csv` — the Stage 1 registry of issuer source URLs. **Real, on disk — RETIRED 2026-08-01** with the script pipeline; kept as a record. Source discovery now happens in the daily batches' coverage diffs; learned per-issuer source knowledge lives in `verify.issuer_notes`.
+- `card_sources_seed_enriched.csv` — the Stage 1 registry of issuer source URLs. **Not in this repo** — it lives in the monorepo under `card_coach_business_docs/01_CORE/CardCoach/Reverify Script/` (2026-09-02 correction). **RETIRED 2026-08-01** with the script pipeline; kept as a record. Source discovery now happens in the daily batches' coverage diffs; learned per-issuer source knowledge lives in `verify.issuer_notes`.
 - 95+ cards · **16 issuers** · 442+ earn rates · 155+ caps (dataset v23, 2026-03-14; PCF net-new adds pending).
   Live DB as of 2026-08-16: 139 `card_products`, 16 issuers, 609 `earn_rates`, 155 `card_caps`.
   The public **card-count** claim stays "95+" until the 2026-07-16 decision is revisited — that
@@ -87,7 +94,7 @@ them from memory. Do not cite them as if they're here.
 | `HOW_THE_ENGINE_WORKS.md` (in old rules) | Now real — built fresh. Use it. |
 | `schema copy.txt` | Never existed. The schema is `SCHEMA.md`. |
 | `PIPELINE.md` / `DECISIONS.md` / `OPEN_ITEMS.md` | Were `.pdf` (image-only). Content now lives in `PIPELINE_AND_DECISIONS.md` + `WORKING_NOTES.md`. |
-| `stage2_fetcher.py` | **RECOVERED.** Was Claude-generated and archived inside `stage2_fetcher.pdf` (a ZIP), which is why no one could find it and Alex never had it. Now a real `.py` file in this set. |
+| `stage2_fetcher.py` | Was recovered from `stage2_fetcher.pdf` (a ZIP) in July and retired 2026-08-01; **it is not in this repo** (2026-09-02). Archive only. |
 | `stage2_README.md` | Not in this folder. Runbook content is summarized in `PIPELINE_AND_DECISIONS.md`. |
 | `stage3_reverify_prompt.md` (and v1.1) | Were `.pdf`. The Stage 3 prompt is summarized in `PIPELINE_AND_DECISIONS.md`; full prompt lives wherever Mike pastes it from. |
 | `card_sources_ddl.sql` | **Not in this folder.** Referenced as "for future Supabase migration." Confirm with Alex. |
@@ -127,7 +134,7 @@ someone produces it. The content is good; the file trail was broken. This list i
 - **Commission-blind** — enforced at the data layer, not just as policy. The pipeline never touches affiliate/commission data.
 - **V1 is dead.** Production reads only the V2 tables (`card_products`, `earn_rates`, `card_caps`, `card_exclusions`). The old `cards` / `card_earn_rates` tables are not in any read path. (See decision 2026-04-16.)
 - **French is V1 scope, but not yet done.** The FR-CA source rows are still blank — placeholder, not verified.
-- **Offer stacking + MCC routing** are captured in data but **not active in production.** Don't describe them as live features.
+- **Offer stacking + MCC routing** — RETIRED LINE (2026-09-02): both are live. `loyalty_offer_stacking` has been on since 2026-08-02 and `merchant_mcc_assumption` since 2026-08-14; see the block at the top of this file.
 - **Safe public claims:** "issuer-verified," "95+ cards," **"16 issuers."** (UPDATED 2026-08-16 — Neo Financial onboarded; see the PIPELINE_AND_DECISIONS entry of that date.) The 16 are: Amex, BMO, CIBC, Canadian Tire, Desjardins, HSBC, MBNA, National Bank, **Neo Financial**, PC Financial, RBC, Rogers, Scotia, Simplii, TD, Tangerine. **Read the history carefully before “correcting” this line:** older docs claimed "16" and were wrong — that 16 double-counted Rogers as both “Rogers” and “Rogers Bank”. The count was genuinely 15 from then until 2026-08-16, and is genuinely 16 now for a different reason. The old standing instruction to hunt down and fix “16 issuers” on the live site is **retired**; 16 is now correct. HSBC still carries 0 tracked cards and is excluded from the verification rotation, so a “cards across N issuers” claim should say 15, not 16.)
 - **No ads.** Hard constraint.
 
@@ -163,8 +170,10 @@ Where this addendum conflicts with the ghost list above, this addendum governs.
 preserved. The two stacked defensive redirects on cardcoach.ca were removed.
 `hello@cardcoach.ca` routes via Email Routing. Deploy: push to `main` auto-deploys
 via Cloudflare Workers Builds (active since 2026-07-05, verified 2026-07-16) —
-anything committed to `main` ships live within ~1 minute. Open: `www.cardcoach.ca`
-dead-ends and needs a www→apex redirect (WORKING_NOTES #21).
+anything committed to `main` ships live within ~1 minute. `www.cardcoach.ca` 301s to the
+apex (verified 2026-09-02; WORKING_NOTES #21 closed). The site's working copy is
+`card_coach_website/site/` in the monorepo (relocated git-dir `.cardcoach-site.git`; see that
+directory's README) — the `01_CORE/site/` worktree named above is the old location.
 
 ---
 

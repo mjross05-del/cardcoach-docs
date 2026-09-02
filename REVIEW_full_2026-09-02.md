@@ -219,3 +219,41 @@ The honest constraint: at ~110 human visits/month, `REVENUE.md`'s model needs ~2
 
 ## Method
 Snapshot copied to a clean container; five specialised reviewers (mobile, engine, edge, web, docs-vs-reality) ran in parallel; every claim re-checked: read-only SQL on production plus one permission probe as `anon` in a rolled-back transaction, deployed function list + 24 h logs, security/performance advisors, live GETs on cardcoach.ca, Cloudflare zone analytics, the three git repos on Mike's machine, and full test runs (`pnpm install --frozen-lockfile`, `tsc`, jest, vitest, Deno). Not verifiable from here: production "Confirm email" setting (F-08); existing GCP quota cap (F-10); `receipt-parse-v1` key handling in receipt-core (F-16). Dropped: a reviewer claim that receipt-core had no git history (snapshot artifact; it has 23 commits and no remote).
+
+
+---
+
+## Status at the end of the review lane — 2026-09-02 (appended by the lane)
+
+All other runtimes were retired on 2026-09-02; this lane took over the DATA-018 branch and landed it. Everything below marked **landed** is on monorepo `main` (local, `141d32b`…`0ac6b3f`) and in this docs repo; Mike's push and the edge deploy make it live.
+
+| Finding | Status |
+|---|---|
+| F-01 anon writes through views | **Closed in production.** SEC-001 applied 14:51 UTC; views `security_invoker`, write grants revoked and re-granted only where enumerated; verified with a rolled-back `anon` probe. |
+| F-02 affiliate lane absent from production | **Closed.** `affiliate-click` v2 deployed with gates; DB guard AFF-002; site pushed; one live click = one row. |
+| F-03 Pro cannot be sold | **Open — Mike's chain.** D-U-N-S `203843635` in hand → Apple Organization enrolment → Paid Apps/banking/W-8BEN-E; Google Payments merchant profile; RevenueCat secrets; go-live build. Code-side seams closed (F-05/06/09). |
+| F-04 caps invisible to ranking | **Landed** (CAPS-001; 16 tests). Live after the edge deploy. |
+| F-05 auto_location not enforced server-side | **Landed** (recommend-here-v2 gate behind `auto_location_gate`). |
+| F-06 paywall seams | **Landed** (purchase-layer check in `useFeatureGate`; confirmation waits for the entitlement). |
+| F-07 background-resume logouts | **Landed** (AppState-driven token refresh). |
+| F-08 signup `emailRedirectTo` | **Landed**; the production "Confirm email" setting is still Mike's to check. |
+| F-09 webhook grants forever | **Landed** (grant without expiry deferred to `billing-sync`). |
+| F-10 no rate limits | **Landed** (SEC-002 per-user budgets, DB-backed; last-hop XFF). GCP quota cap + budget alert remain Mike's. |
+| F-11 affiliate-click unauthenticated writer | **Closed in production.** |
+| F-12 CI tests nothing that ships | **Landed** (Deno tests, bundle hash, i18n, N+1, migration ledger, disclosure gate). |
+| F-13 migration history | **Landed** (18 reconstructed, 4 renamed, ledger + gate; 128/128). `db reset` not yet proven locally — needs Docker on Mike's machine. |
+| F-14 record and code on one laptop | **Partly closed.** Docs repo committed; monorepo `main` carries the work — push is Mike's; receipt-core still has no remote. |
+| F-15 legal surfaces | **Landed** (policy, terms, `/terms`, paywall + Settings links). Residue: receipt retention decision (WORKING_NOTES #40). |
+| F-16 dead/unsourced functions | **Corrected and open.** `recommend-cards-stateless-v1` is live (cardcoach.ca's /best-card calls it) — not dead. Dead: `recommend-here` v1, `recommend-card` v1, `resolve-merchant-v1`, `import-spend-v1`, `health`; undeploy is Mike's (#42). The three functions reading the raw service key now use `getSecretKey()`. |
+| F-17 data debt | **Open — next for the lane** (#44): merchant-category batch never run; MCC p3 deltas `PENDING_VERIFY`. |
+| F-18 snapshots / receipt schema / retention | **Open.** Retention decision #40; snapshot schema move not started; leaked-password protection is a dashboard toggle (Mike). |
+| F-19 docs wrong | **Landed** (this commit): SOURCE_OF_TRUTH top block + corrections, HOW_THE_ENGINE_WORKS, autolocation self-heal correction, price banners ×5, LAUNCH_TRACKER archived, WORKING_NOTES closed/opened, PROJECT_RULES 9(e), PIPELINE entry. |
+| F-20 single points of failure | **Open — Mike** (Expo 2FA; second admin; receipt-core remote). |
+| F-21 revenue blockers | **Open — Mike's chain** (F-03) plus affiliate applications. |
+| F-22 test gaps | **Partly closed** (caps, rate limits, fuel grades, legal links added; 1,347 jest + 726 Deno green). |
+| F-23 mobile silent-failure seams | **Partly closed** (purchase-pending copy, refresh); the rest is unchanged. |
+| F-24 apps/web | **Open** (delete or repoint its privacy page; nothing deployed — correct). |
+| F-25 edge one-sweep items | **Partly closed** (secret-key reads; XFF). |
+| F-26 site housekeeping | **Partly closed** (sitemap lastmod, MBNA link, GM links, EN+FR footer, support teaser, how-we-make-money copy). |
+
+To-do list: items 1, 3, 8, 9, 10, 11 (code half), 12, 13, 14 done; 2 done except the push; 4, 5, 6, 7, 15, 16, 17 are Mike's; 18 and 19 are next for the lane.

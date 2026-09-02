@@ -1,6 +1,6 @@
 # CardCoach — Session Rules (2026-07-02)
 
-Last updated: 2026-08-02 · Owner: Mike (rule 5 partial supersession landed 2026-08-02; rule 10 clarification 2026-07-31)
+Last updated: 2026-09-02 · Owner: Mike (rule 9(e) tightened 2026-09-02; rule 5 partial supersession landed 2026-08-02; rule 10 clarification 2026-07-31)
 
 Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to behave.
 
@@ -61,6 +61,16 @@ Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to 
        breaks `supabase db push` and `db reset` for everyone else. This happened with
        `20260727215042_verification_engine_p1_verify_schema` (applied 2026-07-27, no local
        file). Recover with `supabase db pull`.
+       **Tightened 2026-09-02 (review lane, F-13).** It kept happening: by 2026-09-02, 18 applied
+       migrations had no file and 4 files carried versions the database never recorded. Now
+       binding: (1) the file is named with the version the database RECORDED (MCP
+       `apply_migration` records its own timestamp, never the file's — read it back from
+       `supabase_migrations.schema_migrations` after applying and rename); (2) the same commit
+       appends `<version> <name>` to `mobile_app_codebase/supabase/APPLIED_MIGRATIONS.txt`;
+       (3) CI runs `pnpm verify:migration-history`, which fails on any applied version without
+       a file, any name mismatch, and any file sitting below the newest applied version that
+       the ledger does not list. A file above the newest applied version is a pending
+       migration and passes.
 
    (f) **Multi-session discipline.** Mike runs concurrent sessions. Any session with write
        authority must therefore assume the database has moved since its context was built:

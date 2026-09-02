@@ -1,6 +1,6 @@
 # DESIGN — Online Merchant Recommendation v1 (Pro)
 
-Date: 2026-08-17 · Status: **SHIPPED — see §7a.** · Author: Cowork session (Claude)
+Date: 2026-08-17 · Status: **SHIPPED — see §7a.** · Author: Cowork session (Claude) · Last updated: 2026-09-02 (price notes)
 Sign-off was needed on: D1–D9 (§2) before any code was written.
 
 > **CORRECTION 2026-08-27.** The header said "DRAFT for review" and "before any code is
@@ -200,7 +200,8 @@ flags that the live site already markets a deferred Pro tier. Both need a dated 
 once the paid tier is real.
 
 > **SUPERSEDED 2026-08-28.** The quoted REVENUE.md text no longer exists. The v3 rewrite puts a
-> paid tier in scope and prices it (Plus $3.99/$29.99, Pro $9.99/$79.99), and `online_merchant`
+> paid tier in scope and prices it (the ladder quoted at the time — Plus $3.99/$29.99, Pro $9.99/$79.99 — was
+> withdrawn the same day; the decision is Free + Pro at $7.99/$59.99, 2026-08-28 second revision), and `online_merchant`
 > is one of the five entitlements Pro grants. See `PRICING_TIERS_2026-08-28.md` and the
 > 2026-08-28 entry in `PIPELINE_AND_DECISIONS.md`. WORKING_NOTES #13 still stands: "real" means
 > purchasable, and nothing is on sale yet.
@@ -357,7 +358,7 @@ mean *unverified, not zero* (`recommendCardV2.ts:223-224`) — this design does 
 
 ### D9 — iOS first, web second
 
-Pro is the iOS surface (REVENUE.md: $3.99/mo · $34.99/yr, 40.4% of the 24-month model), the
+Pro is the iOS surface (REVENUE.md at the time: $3.99/mo · $34.99/yr, 40.4% of the 24-month model — decided price is now $7.99/$59.99), the
 mobile client already carries the dead `channel` pref and the missing screen's translations, and
 1.0.3 is in flight. The web app is a bigger lift than it looks — it calls no edge functions at all
 today (§1.3) — and the free web tool is the wrong home for a paid feature anyway.

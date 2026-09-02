@@ -1,6 +1,6 @@
 # How CardCoach's Recommendation Engine Works
 
-Last updated: 2026-07-16 · Owner: Mike
+Last updated: 2026-09-02 · Owner: Mike
 
 This document explains in plain English how CardCoach decides which credit card you should use for any purchase.
 
@@ -78,7 +78,7 @@ Caps are stored in two places:
 
 1. **Inline caps on `earn_rates`** — simple monthly/annual dollar limits via `cap_monthly_cad` and `cap_annual_cad` columns. Good for straightforward "up to $X/month" rules.
 
-2. **`card_caps` table** — richer cap modeling for complex cases:
+2. **`card_caps` table** — richer cap modeling for complex cases. **Until 2026-09-02 ranking never read this table** — only the cap-progress screen did, so a card whose cap lived here (Scotia Momentum's $25,000/yr, CIBC Dividend's $20,000/yr per category, every BMO Air Miles billing-cycle cap: 161 active caps on 40 cards) kept being recommended at its bonus rate after the cap was spent. CAPS-001 (`supabase/functions/_shared/cardCaps.ts`) now folds every active `card_caps` row onto the earn rows it governs before the engine runs: `calendar_year` → the row's annual cap, `calendar_month`/`billing_cycle` → its monthly cap, pooled caps → one `capPoolId` across the member rows, "overall" caps → a whole-card bucket. `card_caps` wins over an inline value on the same axis. Not modelled, deliberately: Rogers subscriber-uplift caps and the second leg of a dual cap (under-consuming a cap is the safe direction).
    - `cap_basis`: what the cap measures (`spend_cad`, `rewards_points`, `transactions`)
    - `cap_unit`: unit of the cap value (`CAD`, `points`, `transactions`, `percent`)
    - `cap_period`: when it resets (`billing_cycle`, `calendar_month`, `calendar_year`)
@@ -422,7 +422,7 @@ The engine has gone through two major versions:
 - **V1** (`packages/engine/src/index.ts`) — The original scoring engine with `rankCardsForPurchase`. Was in use via the `recommend-card` edge function; no longer live.
 - **V2** (`packages/engine/src/v2/earnMath.ts`) — Rewritten earn math with `computeEarnMathV2`. Uses the updated schema (single point valuations, card_caps, card_exclusions) and produces structured explanations via `buildStructuredExplanationV2`. Served by the `recommend-card-v2` edge function.
 
-An offer stacking solver (`solveOfferStack`) has been implemented but is not yet wired into the v2 production path. Both versions coexisted during the transition — the v2 engine was the direction of travel.
+The offer stacking solver (`solveOfferStack`) is wired into the v2 production path behind `runtime_flags.loyalty_offer_stacking`, which has been **on since 2026-08-02** (the sentence that used to stand here said "not yet wired"; it was stale from that date). V1 is retired; the `recommend-card` v1 function is undeployed or pending undeploy (2026-09-02 review).
 
 ---
 
