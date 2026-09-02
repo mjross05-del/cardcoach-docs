@@ -1,7 +1,7 @@
 # CardCoach — Source of Truth
 
 **Open this file first. Always.**
-Last updated: 2026-09-02 · Owner: Mike
+Last updated: 2026-09-02 (Wealthsimple onboarded, 17 issuers) · Owner: Mike
 
 > **2026-09-02 — read this block first; where it conflicts with anything below, it governs.**
 > - The company is **CardCoach Inc.** (Ontario). "Warm Logic" below is the pre-incorporation working brand; the legal, privacy and store surfaces say CardCoach Inc. and so should new docs.
@@ -71,8 +71,9 @@ doc, ask whether it belongs inside one of these instead.
 
 **Card data**
 - `card_sources_seed_enriched.csv` — the Stage 1 registry of issuer source URLs. **Not in this repo** — it lives in the monorepo under `card_coach_business_docs/01_CORE/CardCoach/Reverify Script/` (2026-09-02 correction). **RETIRED 2026-08-01** with the script pipeline; kept as a record. Source discovery now happens in the daily batches' coverage diffs; learned per-issuer source knowledge lives in `verify.issuer_notes`.
-- 95+ cards · **16 issuers** · 442+ earn rates · 155+ caps (dataset v23, 2026-03-14; PCF net-new adds pending).
+- 95+ cards · **17 issuers** · 442+ earn rates · 155+ caps (dataset v23, 2026-03-14; PCF net-new adds pending).
   Live DB as of 2026-08-16: 139 `card_products`, 16 issuers, 609 `earn_rates`, 155 `card_caps`.
+  Live DB as of 2026-09-02 (Wealthsimple onboarded): 153 `card_products`, **17 issuers**, 736 `earn_rates`, 173 `card_caps`.
   The public **card-count** claim stays "95+" until the 2026-07-16 decision is revisited — that
   entry governs the claim, not this line. The **issuer** count is a plain fact and moves to 16.
 - The actual card facts (earn rates, caps, fees, point values) live in the **Supabase database**, governed by the pipeline. They are NOT re-derivable from the docs alone.
@@ -135,7 +136,7 @@ someone produces it. The content is good; the file trail was broken. This list i
 - **V1 is dead.** Production reads only the V2 tables (`card_products`, `earn_rates`, `card_caps`, `card_exclusions`). The old `cards` / `card_earn_rates` tables are not in any read path. (See decision 2026-04-16.)
 - **French is V1 scope, but not yet done.** The FR-CA source rows are still blank — placeholder, not verified.
 - **Offer stacking + MCC routing** — RETIRED LINE (2026-09-02): both are live. `loyalty_offer_stacking` has been on since 2026-08-02 and `merchant_mcc_assumption` since 2026-08-14; see the block at the top of this file.
-- **Safe public claims:** "issuer-verified," "95+ cards," **"16 issuers."** (UPDATED 2026-08-16 — Neo Financial onboarded; see the PIPELINE_AND_DECISIONS entry of that date.) The 16 are: Amex, BMO, CIBC, Canadian Tire, Desjardins, HSBC, MBNA, National Bank, **Neo Financial**, PC Financial, RBC, Rogers, Scotia, Simplii, TD, Tangerine. **Read the history carefully before “correcting” this line:** older docs claimed "16" and were wrong — that 16 double-counted Rogers as both “Rogers” and “Rogers Bank”. The count was genuinely 15 from then until 2026-08-16, and is genuinely 16 now for a different reason. The old standing instruction to hunt down and fix “16 issuers” on the live site is **retired**; 16 is now correct. HSBC still carries 0 tracked cards and is excluded from the verification rotation, so a “cards across N issuers” claim should say 15, not 16.)
+- **Safe public claims:** "issuer-verified," "95+ cards," **"17 issuers."** (UPDATED 2026-09-02 — Wealthsimple onboarded; see the PIPELINE_AND_DECISIONS entry of that date. Previously updated 2026-08-16 for Neo Financial.) The 17 are: Amex, BMO, CIBC, Canadian Tire, Desjardins, HSBC, MBNA, National Bank, Neo Financial, PC Financial, RBC, Rogers, Scotia, Simplii, TD, Tangerine, **Wealthsimple**. A "cards across N issuers" claim should say **16**, not 17 (HSBC still holds no tracked cards) — the Play listing copy currently says 15 and needs a bump at its next edit. **Read the history carefully before “correcting” this line:** older docs claimed "16" and were wrong — that 16 double-counted Rogers as both “Rogers” and “Rogers Bank”. The count was genuinely 15 from then until 2026-08-16, and is genuinely 16 now for a different reason. The old standing instruction to hunt down and fix “16 issuers” on the live site is **retired**; 16 was correct from 2026-08-16 to 2026-09-02 and **17** is correct from 2026-09-02. HSBC still carries 0 tracked cards and is excluded from the verification rotation.)
 - **No ads.** Hard constraint.
 
 ---

@@ -5,7 +5,7 @@ This file is the "why things are the way they are" reference. The process sectio
 the current system; the decisions section is **append-only** — add new entries, never
 rewrite old ones.
 
-Last updated: 2026-09-02 · Owner: Mike (data integrity, governance, review)
+Last updated: 2026-09-02 (Wealthsimple onboarded) · Owner: Mike (data integrity, governance, review)
 Status: **Daily scheduled batches operational (first runs week of 2026-07-27). The Stage 1–3 script pipeline is RETIRED (2026-08-01 decision entry) — see the historical note at the end of Part 1.**
 
 ---
@@ -35,8 +35,8 @@ auto for narrow guarded facts, gated proposals for everything structural.
 | Thu | TD Bank |
 | Fri | CIBC (+ Journie loyalty reverify) — BMO explicitly excluded (walled) |
 | Sat | Rogers + MBNA + Desjardins + National Bank |
-| Sun | Canadian Tire + PC Financial + Simplii + Tangerine + Neo Financial (+ PC/Triangle loyalty reverify) |
-| Fri 5 p.m. | Chrome lane, Mike present (~15–20 min): BMO coverage + facts, RBC tier thresholds, in-application FX boxes, Blue Rewards/AIR MILES transition watch |
+| Sun | Canadian Tire + PC Financial + Simplii + Tangerine + **Wealthsimple** (+ PC/Triangle loyalty reverify) — Wealthsimple added 2026-09-02; the Cowork task prompt's `ISSUER_BATCH` needs the `Wealthsimple` token added by hand |
+| Fri 5 p.m. | Chrome lane, Mike present (~15–20 min): BMO coverage + facts, **Neo Financial** (chrome-lane only since 2026-08-30 — its legal host is robots-walled; it was never actually in the Sunday prompt), RBC tier thresholds, in-application FX boxes, Blue Rewards/AIR MILES transition watch |
 
 Effective cadence: every tracked issuer touched weekly. Loyalty-stack offers carry a
 35-day staleness alarm on top (DATA-018/WS-1, added 2026-08-01).
@@ -1614,3 +1614,55 @@ on its real launch date.
 - **DATA-023 `auto_top_n`** — the issuer assigns the bonus after the fact to the N categories with the most spend in the period. Modelled where the facts are: `earnRowPrices` ranks the purchase's issuer category against the card's other Spend Categories from this month's `user_spend_snapshots`, purchase counted in; a row prices when fewer than N other groups have at least as much. Ties fail closed; so does every caller without spend facts (the web ranking, the stateless catalog path, analyze-spend, card value), which is deliberate — nobody's month is not a fresh month. Compound CIBC categories pool through `condition_group`. Migration `20260902182121`; 33 rows retyped (run `7d3e0c1a`); spec `docs/planning/specs/DATA-023_auto_top_n.md`. Live after the next edge deploy.
 - Retention review: scheduled task "CardCoach — monthly snapshot retention review", 1st of each month 14:00 UTC, read-only — it lists `snapshots.v_retention_candidates` with the drop SQL for Mike; nothing drops on its own.
 **Decision recorded (lane):** the top-N estimate is allowed to under-credit and never to over-credit — the same posture as `user_selected`, `mcc_defined` and the region gate. A user who records no spend sees the bonus price as a first purchase of the month would; that is what the issuer's rule says for a period with fewer than N categories in play, and it is the honest reading of the data on hand.
+
+### 2026-09-02 (later still) — Wealthsimple onboarded as the 17th issuer; four products, all scoreable; non-offered cards stay scoreable but are never pitched
+**Decision (Mike: "I want Wealthsimple added to our catalog … see it end to end"):** Wealthsimple joins the catalogue as
+issuer `wealthsimple` (issuer of record: Wealthsimple Payments Inc., Visa) with **four** `card_products` rows, not the
+two the marketing page shows. Wealthsimple's own legal disclaimers and its agreements index name four products —
+**Visa Infinite 1%** (invite-only beta, $0, 1%), **Visa Infinite 2%** (the original card, closed to new applicants
+2026-04-28, still held), **Visa Infinite +** (open) and **Visa Infinite Privilege** ("only available in limited
+quantities") — and an in-wallet optimizer must score what people actually hold, so the closed and invite-only cards
+load as `is_active` + `scoreable` with `application_status` carrying the truth (`closed`, `invitation_only`,
+`limited`, `open`). The prepaid "Cash" Mastercard is a prepaid product and is out of scope.
+**Decision — fees:** `annual_fee_cad` on the three 2% cards is the **sticker $240** (the disclosure statement's
+"$240* charged monthly at $20/month … maintenance fee"; Quebec billed $240 annually). Wealthsimple waives it for
+clients with $100,000+ in individual assets or $4,000+/month direct deposit; that is a per-client condition with no
+schema home, so it is recorded in `source_metadata.verify` and NOT modelled — the same posture every other
+conditional-waiver card takes. The 1% card is $0 ("No Annual Fees"). Supplementary card $120/yr has no column; noted.
+**Decision — FX:** 0.00% on the 2% family, dual-confirmed (disclosure "We do not charge any additional foreign currency
+conversion mark-up." + product page "it's always zero"); **2.5%** on the 1% card from its own disclosure statement,
+where no-FX is only a user-selectable benefit. The engine has no per-user benefit switch, so the disclosed default is
+stored and the selectable waiver is a carried [VERIFY].
+**Decision — earn:** four flat `base` rows (2 / 2 / 1 / 2 cents per dollar), uncapped, from one Tier-1 clause
+(ACCTC-080426-WS: "2% for the Wealthsimple Visa Infinite 2%, Visa Infinite +, and Visa Infinite Privilege credit cards
+and 1% for the Wealthsimple Visa Infinite 1% credit card"). No `card_exclusions` rows: the exclusions (cash-like
+transactions, refunds, fees, adjustments) are transaction-class, not category-class. In-app "boosted" partner cash back
+and the 30-day "up to 5%" welcome offer are **excluded from `earn_rates`** — merchant-funded / welcome-class, no
+published per-purchase rate — by the Neo 2026-08-16 partner-cashback precedent and rule 7.
+**Decision — the first non-open scoreable cards, and what they exposed:** until today every `closed` card was also
+`load_only`, so nothing ever asked what a public surface should do with a card that scores but cannot be applied for.
+Two surfaces pitch cards the user does not hold — `/best-card`'s "Beyond your wallet" gap-finder and `apps/web`'s
+public per-category rankings (H29). Both now skip `application_status IN ('closed','invitation_only')` (`limited`
+still pitches). The wallet picker (mobile `export_cards`, `/best-card` issuer list) keeps all four, as it must.
+**Access posture:** `www.wealthsimple.com`, `help.wealthsimple.com` and the PDF host `www.cdn.wealthsimple.com` all
+served full content to the cloud fetcher; the three legal documents sit behind 302s from stable wealthsimple.com paths
+to **version-coded PDF filenames** (CHA080426 / CHA041026 / ACCTC-080426-WS) — navigate from the legal index, never
+guess a filename; a changed filename is itself a revision signal. The Claude-in-Chrome extension refuses
+wealthsimple.com outright, so the chrome lane cannot take this issuer; it goes in the **Sunday** cloud batch.
+`verify.issuer_notes` seeded as `Wealthsimple` (`wall_status='open'`, `preferred_channels={http_pdf,browser_render}`)
+with the four-vs-two coverage-diff trap, the fee-waiver trap ("do not propose $0") and all carried items.
+**Carried [VERIFY] items:** (1) evidence capture — onboarded from cloud fetches without sha256 evidence rows; the first
+Sunday run must capture CHA-080426-WS, CHA-041026-WS1 and ACCTC-080426-WS as `verify.evidence` artifacts and grep-guard
+the quoted clauses; (2) the legacy 2% card's fee for grandfathered holders (the pre-April-28 help article states the
+waiver but not the amount; the DB carries the disclosure's $240, which names "Wealthsimple Visa Infinite*"); (3) the
+1% card's selectable no-FX benefit; (4) `application_status` on Privilege (`limited`) and the 1% card
+(`invitation_only`) are sentence-level facts on the product page / help centre — re-check every run.
+**Applied:** deltas `2026-09-02__issuers_card_products__wealthsimple_onboarding.sql` (issuer, 4 card_products,
+issuer_notes seed) and `2026-09-02__earn_rates__wealthsimple_p1.sql` (4 base rows). Snapshots
+`snapshots.{issuers,card_products,earn_rates}_snapshot_20260902_wealthsimple`, RLS-secured. Pre/post guards asserted in
+both transactions (issuers 16→17, card_products 149→153, earn_rates 732→736). Read-back through the anon REST surface
+and a live `recommend-cards-stateless-v1` call (Visa Infinite + ranks first at 200¢ on a $100 base purchase; TD Cash
+Back beats it at groceries) confirmed the rows price. Public claim moves to **17 issuers** (16 with tracked cards —
+HSBC still holds none). Site: `apply-links.js` +4 direct entries, `best-card.js` gap-finder skips non-offered cards;
+mobile: `Wealthsimple` added to the picker's preferred issuer order; `apps/web` H29 filter tightened. The Sunday
+task prompt's `ISSUER_BATCH` is a Cowork-local edit Mike makes by hand (add the token `Wealthsimple`).
