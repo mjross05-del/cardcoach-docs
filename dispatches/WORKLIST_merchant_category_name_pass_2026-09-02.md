@@ -2,6 +2,12 @@
 
 **Date:** 2026-09-02 · **Lane:** review lane · **Owner:** Mike decides, lane applies · Last updated: 2026-09-02
 
+> **APPLIED 2026-09-02 18:03 UTC.** Mike's ruling in chat: "approved" (all 39). Run `4b0ccfa5-41f1-4d6f-975f-5856e4e3eae7`
+> (chat), 39 guarded UPDATEs each with a `verify.write_audit` row (`approved_by = 'mike'`), snapshot
+> `snapshots.merchant_entities_snapshot_20260902_namepass`, record
+> `deltas/2026-09-02__merchant_entities__category_name_pass_39_APPLIED.sql`. Guardrail `placed_null_category`
+> 45 → 6 (the six skipped below); entities NULL overall 77 → 38, none of the remaining 32 has a place row.
+
 **Why.** After today's merchant-category apply (run `99b6d975`), 77 `merchant_entities` still carry a NULL
 `default_category_id`, 45 of them with place rows (`verify.merchant_graph_guardrail` → `placed_null_category`).
 `recommend-card-v2` has no classifier fallback, so every tap on one of them scores base rates only. The
@@ -62,5 +68,4 @@ Bay Adelaide Centre.
 | 6e6ed0cc | SaskTel | recurring_bills |
 | ecf04f24 | VRCADE | entertainment |
 
-**Mike's ruling:** approve all / approve all except … / reject. On "approve", the lane applies and records the
-run in this file's header.
+**Mike's ruling (2026-09-02, chat):** approve all — applied, see the header.
