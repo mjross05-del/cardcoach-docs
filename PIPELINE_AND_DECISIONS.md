@@ -1574,3 +1574,35 @@ An earlier run of this model had the **hard paywall (T9) topping every column, a
 - `apps/web` `/privacy` and `/terms` now redirect to `cardcoach.ca/privacy` and `cardcoach.ca/legal` and left the sitemap (F-24). The mobile font gate reports a failed font load and renders with the platform faces instead of spinning forever (F-23 seam; `FontGate` component, 3 tests).
 **Decision (lane, under rule 9):** snapshots are `snapshots.<table>_<stamp>` from now on (PROJECT_RULES 9(a) tightened). Dropping stays manual, by name, from the view — nothing in the database deletes a snapshot on its own. Rationale: the snapshots exist for rollback; the view's job is to make forgetting impossible, not to decide.
 **Carried from the retired lane:** two uncommitted edits found in the working trees after Mike's checkout switch — the 2026-08-24 Android-submit proof (WORKING_NOTES #24d, `RELEASE_android_1.x_HANDOFF.md` Step 2) — committed as written.
+
+### 2026-09-02 (evening) — The Playbook batch 2: six posts rendered, renderer re-aligned with the live site
+**What landed (repo working trees, UNCOMMITTED — the blog publish gate is Mike's proofread):** six post sources
+(`01_CORE/blog/post-11…post-16`), `render_v2.py` patched, six rendered pages + blog index + four hubs + sitemap (30 URLs)
++ six OG images in `card_coach_website/site/`. Topics, chosen by Mike from a proposed set after the chat-runtime draft
+was found to duplicate four live pages: Rogers Red Mastercard changes (Nov 18 2026), Scotia Momentum rent/tax change
+(Oct 22 2026) + recurring bills, annual-fee break-even (tracker #11), no-fee showdown (tracker #12), foreign transaction
+fees, transit & rideshare. Full record: BLOG_OPERATIONS.md 2026-09-02.
+**Decisions (lane):**
+- **The renderer follows the live site, not the other way round.** `render_v2.py` had drifted from three months of
+  hand edits (root-relative asset refs, Best Card nav, footer, sitemap page list, deploy tree moved). It was patched to
+  reproduce the live pages byte-for-byte before any new page was rendered — proven by a dry render of the ten existing
+  posts. Rule for future renders: run the dry-render diff first; a diff that is not a deliberate edit is renderer drift.
+- **dateModified means modified.** A re-render of an unchanged post no longer bumps `dateModified` / `article:modified_time`
+  / sitemap `lastmod`; the renderer compares the rendered page against the file on disk and keeps the old date when only
+  the date would change. The date policy (real dates only, no backdating) is unchanged; this narrows what counts as a
+  modification.
+- **Card facts in posts come from the catalog first.** Every rate, cap and fee in the six posts was read from
+  `card_products`/`earn_rates`/`card_caps` and the verify engine's quoted issuer clauses, then spot-read live on the
+  issuer page the same day. Facts the catalog fails closed on (Amex consumer FX) stay blank in the post and the post says
+  why. Cards outside the catalog are not named with numbers.
+- **First-year fee waivers are welcome offers.** Note-only in ledgers, never in a fee cell (this batch applied it to BMO's
+  "waived in the first year" too; post-05's older "(waived yr 1)" is a known inconsistency, left for Mike).
+- **MCC lists are ours unless they are the issuer's.** The catalog's MCC mappings are not attributed to issuers in body
+  copy; only MCCs printed on an issuer page (TD's 4111, Scotia's 5411/6513/9311) are quoted as the issuer's.
+- **Independent fact-check before render.** A subagent recomputed every derived figure and re-read ten Tier-1 sources;
+  three substantive corrections came out of it (Rogers' amended Eligible Rogers Purchase definition vs the notice's
+  example sentence; the "half a point" vs full point wording; the rent tier hand-back direction). Worth repeating for
+  every batch.
+**Follow-ups (not decisions):** the 21 older OG images still carry "The Playbook · card.coach" in the footer;
+`make_og.py` in the staging folder regenerates them. If Mike stages publication over weeks, each post needs a re-render
+on its real launch date.

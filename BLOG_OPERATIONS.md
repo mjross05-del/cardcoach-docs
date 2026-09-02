@@ -1,6 +1,6 @@
 # BLOG_OPERATIONS.md — The Playbook (blog at cardcoach.ca site root; domain flipped from card.coach 2026-07-08)
 Updated: 2026-07-05. Owner: Mike. Status: launch-ready. (Header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-01, contradicting the 2026-07-02/03/04 dated entries within.)
-Last updated: 2026-07-31 (stamp added per SYNC_PROTOCOL landing-date rule; content unchanged)
+Last updated: 2026-09-02 (batch 2: posts 11–16 rendered; renderer re-aligned)
 
 ## What exists
 - Blog name: **The Playbook** — "Practical guides to getting more from the cards you already have."
@@ -218,3 +218,71 @@ Top-20 rankings on target queries (90–120d) · organic sessions (M4–M6) · A
 Push to `main` on `cardcoach-site` → Cloudflare Workers Builds auto-deploy (project imported as Workers static assets, 2026-07-05). Branch pushes = preview URLs
 (use for review sittings before merging). `wrangler pages deploy` = break-glass only.
 Drag-and-drop retired. Render sessions end with commit+push once Mike confirms the publish gate.
+
+## 2026-09-02 — Batch 2: six posts rendered (11–16), renderer re-aligned with the live site — AWAITING MIKE'S PROOFREAD GATE
+Origin: a chat runtime without repo/site access drafted seven posts, four of which duplicated live pages
+(groceries, Costco, cash back vs points, gas). Re-scoped against the live catalog and the tracker: Mike chose
+the six below (AskUserQuestion, 2026-09-02). Card facts come from the Supabase catalog (`card_products`,
+`earn_rates`, `card_caps`, verify-engine `fact_checks` quoted clauses, last_verified 2026-08-16 → 2026-09-02)
+plus live issuer reads the same day; every asserted number is ledgered per post. An independent adversarial
+fact-check (subagent: arithmetic recompute + ten Tier-1 fetches + banned-language scan) ran before the final
+render; its findings are folded in and noted in the ledgers where a claim was corrected.
+
+**Sources → pages (all `date` 2026-09-02, "Verified September 2, 2026"):**
+- `post-11-rogers-red-changes.md` → `/rogers-red-mastercard-changes-2026` · How Rewards Work · Rule changes. Tier 1:
+  the four per-card Rogers notices (`notification_Core.pdf`, `_World.pdf`, `_WE.pdf`, `_WL.pdf`), the Aug-4 notice page,
+  compare-cards page, Disclosure Summary 08/2026. Nov 18 2026: 1.5x redemption bonus removed (applies to pre-Nov-18
+  transactions too), 5% on Eligible Rogers Purchases (amended s.13 definition quoted), 1¢/pt; Jan 12 2027 roaming
+  credits $25/$50/$75/$200; Aug-4 caps $16,000/$26,000/$61,000, WL uncapped. DERIVED MATH −$216/yr example, break-even
+  R = 0.5E.
+- `post-12-rent-tax-recurring-bills.md` → `/pay-rent-with-credit-card-canada` · Cash Back vs Points · Rule changes.
+  Tier 1: Momentum VI+ T&C (eff. 2026-02-01) carrying "Effective October 22, 2026, rental payments (MCC 6513) and tax
+  payments (MCC 9311) will no longer qualify as eligible Recurring Bill Payments"; Momentum Visa $49 / No-Fee $0 rates
+  from catalog + product page. Chexy 1.75% is a SERVICE source, labelled as such. Recurring-bill table across TD, CIBC,
+  BMO, Tangerine, Desjardins, Simplii, National Bank. DERIVED MATH: net-after-fee table, tier hand-back −$498/yr.
+  No claim that any other issuer pays its recurring rate on rent (none publishes it).
+- `post-13-annual-fee-worth-it.md` → `/credit-card-annual-fee-worth-it-canada` · How Rewards Work · Rewards basics
+  (tracker #11). Seven same-issuer fee-vs-no-fee pairs; break-even = fee ÷ rate gap; BMO CashBack WE cap case ($120 max
+  grocery uplift < $139 fee). All cash back; Scene+ 1¢ and PC 0.1¢ only.
+- `post-14-no-fee-showdown.md` → `/best-no-fee-credit-card-canada` · Cash Back vs Points · Card comparisons (tracker
+  #12). 13 no-fee cash-back cards + 4 points/store-currency cards on one fixed budget ($700/$300/$200/$800 per month),
+  every figure DERIVED-MATH-ledgered. Loblaw/Costco Amex non-acceptance sourced from `network_acceptance_rules`
+  (loblaws.ca help article; costco.ca).
+- `post-15-foreign-transaction-fees.md` → `/foreign-transaction-fee-credit-cards-canada` · How Rewards Work · Rewards
+  basics. Issuer FX disclosures quoted (Scotia fees page incl. its four named no-fee cards; TD, CIBC, RBC, Tangerine, PC,
+  Rogers, Neo 3%). Amex consumer FX deliberately blank — verify engine 2026-09-01: not published pre-application. Gold
+  Amex "accelerated only in Canadian currency; foreign = 1 pt" quoted from the product page. No-FX cards outside the
+  catalog not named.
+- `post-16-transit-rideshare.md` → `/best-credit-card-for-transit-canada` · Gas & Transit · Card comparisons (fills
+  the transit half of the pillar). Issuer definitions quoted (TD MCC 4111 only; CIBC benefits-guide wording; BMO/Scotia/
+  Amex wording); MCC lists are NOT attributed to issuers (catalog mapping only). PRESTO/TTC tap-to-pay facts from
+  prestocard.ca + ttc.ca (agency facts, not card facts). 14-card commute table, DERIVED MATH.
+
+**Renderer (`render_v2.py`) — two patches, byte-for-byte parity proven before use:** (1) live-drift parity: OUT moved
+to `card_coach_website/site` (01_CORE/site no longer exists), root-relative asset refs (`/styles.css` etc.), Best Card
+nav link, current footer (no Waitlist; How we make money; App Store link; "App in EN + FR"), sitemap page list
+(+delete-account, how-we-make-money, best-card; −waitlist). A dry render of the ten existing posts against the live
+files differed ONLY in `dateModified` — then (2) the **modified-date rule**: a post whose rendered content is unchanged
+keeps its previous `dateModified`/`article:modified_time`/sitemap `lastmod`; only real edits bump it. Also an optional
+`"sort"` key in POSTS as a same-date tiebreaker (timely posts lead the batch). Five existing posts gained inbound
+Related-reading links to the new ones (01, 02, 04, 05, 10) and therefore carry dateModified 2026-09-02; 03/06/07/08/09
+keep 2026-07-08. Patch scripts + pre-patch backup: `_to_delete/review-lane-staging/blog-2026-09-02/`.
+
+**Render result in `card_coach_website/site/` (UNCOMMITTED, Mike's gate):** 6 new post pages, blog.html (16 cards,
+Start-here unchanged), 4 hubs (Cash Back vs Points 4, Maximizing Groceries 3, Gas & Transit 3, How Rewards Work 6),
+sitemap.xml 30 URLs, post.css unchanged, 6 new OG PNGs (1200×630, brand template, footer "The Playbook · cardcoach.ca"
+— the 21 older OG images still read "card.coach"; regenerate when convenient, generator kept in the staging folder as
+`make_og.py`). Parity checklist run: every root-relative href/src resolves (30 pages), sitemap 30/30 ↔ files, canonicals
+== sitemap, ledgers on exactly the 16 post pages, ⛔ nowhere, one beacon per page (terms.html stub excepted, pre-existing),
+JSON-LD parses on every page, OG image present for every page, zero `href="#"`, banned-language scan clean on all six
+bodies, one footer md5 across the 30 rendered/hand pages (delete-account + terms stub pre-existing exceptions).
+
+**Editorial rules applied in this batch (new):** first-year fee waivers/rebates are welcome offers → note-only, never in
+a fee cell (BMO's "waived in the first year" included, unlike post-05's older "(waived yr 1)"); superlatives scoped to
+"our verified catalog"; MCC lists never attributed to an issuer unless on the issuer's page; service fees (Chexy) named
+as service sources; merchant acceptance facts cite `network_acceptance_rules` evidence.
+
+**Mike's steps:** proofread (review page published as an artifact, link in chat) → say "publish" → commit both trees
+(monorepo: 6 md + render_v2.py + `_to_delete` staging; site repo: 22 files) → push `cardcoach-site` main (Workers
+auto-deploy) → GSC: submit sitemap / request indexing for the six URLs. If publication slips past 2026-09-02, re-render
+so datePublished = the real launch date (date policy).
