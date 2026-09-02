@@ -46,6 +46,26 @@ Read SOURCE_OF_TRUTH.md first. It governs what's real; this file governs how to 
        ```
        Enabling RLS with no policies denies all non-bypassing roles; the REVOKE removes the
        grant as well so a later permissive policy cannot silently reopen it.
+       **Tightened 2026-09-02 (review lane, SNAP-001/SNAP-002).** Snapshots no longer live in
+       `public`. By 2026-09-02 that schema held 68 `*_snapshot_*` tables plus the three
+       `*_night_2026_07_31` copies: RLS on, so the API returned no rows, but 32 still carried
+       SELECT grants to anon/authenticated and every one was enumerable through the API's
+       schema. Migrations `20260902172110_snap_001` and `20260902173014_snap_002` created a
+       `snapshots` schema that PostgREST does not expose (service_role and the owner only) and
+       moved all 71. Now binding — the required form is
+       ```sql
+       CREATE TABLE snapshots.point_valuations_<stamp> AS SELECT *, now() AS snapshot_taken_at FROM point_valuations;
+       ALTER TABLE snapshots.point_valuations_<stamp> ENABLE ROW LEVEL SECURITY;
+       REVOKE ALL ON snapshots.point_valuations_<stamp> FROM anon, authenticated;
+       ```
+       with `<stamp>` = YYYYMMDD (the retention view reads the date from the name, so it is
+       not optional). The RLS + REVOKE lines stay so a snapshot is safe even if the schema is
+       ever exposed. Retention: `snapshots.v_retention_candidates` lists every snapshot whose
+       stamp is more than 90 days old with a ready `drop_sql`; Mike reviews it, confirms no
+       delta still needs the table for a rollback, and drops by name. Nothing drops
+       automatically. Delta files written before 2026-09-02 name their snapshots `public.<t>`
+       in their rollback sections — read those as `snapshots.<t>`. Tables in the unexposed
+       `receipt` and `verify` schemas snapshot in place (`receipt.tenants_snapshot_20260902`).
    (b) **Every applied change is also cut to a dated delta file.** The file record must never lag
        the DB — the 2026-07-27 batch-1 CPP changes were applied with no delta files, and that is
        the failure this condition exists to prevent.

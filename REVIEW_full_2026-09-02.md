@@ -225,7 +225,7 @@ Snapshot copied to a clean container; five specialised reviewers (mobile, engine
 
 ## Status at the end of the review lane — 2026-09-02 (appended by the lane)
 
-All other runtimes were retired on 2026-09-02; this lane took over the DATA-018 branch and landed it. Everything below marked **landed** is on monorepo `main` (local, `141d32b`…`0ac6b3f`) and in this docs repo; Mike's push and the edge deploy make it live.
+All other runtimes were retired on 2026-09-02; this lane took over the DATA-018 branch and landed it. Everything below marked **landed** is on monorepo `main` and in this docs repo, both pushed by Mike on 2026-09-02; the edge functions were deployed the same afternoon (16:31 UTC). Table last updated 2026-09-02 evening.
 
 | Finding | Status |
 |---|---|
@@ -242,18 +242,18 @@ All other runtimes were retired on 2026-09-02; this lane took over the DATA-018 
 | F-11 affiliate-click unauthenticated writer | **Closed in production.** |
 | F-12 CI tests nothing that ships | **Landed** (Deno tests, bundle hash, i18n, N+1, migration ledger, disclosure gate). |
 | F-13 migration history | **Landed** (18 reconstructed, 4 renamed, ledger + gate; 128/128). `db reset` not yet proven locally — needs Docker on Mike's machine. |
-| F-14 record and code on one laptop | **Partly closed.** Docs repo committed; monorepo `main` carries the work — push is Mike's; receipt-core still has no remote. |
-| F-15 legal surfaces | **Landed** (policy, terms, `/terms`, paywall + Settings links). Residue: receipt retention decision (WORKING_NOTES #40). |
-| F-16 dead/unsourced functions | **Corrected and open.** `recommend-cards-stateless-v1` is live (cardcoach.ca's /best-card calls it) — not dead. Dead: `recommend-here` v1, `recommend-card` v1, `resolve-merchant-v1`, `import-spend-v1`, `health`; undeploy is Mike's (#42). The three functions reading the raw service key now use `getSecretKey()`. |
-| F-17 data debt | **Open — next for the lane** (#44): merchant-category batch never run; MCC p3 deltas `PENDING_VERIFY`. |
-| F-18 snapshots / receipt schema / retention | **Open.** Retention decision #40; snapshot schema move not started; leaked-password protection is a dashboard toggle (Mike). |
+| F-14 record and code on one laptop | **Partly closed.** Both repos pushed 2026-09-02; receipt-core still has no remote (Mike). |
+| F-15 legal surfaces | **Landed** (policy, terms, `/terms`, paywall + Settings links). Residue closed: receipt retention is 90 days (RCPT-011). |
+| F-16 dead/unsourced functions | **Corrected and closed.** `recommend-cards-stateless-v1` is live (cardcoach.ca's /best-card calls it) — not dead. Undeployed by Mike: `recommend-here` v1, `recommend-card` v1, `health`. `resolve-merchant-v1` and `import-spend-v1` were wrongly listed (shipped-dark features with tests and config blocks) and are re-deployed. The three functions reading the raw service key now use `getSecretKey()`. |
+| F-17 data debt | **Closed for the lane.** Merchant-category batch ran (run `99b6d975`: 3 applied, 1 rejected, Mike deciding live); MCC p3 applied (run `f890f135`: 40 rows; 35 withheld with reasons on file). Residue is Mike's: the 39-category name-pass worklist and the CIBC Adapta modelling decision; TD FX values and the 21 stale valuations stay in the verify queue. |
+| F-18 snapshots / receipt schema / retention | **Landed.** Retention 90 days (RCPT-011; first deletions 2026-11-24). `snapshots` schema with a retention view (SNAP-001/002: 71 tables moved, `public` down to 70 tables). pg_net relocated and six search_paths pinned (SEC-003). Security advisor: one WARN left, leaked-password protection — a dashboard toggle (Mike). |
 | F-19 docs wrong | **Landed** (this commit): SOURCE_OF_TRUTH top block + corrections, HOW_THE_ENGINE_WORKS, autolocation self-heal correction, price banners ×5, LAUNCH_TRACKER archived, WORKING_NOTES closed/opened, PROJECT_RULES 9(e), PIPELINE entry. |
 | F-20 single points of failure | **Open — Mike** (Expo 2FA; second admin; receipt-core remote). |
 | F-21 revenue blockers | **Open — Mike's chain** (F-03) plus affiliate applications. |
 | F-22 test gaps | **Partly closed** (caps, rate limits, fuel grades, legal links added; 1,347 jest + 726 Deno green). |
-| F-23 mobile silent-failure seams | **Partly closed** (purchase-pending copy, refresh); the rest is unchanged. |
-| F-24 apps/web | **Open** (delete or repoint its privacy page; nothing deployed — correct). |
+| F-23 mobile silent-failure seams | **Partly closed** (purchase-pending copy, refresh; the font gate now reports a failed load and renders instead of spinning forever). Unchanged: `createClient("","")` on a missing env, the four uninstrumented `api.ts` calls, Android `canAskAgain`, `withTimeout` timers, no offline detection. |
+| F-24 apps/web | **Landed.** `/privacy` and `/terms` redirect to the site's policy and terms and left the sitemap; the FalconView.ai policy text is gone. Nothing deployed — correct. |
 | F-25 edge one-sweep items | **Partly closed** (secret-key reads; XFF). |
 | F-26 site housekeeping | **Partly closed** (sitemap lastmod, MBNA link, GM links, EN+FR footer, support teaser, how-we-make-money copy). |
 
-To-do list: items 1, 3, 8, 9, 10, 11 (code half), 12, 13, 14 done; 2 done except the push; 4, 5, 6, 7, 15, 16, 17 are Mike's; 18 and 19 are next for the lane.
+To-do list: items 1, 2, 3, 8, 9, 10, 11 (code half), 12, 13, 14, 18 (lane half), 19 done — 19's leaked-password toggle, Sentry org, local secrets/Play JSON and branch pruning are Mike's, on his machine; 4, 5, 6, 7, 15, 16, 17 are Mike's chain.
