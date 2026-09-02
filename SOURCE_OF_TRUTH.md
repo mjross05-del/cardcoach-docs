@@ -36,7 +36,7 @@ plain Markdown, each one actually is what it says it is.
 | `WORKING_NOTES.md` | What's unresolved, who owns it, what's next. The churning to-do reality. | Often — this is the only one that churns |
 | `STAGE3_PROMPT.md` | RETIRED 2026-08-01 (script pipeline). Kept as the record of the extraction rules. | Frozen |
 | `BRAND.md` | Warm Logic brand: palette, type, logo, voice, rules. | Rarely |
-| `REVENUE.md` | The Phase 4 v2 revenue model: free web + paid iOS. | Rarely — on strategy shifts |
+| `REVENUE.md` | The revenue model (v3 as of 2026-08-28; Phase 4 v2 retired): free web + paid iOS. | Rarely — on strategy shifts |
 
 Seven files. Plus `SCHEMA.md` and `README.md` (real, on disk, keep), and the recovered —
 now retired — `stage2_fetcher.py`. If you find yourself maintaining an eighth governance
@@ -99,7 +99,7 @@ them from memory. Do not cite them as if they're here.
 | Brand docx (`WarmLogic_BrandKit`, `Colors_and_Fonts`) | Replaced by `BRAND.md`. |
 | Stage 3 prompt PDFs (`stage3_reverify_prompt`, v1.1) | Full prompt now in `STAGE3_PROMPT.md`. |
 | Phase 4 PDFs (`Revenue_Model`, `Revenue_Summary_v2`) | Both were renders of the v2 model. Consolidated into `REVENUE.md`. |
-| `CardCoach_Phase4_Revenue_Model_v2.xlsx` | The live revenue model (866 formulas). **Not in this folder.** Needed to flex assumptions — the PDFs were just renders of it. |
+| `CardCoach_Phase4_Revenue_Model_v2.xlsx` | **RETIRED 2026-08-28** — superseded by `CardCoach_Revenue_Model_v3.xlsx` in `01_CORE/data/`. Kept for provenance only (866 formulas). **Not in this folder.** Needed to flex assumptions — the PDFs were just renders of it. |
 | "audit workbook" (.xlsx) | **Does not exist in this project.** Card-level facts can't be verified from docs without it. → recovered 2026-07-16; superseded by the workbook block above. |
 | reverification "SQL files" (in old rules) | No `.sql` files exist here. Reverification exists as a *prompt*, not executable SQL. |
 
@@ -142,7 +142,9 @@ the 2026-07-02 folder recovery, and where each now lives:
   at repo root is canonical (re-designated 2026-07-16; verified: 95 unique cards, 15
   issuers, v22→v23→v24 lineage sheets intact). v23 patchready is superseded — archived
   2026-06-10 to `_archive/files/`.
-- **Revenue model:** `01_CORE/data/CardCoach_Phase4_Revenue_Model_v2.xlsx` (materialized 2026-06-09;
+- **Revenue model:** `01_CORE/data/CardCoach_Revenue_Model_v3.xlsx` (built 2026-08-28; ten switchable tier
+  scenarios; Python reference in `01_CORE/data/model_v3/`). RETIRED predecessor:
+  `CardCoach_Phase4_Revenue_Model_v2.xlsx` (materialized 2026-06-09;
   verified 2026-07-16 — 7 tabs, 866 formulas). Current summary output:
   `CardCoach_Phase4_Sensitivity_OnePager.md` (generated 2026-06-10).
 - `schema copy.txt` → `99_ARCHIVE/superseded-governance/` → existed after all; consolidated DDL through migration 0037, superseded by SCHEMA.md (43 migrations).

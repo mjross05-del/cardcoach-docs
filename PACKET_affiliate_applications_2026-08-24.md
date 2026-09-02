@@ -61,7 +61,7 @@ the same guidelines say *"When sharing affiliate content, do not use #ad."*
 
 Fintel Connect's own approval guidance is blunt: *"If you're signing up to a new
 affiliate program with your Yahoo or Hotmail email, it sets off an immediate
-warning sign."* Apply from **`mike@card.coach`** (already in use for Play
+warning sign."* Apply from **`mike@cardcoach.ca`** (already in use for Play
 Console) or `hello@cardcoach.ca`, never a personal address.
 
 Have a **phone number that answers**, with a professional voicemail. Fintel:

@@ -199,6 +199,12 @@ says *"Pro tier — out of scope. Current pricing IS the iOS monetization"*, and
 flags that the live site already markets a deferred Pro tier. Both need a dated reconciliation
 once the paid tier is real.
 
+> **SUPERSEDED 2026-08-28.** The quoted REVENUE.md text no longer exists. The v3 rewrite puts a
+> paid tier in scope and prices it (Plus $3.99/$29.99, Pro $9.99/$79.99), and `online_merchant`
+> is one of the five entitlements Pro grants. See `PRICING_TIERS_2026-08-28.md` and the
+> 2026-08-28 entry in `PIPELINE_AND_DECISIONS.md`. WORKING_NOTES #13 still stands: "real" means
+> purchasable, and nothing is on sale yet.
+
 ### 1.9 Interaction with the in-flight place-resolution design
 
 `DESIGN_place_resolution_v1.md` (2026-08-12, DRAFT) is **not implemented**: both mint paths are

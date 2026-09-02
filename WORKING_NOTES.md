@@ -33,7 +33,7 @@ Last updated: 2026-08-25 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#34** Real FX gap **DIAGNOSED 2026-08-26** — 40 active cards NULL; **zero robots-blocked, zero never-attempted**. Mostly correct rule-7 withdrawals (clause states conversion mechanism, never a percentage); RBC 6 are #23a in-application InfoBox staleness; 10 live TD cards are the one block worth chasing
 - **#36** Chrome lane's scope query (`wall_status='walled'`) matches **zero issuers** — its standing queue is empty by construction; last ran 2026-08-16 against a weekly charter, while #34/#23a queue real work for it
 - **#37** **Privacy policy / Law 25 gap — FLAGGED 2026-08-27, deliberately deferred by Mike ("leave legal for now, flag it").** There is no privacy policy with a collection list: `site/privacy.html` is a plain-English summary with no enumerated collection list, no retention period and no Law 25 disclosures, and `/privacy` and `/legal` link to each other for the document neither contains. The site is English-only (`<html lang="en-CA">`, 25 flat files, no `/en/` or `/fr/`). `COMPLIANCE_statement_import_pack_2026-08-20.md` §0 calls this a launch blocker for statement import **in Quebec**, and `runtime_flags.statement_import` is now `enabled = true` — so the gate is currently the entitlement, not the flag. Not being worked; do not start it without Mike.
-- **#38** **Paywall live but unsellable — OWNED BY MIKE, in progress 2026-08-27, progress expected within days.** `RUNBOOK_pro_go_live_2026-08-24.md` states the paywall is live and advertising a tier the app cannot sell; `public.user_entitlements` holds 50 granted rows and `react-native-purchases ^10.7.1` has shipped since 2026-08-21. **Do not pick this up** — it is actively being worked. Related: the `$3.99/$34.99` model vs `$4.99/$39.99` product config drift recorded in `REVENUE.md` §Pricing.
+- **#38** **Paywall live but unsellable — OWNED BY MIKE, in progress 2026-08-27, progress expected within days.** `RUNBOOK_pro_go_live_2026-08-24.md` states the paywall is live and advertising a tier the app cannot sell; `public.user_entitlements` holds 50 granted rows and `react-native-purchases ^10.7.1` has shipped since 2026-08-21. **Do not pick this up** — it is actively being worked. Related: the `$3.99/$34.99` model vs `$4.99/$39.99` product config drift recorded in `REVENUE.md` §Pricing. **UPDATE 2026-09-01:** paywall flags are now *false* (build 84), so nothing unsellable is advertised. RevenueCat is as far as it can go without credentials (entitlement `cardcoach_pro`, Play app, Play products `cardcoach_pro:monthly`/`:annual`, `default` offering; App Store app **blocked on the new team's `.p8` key**). Remaining gates are Mike's: **D-U-N-S → Apple Organization enrolment → Paid Apps/banking/W-8BEN-E**, **Google Payments merchant profile** (Play Subscriptions page locked without it), secrets/webhook/EAS. Then Alex transfers the app (TestFlight off, SIWA transfer ids — **11 Apple users**, 60-day window). Prices are now $7.99/$59.99/14-day. Runbook: `RUNBOOK_store_accounts_and_revenuecat_2026-09-01.md`.
 - **#39** **AFF-001 beacon has a table but no function — OWNED BY MIKE, in progress 2026-08-27.** `public.affiliate_clicks` was applied 2026-08-28 02:06 UTC (migration `20260828020603`), but the `affiliate-click` edge function is **not deployed** and the site changes are still unstaged in the site repo (`mjross05-del/cardcoach-site`). The order matters: if the **site** ships before the **function**, clicks post to nothing and silent zero-collection is indistinguishable from genuinely no clicks. Deploy the function first, or ship both together. **Do not pick this up** — actively being worked.
 - **#35** Document-currency follow-ups from the 2026-08-25 sweep — RBC hub dead (navigate fresh, do not guess), NationalBank FX box may be the FR artifact, 3 aged docs to check against their indexes, Neo corpus now checkable
 - **#20** Web app v1 (free recommendation surface) — approved 2026-07-13 (D1); P1 pending keys
@@ -628,3 +628,57 @@ cathaypacific.com/ca yet — same class of gap as #23, and it fails closed until
 **Watch item:** Neo publishes separate Quebec disclosures and QC-specific APRs, and Cathay
 is not sold in Quebec at all (already modelled: `availability_scope='regional'`, QC excluded
 from `available_provinces`). The Sunday batch should watch for QC carve-outs on the other eight.
+
+## #37 — card.coach → cardcoach.ca identity migration (executed 2026-08-28)
+
+**Status: Workspace and DNS side DONE 2026-08-28.** Decision record and full implications:
+`PIPELINE_AND_DECISIONS.md`, entry of 2026-08-28. Supersedes the mail half of #18.
+
+**What is true now.** Workspace primary domain is **cardcoach.ca**. Mike is
+**`mike@cardcoach.ca`**; `mike@card.coach` is an alias and still delivers. Same for
+`marketing@`, `mikayla@`, `welcome@`. `hello@cardcoach.ca` and `support@cardcoach.ca` are real
+Workspace aliases on Mike's account — they **send** now, which they could not before.
+`hello@card.coach` exists for the first time (it never did; mail to it was bouncing).
+Both domains are DKIM-signed; `card.coach` had no DKIM at all before this.
+
+**#18 is superseded.** That note recorded `hello@cardcoach.ca` as a Cloudflare Email Routing
+forward into `mike@card.coach`, live-tested 2026-08-11, with "a send-as/reply-from for hello@"
+carried as an optional nicety. Cloudflare Email Routing on `cardcoach.ca` is now **disabled** and
+its records are gone — the address is served by Google. Do not re-enable it; it would fight the MX.
+
+**Correction to the release/handoff docs, which are dated records and were left as written.**
+Anywhere the following say `mike@card.coach`, read `mike@cardcoach.ca` — it is the same Google
+account, renamed, so nothing about the underlying access changed:
+- `mobile_app_codebase/docs/app-store/RELEASE_android_1.x_HANDOFF.md` (header + Step 2 org-policy prerequisite)
+- `mobile_app_codebase/docs/app-store/RELEASE_1.0.3_HANDOFF.md` (Play Console account line)
+- `mobile_app_codebase/docs/app-store/RELEASE_1.2.0_PREMIUM_TESTFLIGHT.md` (`eas whoami`)
+- `mobile_app_codebase/docs/dev_notes/BILL-002_pro_surfaces_design_pass_2026-08-22.md` (`eas whoami`)
+- this file, #24a / #24d (Play Console account, `roles/orgpolicy.policyAdmin` grantee)
+
+**`tester_allowlist`.** `mike@cardcoach.ca` was ADDED alongside the existing `mike@card.coach`
+row rather than replacing it — Mike's call; purely additive, both accounts comp. Delta:
+`deltas/2026-08-28__tester_allowlist__cardcoach_ca_owner_address.sql`. The `auth.users` row for
+`mike@card.coach` (`1d79eb69-…`) was **not** touched; that in-app account still signs in on the
+old address, which still receives.
+
+**Third-party logins — CLOSED 2026-08-28.** Resolved as follows:
+- **Expo/EAS — DONE.** `mike@cardcoach.ca`, verified. `eas whoami` reports the new address; same
+  account, so the `cardcoach` / `falconview` ownership and project credentials are unchanged.
+- **Supabase — DONE.** Both the auth email and the *username* (it used the email as display name).
+  Note for anyone repeating this: Supabase requires confirming from BOTH addresses, and Gmail's
+  link scanner consumes the one-time token before a human can click it — the confirm link has to
+  be opened directly rather than clicked from inside the Gmail UI, or it returns `otp_expired`.
+- **Cloudflare, GitHub — N/A.** Both are on `mjross05@gmail.com`; they were never on card.coach.
+- **Sentry, RevenueCat, Squarespace — N/A.** Mike has no account on the first two, and Squarespace
+  is no longer used. **Follow-up worth having:** the mobile app still reports to Sentry under
+  `SENTRY_ORG=falcon-view-group` / `SENTRY_PROJECT=react-native-card-coach`, so CardCoach crash
+  data lands in an org Mike has no login for. Not an email problem; an access problem.
+- **Apple — DELIBERATELY LEFT (Mike's call 2026-08-28).** Mike *is* on the team: Apple Account
+  `mike@card.coach`, role **Admin**, All Apps. Alex (`alexfrancoisfl@gmail.com`) is Account Holder,
+  and the team is his Individual account (`AF887JD7ZG`). That column is an **Apple ID**, which App
+  Store Connect cannot edit — it changes only at appleid.apple.com and carries devices, purchases
+  and 2FA with it. Ruled not worth the risk mid-release-cycle when `mike@card.coach` receives
+  indefinitely anyway. Revisit after the Android submit lands, if ever.
+
+**Unrelated but found while in there: the Expo account has 2FA disabled.** That account holds the
+signing credentials for both stores.
