@@ -392,3 +392,27 @@ Pro, not the app. Still outstanding on the console side.
 
 An Android tester checklist was published as an artifact, grouped by whether each item is a
 fixed Android regression, new behaviour, or a known non-bug.
+
+### OTA on 85 — 2026-09-02, wallet add-card search field
+
+JS-only (search field at the top of the add-card sheet, filter by name / issuer / network,
+EN+FR strings). Published with `--environment production`; both runtime versions verified
+equal to the build 85 fingerprints above, so every current install on both platforms
+receives it — no binary.
+
+| | iOS | Android |
+|---|---|---|
+| Update group | `04797dbc-ec8f-46bc-aeca-94150006d18c` | `fbd4c798-eb68-4b6e-8a09-39007fca572b` |
+| Runtime | `d7a02945…` (= build 85) | `e1a30960…` (= build 85) |
+| Commit | `e4f3ddc` on `wallet/add-card-search` (CardCoachv2; fast-forwards onto main) | same |
+| Confirmed on device | 09-02, yes | pending at time of writing |
+
+Two things to know if you come back to this:
+
+- **The first publish went to the `preview` channel** (groups `fde2387a` iOS / `fbe718ac`
+  Android). No build has ever been made with the preview profile, so those groups are
+  inert — ignore them. Builds 85 are both on `production`; that is the only channel with
+  installs.
+- The EAS record shows the commit with a `*` (dirty tree). The dirt was unrelated
+  `card_coach_website/` and blog files another session had open; every file in the bundle
+  matched `e4f3ddc`.
