@@ -1,4 +1,11 @@
 -- =========================================================================
+-- SUPERSEDED 2026-09-02 — DO NOT RUN. Replaced by
+-- deltas/2026-09-02__earn_rates__mcc_backfill_p3_APPLIED.sql, which applied 40 rows with the
+-- source-clause checks closed against the issuers' own definitions (CIBC rows carry the
+-- issuer's narrower class sets, not the category-typical sets in this file) and withheld
+-- 35 (33 CIBC Adapta auto-top-3, Aeroplan VIP dining, Neo United). Kept for the record.
+-- =========================================================================
+-- =========================================================================
 -- SAFETY NOTE ADDED 2026-08-27 — THIS FILE IS ALL-OR-NOTHING, NOT PER-ROW.
 -- The header promises per-row gating: "apply per row as its source-clause
 -- check closes", "A row ships when its [ ] source-clause check below is
