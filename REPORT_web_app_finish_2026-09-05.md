@@ -146,6 +146,15 @@ sitemap matches the repo (30 URLs).
 
 Side finding, pre-existing and NOT changed: the Worker has no `wrangler` config in the deploy
 repo (Workers Builds auto-generates one), so `not_found_handling` is the default and an unknown
-URL returns an EMPTY 404 body — `404.html` is never served. One-file fix if wanted: commit a
-`wrangler.jsonc` with `assets: { directory: ".", not_found_handling: "404-page" }`. Needs
-Mike's OK since it changes how the Worker deploys.
+URL returns an EMPTY 404 body — `404.html` is never served. FIXED 2026-09-05 13:50 UTC on Mike's "do with your rec": deploy-repo `82f3051` commits
+`wrangler.jsonc` = exactly what Workers Builds had been generating (name `cardcoach-site`,
+compatibility_date 2026-09-03, observability on, assets dir ".") plus
+`not_found_handling: "404-page"`; `.gitignore` gains `.wrangler/`; `.assetsignore` already
+excluded the config. Verified with `wrangler dev` before landing, then live after the push-event
+build (Worker version `85e04dc9`, log shows no generated config this time): unknown URL → 404
+with the 6,109-byte `404.html` (noindex); `/`, `/pro`, `/blog`, posts all 200; all redirects
+still 301 (incl. the Search Console lane's `/waitlist`); `/wrangler.jsonc`, `/.assetsignore`,
+`/.gitignore` → 404 page, not served. Landing note: the parallel Search Console lane had
+committed `0f4ee2d` to the deploy repo in between, so the compare-and-swap refused once; the
+Worker-config commit was cherry-picked onto it and both shipped in Mike's push. Mirrors:
+monorepo main `d304ca8`, branch `63bed8a`.
