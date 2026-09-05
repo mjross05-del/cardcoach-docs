@@ -131,7 +131,21 @@ template in both): finder page/JS/CSS removed; "Which card?" nav + footer item d
 every page; footer "Web app", blog "Try it free" ×20 and the 404 action → `app.cardcoach.ca`;
 home demo's "Open the full finder" → "Use it on the web", "Add card" chip → web app, note
 under it no longer promises "no account needed"; `_redirects` 301s `/which-card-should-i-use`
-and the older `/best-card` aliases to `/`; sitemap 33 → 32. `apply-links.js` kept for the
+and the older `/best-card` aliases to `/`; sitemap 31 → 30 URLs (the commit messages say 33 → 32 — that counted file lines, not entries). `apply-links.js` kept for the
 affiliate lane's next surface — the obvious one is the best-* posts, where the impressions are
 (separate decision). Mike's "Open the full finder breaks" report was not reproducible on
 desktop Chrome (link, finder and edge call all fine) and is moot with the page gone.
+
+**Live 2026-09-05 13:04 UTC** — Mike's push of `705725b` triggered the Workers Build on its own
+this time (`push_event`, success, Worker version `9bab0436`), confirming the GitHub-app fix
+holds. Verified: `/which-card-should-i-use` and `/best-card` → 301 `/`; home nav is How it
+works · Pro · Blog · About (+ Support on the mobile menu); home finder section links "Use it on
+the web →" → `app.cardcoach.ca` (clicked, lands on `/now` signed in); footer "Web app" and the
+blog "Try it free" buttons → `app.cardcoach.ca`; zero live pages reference the finder; live
+sitemap matches the repo (30 URLs).
+
+Side finding, pre-existing and NOT changed: the Worker has no `wrangler` config in the deploy
+repo (Workers Builds auto-generates one), so `not_found_handling` is the default and an unknown
+URL returns an EMPTY 404 body — `404.html` is never served. One-file fix if wanted: commit a
+`wrangler.jsonc` with `assets: { directory: ".", not_found_handling: "404-page" }`. Needs
+Mike's OK since it changes how the Worker deploys.
