@@ -112,3 +112,26 @@ production `rcb_` key; `REVENUECAT_ALLOW_SANDBOX` deleted from the edge-function
 `billing-sync` v10 deployed through the Supabase connector (the CLI is not on Mike's Mac) with
 the store-lookup fix (`33b3e70`) and the sandbox refusal (`91c0bb2`). Runtime flags
 `billing_paywall` / `card_slot_limit` deliberately still off until the keyed phone builds ship.
+
+## 9. Site finder retired (2026-09-05, Mike's call)
+
+Mike asked whether the site's "Which card?" finder was still needed now that the web app
+exists. Facts checked before answering: Search Console (3 months) showed the finder page at
+**0 clicks / 0 impressions** against a site total of 5 clicks / 804 impressions, nearly all on
+the best-*/comparison posts (best-gas-card 241, BMO Blue 193, best-grocery 81); the finder was
+the **only** page loading `apply-links.js` and the only home of the "Beyond your wallet"
+affiliate upsell, and `public.affiliate_clicks` was **empty** — zero clicks ever; it also
+undercut the funnel (no sign-in, no card cap) and was a second UI over the same
+`recommend-cards-stateless-v1` engine. Decision: retire the page, keep the home-page
+sample-wallet demo. Side finding fixed in the same commit: the footer "Web app" link on all
+32 pages still pointed at the finder (pre-dated the web app).
+
+Deploy repo `705725b` (mirrored: monorepo main `809b789`, branch `375cc21`, blog renderer
+template in both): finder page/JS/CSS removed; "Which card?" nav + footer item dropped on
+every page; footer "Web app", blog "Try it free" ×20 and the 404 action → `app.cardcoach.ca`;
+home demo's "Open the full finder" → "Use it on the web", "Add card" chip → web app, note
+under it no longer promises "no account needed"; `_redirects` 301s `/which-card-should-i-use`
+and the older `/best-card` aliases to `/`; sitemap 33 → 32. `apply-links.js` kept for the
+affiliate lane's next surface — the obvious one is the best-* posts, where the impressions are
+(separate decision). Mike's "Open the full finder breaks" report was not reproducible on
+desktop Chrome (link, finder and edge call all fine) and is moot with the page gone.
