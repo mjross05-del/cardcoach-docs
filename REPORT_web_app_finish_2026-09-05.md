@@ -60,6 +60,41 @@ repo untouched, no merge to main, Mike typed the one card number and ran every g
 - "Deploy… Not done in this pass by design", git-connected Pages → deployed via static deploy repo; why, and the recipe (README updated 2026-09-05).
 - Nothing in the README or handoff mentioned `CORS_ALLOWED_ORIGINS`; it does now.
 
-## 6. Side finding — marketing site drift (flagged, NOT fixed)
+## 6. Side finding — marketing site drift (RESOLVED 2026-09-05, corrected)
 
-`card_coach_website/site/` in the monorepo (both the main checkout and this worktree, last touched by `bfe00c6`) is **behind** the marketing deploy repo's `main` (`8c631f7` "Home step 2 is now 'Tell us where you're shopping'"): the deployed site has the new step-2 illustration in `index.html` + `styles.css` and ten files the monorepo copy lacks (`pro.html`, `home-finder.js`, `og-pro.png`, `icon-1024.png`, the four brand lockup/mark PNGs, `shots/*-v3.png`). The next site edit made from the monorepo copy and pushed to `cardcoach-site` would regress the live home page and drop `/pro`. Port the deploy repo's main back into `card_coach_website/site/` first.
+First reading, later corrected: I reported `card_coach_website/site/` as missing ten files
+that the deploy repo had. That was the deploy repo's stale index, not the work tree — the
+files were tracked in both. The real drift was one commit: the deploy repo's `main`
+(`8c631f7`, "Home step 2 is now 'Tell us where you're shopping'", `index.html` + `styles.css`)
+had never been ported back into the monorepo copy, so an edit made from the monorepo and
+pushed would have regressed the live home page.
+
+Resolved when Mike lifted the no-site-edits rule for this lane: `6ab1d74` ports `8c631f7`
+into `card_coach_website/site/`; `130e6b9` mirrors the new deploy-repo commit `8899aa3`
+("Point the site at the web app"); the deploy repo's work tree and index on the Mac now
+match its `main`. After Mike pushes, all three (deploy repo, live site, monorepo copy) are
+identical.
+
+## 7. Site → web app (added 2026-09-05)
+
+Nothing on cardcoach.ca linked to app.cardcoach.ca (nav "Sign in" went to the finder; "Try
+it on the web" scrolled to the home-page finder; "Start free trial" went to `/#download`,
+App Store only). Deploy-repo commit `8899aa3` — nav **Sign in** → `app.cardcoach.ca/sign-in`
+on all 32 pages and in `render_v2.py` (blog template); hero **Use it on the web** →
+`app.cardcoach.ca/`; download band pill "iPhone and web today" + a third badge "Use it in your
+browser · app.cardcoach.ca"; `/pro` **Start free trial** ×2 → `app.cardcoach.ca/pro`. Web app
+`37836b7` adds `/pro` (opens the paywall over Settings, sign-in first if needed; the return
+path survives the Google round trip via sessionStorage, in-app paths only). Verified in fixture
+mode: signed-in, email sign-in and Google paths all land on `/settings` with the paywall open.
+Release `4badf38` in the deploy repo carries it.
+
+## 8. Production billing (2026-09-05, later)
+
+Stripe `acct_1UC5lPHDaUSvBTOn` activated by Mike (session filled only the products/services
+description). RevenueCat app installed on the **live** Stripe account (Mike's OK), which is
+what makes RevenueCat issue the production Web Billing key; verified with the live key that
+offerings and products (CA$59.99/yr, CA$7.99/mo, 2-week trials) resolve. `.env` now carries the
+production `rcb_` key; `REVENUECAT_ALLOW_SANDBOX` deleted from the edge-function secrets;
+`billing-sync` v10 deployed through the Supabase connector (the CLI is not on Mike's Mac) with
+the store-lookup fix (`33b3e70`) and the sandbox refusal (`91c0bb2`). Runtime flags
+`billing_paywall` / `card_slot_limit` deliberately still off until the keyed phone builds ship.
