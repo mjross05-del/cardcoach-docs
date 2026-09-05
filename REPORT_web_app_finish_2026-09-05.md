@@ -88,6 +88,20 @@ path survives the Google round trip via sessionStorage, in-app paths only). Veri
 mode: signed-in, email sign-in and Google paths all land on `/settings` with the paywall open.
 Release `4badf38` in the deploy repo carries it.
 
+**Live 2026-09-05 12:05 UTC.** Mike's push of `8899aa3` did not deploy at first: the Cloudflare
+Workers Build for `cardcoach-site` terminated with "The project is linked to a repository that no
+longer exists". Cause: the GitHub app "Cloudflare Workers and Pages" (installation 144583477 on
+`mjross05-del`) had repository access narrowed to only `cardcoach-app`, so Cloudflare could no
+longer see `cardcoach-site`. Fix: added `cardcoach-site` back under Repository access → "Only
+select repositories" (now 2 repos) and re-ran the "Deploy default branch" trigger — build
+`7b55c5a8` succeeded (33 files uploaded, Worker version `67e8ba96`). Live check: `cardcoach.ca/`
+carries 3 `app.cardcoach.ca` links (Sign in, Use it on the web, browser badge), `/pro` carries 2
+`app.cardcoach.ca/pro` + nav Sign in, every real page carries the nav link. Clicked through on the
+live site: **Start free trial** → `app.cardcoach.ca/pro` → Settings with the paywall open
+(Yearly CA$59.99 / Monthly CA$7.99, no SANDBOX banner); **Sign in** while already signed in →
+`/now`. Note for the future: if a site push ever "does nothing" again, check that GitHub app's
+repository list before anything else — auto-builds on push need it, not just manual runs.
+
 ## 8. Production billing (2026-09-05, later)
 
 Stripe `acct_1UC5lPHDaUSvBTOn` activated by Mike (session filled only the products/services
