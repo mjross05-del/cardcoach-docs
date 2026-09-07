@@ -1685,3 +1685,35 @@ contradicted for the 1% card by its own disclosure (2.5%) and benefits article �
 **Unrelated find while checking catalogue invariants:** `ca_national_bank_mycredit_standard_mastercard` is the only
 active scoreable card with no active `base` earn row (two category rows, scalar `base_earn` 0.5). Pre-existing; not
 touched here — WORKING_NOTES #48(e).
+
+### 2026-09-07 — A runtime flag broke the store build for three weeks; union members now need a client declaration
+**What happened:** Mikayla reported "Something went wrong" on recommendations (build 56, the App Store v1.1). Every
+server log read 200 — five `recommend_card_v2_success` lines for her account in two minutes. The failure was on the
+phone: `runtime_flags.tie_disclosure` has been ON since 2026-08-16 (build-57 TestFlight QA), so whenever two wallet
+cards tie on ranked cents the server appends a `value_tie` explanation item; build 56's `zExplanationItemV2` is a
+closed `discriminatedUnion` from 2026-08-07 that has never heard of it, `.parse()` throws `invalid_union`, the
+wrapper reports `unknown`, the Now screen shows the generic error. Her PC Financial Standard MC and Scene+ Standard
+Visa both score 1.0% at the merchant she searched — a genuine tie. Mike's wallet scores 100/90/50 there, which is
+why he could not reproduce it on the same build. Confirmed by running the live payload through the build-56 contract.
+**The lesson, now a rule:** optional FIELDS are additive for a zod client (unknown keys are stripped); a new member of
+a discriminated union is NOT — it is a breaking change for every shipped client built before it, flag or no flag.
+API-014 had spelled this out (its test "the explanation union is what a new item type WOULD have broken") and put
+`membershipEarn` at the top level for exactly that reason; API-016 shipped `value_tie` inside the union two days
+later and the flag was flipped for TestFlight while the store served build 56. Nobody checked the store build's
+contract before the flip. From here: **a union member is emitted only to a caller that has declared it.**
+**Decision (Mike, "move forward with stage 2 — the actual fix"; the flag flip was offered and declined):** monorepo
+`5a25742` on local `main` (parent `d304ca8` = `origin/main`), branch `fix/tie-disclosure-legacy-clients`:
+- `_shared/clientCapabilities.ts` — callers declare the explanation item types they parse in `x-cardcoach-caps`;
+  **no header = the legacy store client**. `recommend-card-v2` / `recommend-here-v2` switch tie disclosure off per
+  request for undeclared callers — payload AND the tie-aware comparator, which go together. CORS allowlist updated.
+- `engine-contracts` `explanationsV2.ts` — `EXPLANATION_ITEM_TYPES_V2` (derived from the union), and
+  `zExplanationSectionV2` DROPS unknown-but-well-formed item types instead of failing the whole response, so the
+  next union member degrades to "not displayed" on a shipped client rather than to "Something went wrong".
+- mobile `tracing.ts` sends the header from the contract it ships; web app `supabaseData.ts` likewise (patched in the
+  web worktree, uncommitted — the Code prompt commits it, AFTER the functions are live, because the header changes
+  the browser preflight).
+- `tie_disclosure` stays ON: inert for build 56 after the deploy, live for build 85 and the web app.
+**Deploy path:** `PROMPT_deploy_tie_disclosure_compat_2026-09-07.md` (CLI deploy of the two functions, push, web
+release). Open item: WORKING_NOTES #38 until the deploy lands and Mikayla confirms.
+**Still true afterwards:** build 56 users get no tie disclosure at all (they never could); the real close is 1.3.0
+(build 85) reaching the store, which is gated on the App Store account transfer.

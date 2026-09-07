@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-09-02 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-09-07 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -624,6 +624,25 @@ cathaypacific.com/ca yet — same class of gap as #23, and it fails closed until
 **Watch item:** Neo publishes separate Quebec disclosures and QC-specific APRs, and Cathay
 is not sold in Quebec at all (already modelled: `availability_scope='regional'`, QC excluded
 from `available_provinces`). The Sunday batch should watch for QC carve-outs on the other eight.
+
+## #38 — Build-56 `value_tie` fix: deploy pending (opened 2026-09-07)
+
+**Status: code landed on local `main` (5a25742), NOT deployed, NOT pushed.** Decision record:
+`PIPELINE_AND_DECISIONS.md`, entry of 2026-09-07. Runbook for the Code session:
+`PROMPT_deploy_tie_disclosure_compat_2026-09-07.md`.
+
+**What is broken until the deploy lands:** any App Store (build 56) user whose wallet has two cards
+that tie on ranked cents at a merchant gets "Something went wrong" instead of a recommendation.
+Mikayla's wallet is one; Mike's is not. Server logs read 200 throughout — do not look for the
+failure there.
+
+**What closes it:** `recommend-card-v2` and `recommend-here-v2` redeployed (expect v39 / v40),
+monorepo `main` pushed, web app committed + released with the `x-cardcoach-caps` header (after the
+functions, never before), Mikayla confirms on build 56. Then delete this note.
+
+**Unrelated but found while in there:** the store is still build 56 (v1.1, 2026-08-07 contract) —
+every flag flip since then has been tested against TestFlight builds only. Until 1.3.0 ships, treat
+"does build 56 parse it?" as a precondition for flipping any flag that changes a response shape.
 
 ## #37 — card.coach → cardcoach.ca identity migration (executed 2026-08-28)
 
