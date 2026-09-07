@@ -667,11 +667,16 @@ every flag flip since then has been tested against TestFlight builds only. Until
   `mjross05-del/cardcoach-app` `main` 4badf38 → **8f9cb5d** ("Release: 9eabee9"); Cloudflare Pages served it
   ~20 s later — `index-BJiO0aUw.js` referenced, `supabaseData-DYrKAOUp.js` (200, 10,525 B) contains
   `x-cardcoach-caps`. Web build: `tsc` clean, `vite build` clean, `verify:brand` passed.
-- **Still open — human proof:** (1) **Mikayla has NOT yet confirmed** on build 56 (or: install the App Store build
-  with two 1% cards and expect a recommendation, not "Something went wrong"); (2) signed-in check at
-  app.cardcoach.ca that the tie note still renders and DevTools shows `x-cardcoach-caps` on the
-  `recommend-card-v2` request with a 200. Not done by this session (no credentials, no Xcode on this Mac).
-  **Delete this entry once (1) lands.**
+- **Web app verified signed-in 2026-09-07 ~16:10 ET (Mike's own session, Chrome):** at Ricco Foods Cash and Carry
+  Mike's wallet ties at ranks 2/3 (PC Financial World Elite MC and Scotia Momentum MC, both 100 ¢ per $100). The
+  live `recommend-card-v2` POST carried `x-cardcoach-caps: base_earn,category_earn,offers_total,cap_adjustment,
+  offer_decision,valuation_assumption,fuel_price_assumption,value_tie,benefit,warning`, returned 200 with two
+  `tie` objects (groupId 1, size 2) and a `value_tie` item on each tied card; the UI renders "2 cards tie at
+  $1.00 per $100." under the carousel and in the Why-this-card panel. The same body replayed from the page
+  WITHOUT the header (the build-56 shape): 200, same ranks and cents, zero `tie` objects, zero `value_tie` —
+  the gate holds on the live function.
+- **Still open — human proof:** **Mikayla has NOT yet confirmed** on build 56 (or: install the App Store build
+  with two 1% cards and expect a recommendation, not "Something went wrong"). **Delete this entry once that lands.**
 
 ## #37 — card.coach → cardcoach.ca identity migration (executed 2026-08-28)
 
