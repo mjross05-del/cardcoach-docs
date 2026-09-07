@@ -644,6 +644,35 @@ functions, never before), Mikayla confirms on build 56. Then delete this note.
 every flag flip since then has been tested against TestFlight builds only. Until 1.3.0 ships, treat
 "does build 56 parse it?" as a precondition for flipping any flag that changes a response shape.
 
+**DEPLOYED 2026-09-07 ~15:50–16:05 ET (Code session, worktree `cardcoach-android-revenucat-key-3ad640` at `5a25742`).**
+`PROMPT_deploy_tie_disclosure_compat_2026-09-07.md` executed end to end; every automated check green.
+
+- **Edge:** `recommend-card-v2` **v39** (was 38), `recommend-here-v2` **v40** (was 39); both `verify_jwt=false`,
+  import map pinned by `config.toml` (no `--import-map` flag needed). `clientCapabilities.ts` + `cors.ts` in both
+  upload lists. `recommend-cards-stateless-v1` untouched at v21. CLI `npx supabase` 2.117.0.
+- **Pre-deploy gates:** contracts 108/108 (explanationsV2 ×5 incl. "drops unknown-but-well-formed type"), Deno
+  751 passed / 0 failed (client_capabilities ×5, tie_disclosure_api_016, cors, stateless, api_014), mobile
+  tracing 8/8 ("declares the explanation item types"); `bundle_engine.mjs` → no drift under `_shared`.
+- **CORS check:** `OPTIONS` with `Access-Control-Request-Headers: x-cardcoach-caps` → 200;
+  `access-control-allow-headers` on BOTH functions now reads
+  `authorization, x-client-info, apikey, content-type, x-request-id, x-cardcoach-caps`.
+- **Stateless byte-stability:** Aeroplan 150 / PC Financial Standard 50 / Scene+ Standard 50, no `value_tie`
+  anywhere in the payload — unchanged, as required.
+- **Pushes:** monorepo `main` d304ca8 → **07201aa** (fast-forward; carries `5a25742` AND Mike's same-afternoon
+  `07201aa` "verification-engine: fix render.js navigation and no-poll capture", which had landed on local
+  `main` between the runbook's Step 0 check and the push — business-docs render.js only, nothing under
+  `supabase/functions`, `engine-contracts` or `card_coach_web_app`). `fix/tie-disclosure-legacy-clients` pushed
+  at `5a25742`. Web branch `claude/cardcoach-web-design-handoff-8b6b9f` 63bed8a → **9eabee9** (the
+  `x-cardcoach-caps` commit; only web-app source change since the last release). Deploy repo
+  `mjross05-del/cardcoach-app` `main` 4badf38 → **8f9cb5d** ("Release: 9eabee9"); Cloudflare Pages served it
+  ~20 s later — `index-BJiO0aUw.js` referenced, `supabaseData-DYrKAOUp.js` (200, 10,525 B) contains
+  `x-cardcoach-caps`. Web build: `tsc` clean, `vite build` clean, `verify:brand` passed.
+- **Still open — human proof:** (1) **Mikayla has NOT yet confirmed** on build 56 (or: install the App Store build
+  with two 1% cards and expect a recommendation, not "Something went wrong"); (2) signed-in check at
+  app.cardcoach.ca that the tie note still renders and DevTools shows `x-cardcoach-caps` on the
+  `recommend-card-v2` request with a 200. Not done by this session (no credentials, no Xcode on this Mac).
+  **Delete this entry once (1) lands.**
+
 ## #37 — card.coach → cardcoach.ca identity migration (executed 2026-08-28)
 
 **Status: Workspace and DNS side DONE 2026-08-28.** Decision record and full implications:
