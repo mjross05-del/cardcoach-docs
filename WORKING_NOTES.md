@@ -4,7 +4,7 @@
 next. Update freely. When an item closes, **delete it** — closed items don't belong here.
 Settled decisions move to `PIPELINE_AND_DECISIONS.md`; they don't live here.
 
-Last updated: 2026-09-07 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
+Last updated: 2026-09-08 · Owner: Mike  (header date corrected 2026-07-04, housekeeping sweep 2 — was 2026-07-03, contradicting the 2026-07-04 dated updates within; prior correction 2026-07-03 — was 2026-06-02)
 
 > For a future session: this is where you look to find what needs doing next. Don't
 > re-propose items already listed here unless you have new information.
@@ -44,6 +44,7 @@ Last updated: 2026-09-07 · Owner: Mike  (header date corrected 2026-07-04, hous
 - **#46** **Snapshots out of `public`; security advisor down to one toggle — DONE 2026-09-02** (review lane, F-18). SNAP-001 (`20260902172110`) created the unexposed `snapshots` schema and moved the 68 `*_snapshot_*` tables; SNAP-002 (`20260902173014`) took the three `*_night_2026_07_31` copies; SEC-003 (`20260902172821`) moved pg_net's extension record from `public` to `extensions` (not relocatable, so drop + create; the worker was proven alive with a live request afterwards) and pinned `search_path = public` on the six pre-existing functions the advisor flagged. Security advisor now: 0 ERROR; 1 WARN — `auth_leaked_password_protection`, a dashboard toggle for **Mike** (Authentication settings → password security; remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection); 90 INFO `rls_enabled_no_policy`, all deliberate (service-role-only tables and the `snapshots`/`verify`/`receipt` schemas). Rule 9(a) now creates snapshots as `snapshots.<table>_<stamp>`. **Standing chore (Mike, monthly):** `select * from snapshots.v_retention_candidates;` → confirm no delta still needs the table → run each `drop_sql` by hand; the first candidates appear 2026-10-27. Also from to-do 19: the NUL byte in `_shared/scoring.ts` was a literal NUL used as a map-key separator (`${program}\0${unit}`, line 1744) — it made grep and diff treat the file as binary; rewritten as the `\u0000` escape (same key at runtime, text-safe file). `_shared/pii.ts` is unused by any function but carries its own tests, left in place.
 - **#47** **CIBC Adapta modelled — DONE 2026-09-02 (DATA-023, Mike: "add condition type").** New `earn_rates.condition_type = 'auto_top_n'` with `condition_top_n` (N) and `condition_group` (the issuer category a row competes as when one CIBC category spans two of ours). Migration `20260902182121`; the 33 rows retyped from `mcc_defined`-with-no-MCC under run `7d3e0c1a` (audit `21096c42`, delta `deltas/2026-09-02__earn_rates__adapta_auto_top_n_APPLIED.sql`). The edge gate ranks the purchase's issuer category against the card's others from this month's `user_spend_snapshots`, purchase counted in; ties, no category, no N and callers without spend facts (the web ranking, the stateless catalog path, analyze-spend) fail closed. 17 Deno tests + 2 engine cases. **Live after Mike's next edge deploy.** Residue of #27: 2 active `mcc_defined` rows with no MCC list (Aeroplan VIP dining, Neo United travel), both withheld with reasons on file. Not modelled: Adapta's $40,000 annual bonus pool (a `card_caps` row, CAPS-001).
 - **#48** **Wealthsimple onboarded (17th issuer) — DONE 2026-09-02, four follow-ups open.** Four `card_products` (Visa Infinite + open; Privilege `limited`; 1% `invitation_only`; 2% `closed` — all scoreable), four flat base rows, `verify.issuer_notes` seeded; deltas `2026-09-02__issuers_card_products__wealthsimple_onboarding.sql` + `2026-09-02__earn_rates__wealthsimple_p1.sql`; decision entry in PIPELINE_AND_DECISIONS. **(a) Mike, ~1 min:** add the token `Wealthsimple` to the Sunday Cowork task's `ISSUER_BATCH` — the batch cannot be edited from a cloud session; until it lands, Wealthsimple is verified by nobody. **(b) First Sunday run:** capture CHA-080426-WS, CHA-041026-WS1 and ACCTC-080426-WS as `verify.evidence` artifacts (onboarded without sha256 rows) and confirm the legacy 2% card's grandfathered fee box. **(c) Store/site copy:** the Play listing says "15 Canadian issuers" — 16 with tracked cards from today; bump at the next listing edit. Playbook post 15 (foreign-transaction fees, live since 2026-09-02) lists the catalogue's no-FX cards and says other issuers' no-fee cards "are not in our catalog yet" — Wealthsimple's three 0%-FX cards now belong in that list; re-render on its next edit. **(d) Pushes (Mike):** monorepo `main` (picker order, `apps/web` H29 filter, COWORK_SETUP rotation), site deploy repo `main` (`apply-links.js` +4, `best-card.js` gap-finder skips closed / invitation-only cards — the first scoreable non-offered cards in the catalogue), docs repo `main`. **(e) Unrelated find:** `ca_national_bank_mycredit_standard_mastercard` is the only active scoreable card with no active `base` earn row (two category rows; scalar `base_earn` 0.5) — a Saturday-batch item, not touched here. Status after the independent re-read: Visa Infinite + is `limited` (the "limited quantities" sentence covers both + and Privilege), see the addendum entry in PIPELINE_AND_DECISIONS and delta part 3.
+- **#49** **Verify engine v2 LIVE 2026-09-08 — cutover has four ★ steps that are Mike's.** Migrations `20260908010442`…`011333` applied, `verify-doc-watch` v2 deployed and proven (TDBank 28/28, Simplii 6/6 + 1 baseline), pg_cron plans at 08:30 UTC and sweeps 08:35–09:55. Cloud task `cardcoach-verify-engine` (`trig_01GsH2snaKFFjrXL8A9YJjdj`, 10:30 UTC daily) is created and enabled — first session 2026-09-08. Waiting on Mike: (1) read its first digest; (2) `CF_ACCOUNT_ID` + `CF_BROWSER_RUN_TOKEN` function secrets; (3) pause/delete the 8 Cowork batch tasks + `cardcoach-apply-loop` + the retention and DATA-018 triggers; (4) swap the chrome-lane prompt for `PROMPT_engine_runner_chrome.md`. Repos pushed via `PROMPT_deploy_verify_engine_v2_2026-09-07.md`. Section below.
 - **#35** Document-currency follow-ups from the 2026-08-25 sweep — RBC hub dead (navigate fresh, do not guess), NationalBank FX box may be the FR artifact, 3 aged docs to check against their indexes, Neo corpus now checkable
 - **#20** Web app v1 (free recommendation surface) — approved 2026-07-13 (D1); P1 pending keys
 - **#23** merchant_list_only eligible lists — BACKFILLED PASS 1 + CHAIN BINDING FIX, 2026-08-02 (second live find: Google location-suffixed names minted orphan entities; 3 places re-pointed by delta, durable fix MERGED b13595f + migration applied to cloud (48 chains) + resolve-place v13 DEPLOYED with live 200s 2026-08-02; the "LAST STEP" recommend-here-v2 deploy happened long ago — v33 is live as of 2026-09-02) (108 pairs / 21 of 31 rows; delta `deltas/2026-08-02__earn_rate_eligible_merchants__backfill_p1.sql`). Was EMPTY in production — every list-gated earn row failed closed everywhere; found via Mike's live Superstore test. Remaining: 10 rows deliberately fail-closed (network/classifier-defined); PC list is officially NON-EXHAUSTIVE (Provigo/YIG/Dominion/T&T unnamed in any official text — Sunday batch watches for an official enumeration); local seed.sql parity not done; Sunday/Sunday+Monday batches now maintain these lists via gated proposals.
@@ -677,6 +678,58 @@ every flag flip since then has been tested against TestFlight builds only. Until
   the gate holds on the live function.
 - **Still open — human proof:** **Mikayla has NOT yet confirmed** on build 56 (or: install the App Store build
   with two 1% cards and expect a recommendation, not "Something went wrong"). **Delete this entry once that lands.**
+
+## #49 — Verify engine v2: live in production, cutover waiting on Mike (opened 2026-09-08)
+
+**Status: production is on the engine; the old prompts are still scheduled beside it.** Decision
+record: `PIPELINE_AND_DECISIONS.md`, entry of 2026-09-08. Design: `DESIGN_verify_engine_v2_2026-09-07.md`.
+Operations: `card_coach_business_docs/01_CORE/verification-engine/RUNBOOK_verify_engine_v2.md`.
+Repo push runbook for a Code session: `PROMPT_deploy_verify_engine_v2_2026-09-07.md`.
+
+**What is live (2026-09-08 01:04–01:32 UTC, Cowork cloud session):** migrations `20260908010442`
+(p1 registry/contract/queue), `20260908010931` (p2 runner API), `20260908011244` (p3 seed +
+backfill), `20260908011333` (p4 doc-watch plumbing), plus Mike's `20260907175034` GUARDRAIL-1 view
+reconstructed as a file; `verify-doc-watch` **v2** (`verify_jwt=false`, Vault-token gated, byte-identical
+to the repo file); four pg_cron jobs (`verify_plan_daily` 08:30 UTC, `verify_reap_hourly` :15,
+`verify_doc_watch_sweep_a` 08:35–08:55, `_b` 09:00–09:55, every 5 min). Proof: wrong token → 401;
+`verify.plan()` queued 22 items; TDBank sweep 28/28 fetched in 40 s with every stored PDF hash
+matching the live document; SimpliiFinancial 6/6 with the cardholder agreement baselined into
+Storage (`doc_watch/20260908/SimpliiFinancial/…pdf`) and `verify.evidence`. Dashboard at cutover:
+152 cards, 1,551 active targets (224 fresh / 854 never verified / 31 sourcing gaps), 396 sources
+(134 hash-baselined), 123 `partially_verified` / 30 `unverified` cards, guardrail 0.
+
+**What closes it — four ★ steps, all Mike's:**
+1. **Read the first digest of the cloud scheduled task `cardcoach-verify-engine`** (created and
+   enabled 2026-09-08 01:35 UTC as `trig_01GsH2snaKFFjrXL8A9YJjdj`; daily 10:30 UTC = 06:30 ET;
+   prompt = `PROMPT_engine_runner_cloud.md`, Supabase + Cloudflare connectors; push notification on
+   completion). Its first day claims BMO and NeoFinancial (both moved to the cloud lane) after the
+   housekeeping kinds. If it must be paused: `update_trigger enabled=false` — do not delete it.
+2. **Set the Browser Run secrets:** `npx supabase secrets set CF_ACCOUNT_ID=c8f2911db35005faefbb206f61591394
+   CF_BROWSER_RUN_TOKEN=<Cloudflare API token, Browser Rendering: Edit> --project-ref hrzpznlpmxxrbtwskacu`.
+   Until then the doc-watch reports rendered pages as `skipped` and the runner renders through the
+   Cloudflare connector. Workers Free = 10 browser-minutes/day (≈60 renders); Workers Paid ($5/mo)
+   removes the ceiling. The token lives only in Supabase secrets — never in a file or a prompt.
+3. **Retire the legacy schedule the same day the cloud task is approved:** the eight Cowork-local
+   batch tasks (Mon Scotiabank … Sun CanadianTire+PCFinancial+Simplii+Tangerine+Wealthsimple), the
+   daily `cardcoach-apply-loop` task, the monthly retention trigger `trig_011MmuqVCZMsDxMPZYXoZaqF`
+   and the DATA-018 2027-05-01 trigger `trig_01DRpn21tiRXMzb8AuVY8pbT` — the last two are
+   `retention_review` / `loyalty_reverify` work items now. Running both systems double-verifies, and
+   the legacy prompts now trip the vocabulary trigger on any spelling not in `verify.fact_keys` /
+   `verify.issuers` (their writes stay safe — the trigger refuses the row, the run continues).
+4. **Chrome lane:** keep the Friday task, replace its prompt with `PROMPT_engine_runner_chrome.md`
+   (claims only `chrome_capture` items — sources the cloud could not reach three times in a row).
+
+**How to watch it:** `select * from verify.v_engine_dashboard;` · `select * from verify.v_engine_health;`
+(`gated_guardrail_rows` and `write_audit_unattributed` must stay 0) · the morning's sweeps:
+`select issuer_token, state, result from verify.work_items where kind='doc_watch' and due_at::date=current_date;`
+· review: `select * from verify.v_review_packet;` → `select verify.decide('<id>','approved','mike','why');`.
+
+**Follow-on lanes (not started):** app + web read `public.card_verification` ("Issuer-verified N days
+ago" on the card); a first `issuer_verified` card needs every target fresh — the never-verified 854 are
+the backlog the cloud runner works down at ≤3 issuers/day. **Unrelated finds on the way:** the
+cloud sandbox cannot run headless Chromium (egress proxy) — Browser Run is the rendering path from
+the cloud, full stop; `evidence-upload` is the only function still on `verify_jwt=true` with the
+publishable key as bearer — it works today, revisit if the legacy-key disablement changes that.
 
 ## #37 — card.coach → cardcoach.ca identity migration (executed 2026-08-28)
 
