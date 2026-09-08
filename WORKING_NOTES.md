@@ -731,6 +731,42 @@ cloud sandbox cannot run headless Chromium (egress proxy) — Browser Run is the
 the cloud, full stop; `evidence-upload` is the only function still on `verify_jwt=true` with the
 publishable key as bearer — it works today, revisit if the legacy-key disablement changes that.
 
+**Repos pushed 2026-09-08 (`PROMPT_deploy_verify_engine_v2_2026-09-07.md`, code runtime).**
+`CardCoachv2` `07201aa` → **`7dcba01`** — 11 paths: the five migrations under their recorded
+versions, the five `APPLIED_MIGRATIONS.txt` lines, `verify-doc-watch/index.ts`, the `config.toml`
+block, and the three business docs (2677 insertions, no deletions). `cardcoach-docs` `c673f16` →
+**`d5a16cd`**. That second push also carried three backlogged tie-fix doc commits (`e07cc5f`,
+`f469ecf`, `286e9b4`, all 2026-09-07) that had never left the Mac — the docs repo was three commits
+*ahead* of `origin/main`, not level with it as the prompt assumed. Both pushes were fast-forwards,
+pushed by SHA rather than by branch name so a concurrent session could not be overwritten.
+
+**Verification before the push.** All five migration md5s matched what production recorded, in the
+recorded order; `functions/verify-doc-watch/index.ts` matched sha256 `7eeca9d4…82be1`. Gates:
+`verify:migration-history` passed (138 ledger entries, 138 files, pending 0) and
+`verify:edge-imports` passed (`INFRA-003`, 20 entrypoints including `verify-doc-watch`, 0
+violations, `deno check` clean under the user-local Deno). Production showed `verify-doc-watch`
+**ACTIVE, version 2**, `verify_jwt false`, import map on, and an unauthenticated POST returned
+**401** — so no redeploy was made. (The prompt's aside that `receipt-purge-worker` sits at v1 is
+stale: it is at v5, untouched by this work.)
+
+**★ Cloudflare Browser Run secrets: NOT set.** Mike has not handed over a token, so `CF_ACCOUNT_ID`
+and `CF_BROWSER_RUN_TOKEN` are still absent and client-rendered pages will keep coming back
+`skipped`. Still item (2) of the waiting-on-Mike list above.
+
+**Dashboard at 03:05 UTC 2026-09-08**, i.e. before the 08:30 plan and the 08:35–09:55 sweeps:
+active_cards 152, targets_active 1551, targets_fresh 224, targets_never_verified 854,
+targets_sourcing_gap 31, sources_active 396, sources_hash_baselined 134, work_queued 21,
+work_leased 0, awaiting_mike 0, approved_unapplied 0, last_doc_watch `2026-09-08 01:31 UTC`.
+Health: every count 0 except `issuers_overdue` 1 — `gated_guardrail_rows` **0** and
+`write_audit_unattributed` **0**. All four `verify_*` pg_cron jobs active. Today's 16 `doc_watch`
+items all exist: TDBank (28 fetched / 0 changed / 0 failed) and SimpliiFinancial (6/0/0) `done`
+from last night's proving run, the other 14 `queued` for the morning sweeps. Queue by kind:
+doc_watch 14, verify_issuer 2, and one each of apply_approved, draft_proposals, loyalty_reverify,
+retention_review, stage_gated.
+
+**#49 stays open** — it closes when the ★ items above are done and the cloud task's first digest
+has been read.
+
 ## #37 — card.coach → cardcoach.ca identity migration (executed 2026-08-28)
 
 **Status: Workspace and DNS side DONE 2026-08-28.** Decision record and full implications:
