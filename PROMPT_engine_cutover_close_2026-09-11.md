@@ -23,7 +23,9 @@ that item only — finish the rest and report what is left.
   Its sandbox lost outbound egress on 2026-09-11 (Trusted allowlist); that is why it moved.
 - Already retired on 2026-09-08 (disabled and renamed `[RETIRED …]`): the monthly retention trigger
   `trig_011MmuqVCZMsDxMPZYXoZaqF` and the DATA-018 trigger `trig_01DRpn21tiRXMzb8AuVY8pbT`.
-- Mike re-authorized the two Cloudflare connectors on 2026-09-11 (Step 1 confirms it took).
+- Mike re-authorized the two Cloudflare connectors on 2026-09-11; the connector probe at 14:58 UTC
+  (`cse_01VYjkw1nTjr8rAxSN1TPJ7d`) then loaded `mcp__Cloudflare_API__execute/docs/search` and the
+  Developer Platform tools with no `mcp_auth_required`. Step 1 re-checks it in the runner's own log.
 - Two disabled one-off probe routines exist and are meant to stay: `trig_01F41dScxUJ7MaiV6unhuFcs`
   (egress) and `trig_01GDntpaR1Xpetkysxvd6tQH` (connector). Re-arm one with
   `update {run_once_at: <now+3 min>, enabled: true}` when you want a health check that costs nothing.
