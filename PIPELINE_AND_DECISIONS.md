@@ -1794,3 +1794,21 @@ push both repos (`PROMPT_deploy_verify_engine_v2_2026-09-07.md`). WORKING_NOTES 
 rulings (`verify.rules` is the operative copy); `issuer_notes.quirks` still grows through `note_quirk` (bounded, 40 KB,
 archived) but structured learnings go to `verify.issuer_learnings`; Browser Run costs are Workers Free
 (10 browser-minutes/day ≈ 60 renders) until Mike moves the account to Workers Paid.
+
+### 2026-09-11 — The cloud runner's sandbox lost egress overnight; the runner is now a Claude Code routine on our own environment
+**What happened:** the 10:31 UTC engine session could not open a single outbound connection — every issuer host and
+`hrzpznlpmxxrbtwskacu.supabase.co` refused at CONNECT with `organization policy`, while `api.github.com` and PyPI
+answered. That is the Trusted allowlist. The task had not been edited since 09-09 and the 09-10 session had fetched
+17 artifacts with the same `curl`; the environment's policy changed, not the task. Root cause: the runner was a
+**Cowork cloud task** (`created_kind: cowork_task`, environment `env_0111…117`), and Cowork cloud sessions take the
+account-level network setting — there is no per-task environment, nothing to see and nothing to pin.
+**What the engine did:** exactly what RUNBOOK §4 says — three items failed at attempt 1 and requeued, the run closed
+`stopped`, nothing written; the manual retry at 12:30 claimed nothing further. No data touched.
+**Decision:** the daily runner is a **Claude Code routine** (`trig_019iW4BgbcU6KS9DpnKQt6Rt`; same prompt, cron and
+model; connectors trimmed to the three it uses) on Mike's **Card Coach** environment with **Network access Full** and
+a setup script that installs `poppler-utils` — the Code image ships without `pdftotext`, which the grep guard depends
+on. The Cowork task is paused, not deleted. A routine pins its own environment, so the egress policy is ours to set,
+and `list_runs` / `get_run_log` give any Code session the run history. Proven by two one-off probes (egress FAIL →
+PASS after the edits; `execute_sql` works in routine sessions) and the first routine run (`cdd51798`, 14:43 UTC:
+TDBank 15/15 pages fetched, evidence uploads `ok`). Record: RUNBOOK_verify_engine_v2 §7; WORKING_NOTES #49.
+**Still Mike's:** re-authorize the two Cloudflare connectors (`browser_run` sources only), plus the ★ items in #49.
