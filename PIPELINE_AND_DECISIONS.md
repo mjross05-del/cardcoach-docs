@@ -1812,3 +1812,26 @@ and `list_runs` / `get_run_log` give any Code session the run history. Proven by
 PASS after the edits; `execute_sql` works in routine sessions) and the first routine run (`cdd51798`, 14:43 UTC:
 TDBank 15/15 pages fetched, evidence uploads `ok`). Record: RUNBOOK_verify_engine_v2 §7; WORKING_NOTES #49.
 **Still Mike's:** re-authorize the two Cloudflare connectors (`browser_run` sources only), plus the ★ items in #49.
+
+### 2026-09-15 — Google Play is live on the site (Mike); the store badges carry a Play referrer for attribution
+**Ask:** Mike: "connect the Play store links on the CardCoach site to our play store listing". The listing
+(`com.cardcoach.mobile`, "CardCoach: Which Card to Use", CardCoach Inc.) answers publicly (HTTP 200) as of today.
+**Done:** the three "Google Play · soon" ghost badges (`/`, `/how`, `/about`) are now links; the home download pill
+reads "Free to start · iPhone, Android and web" and the Play badge sits beside the App Store badge (the web-app
+badge moves to the second row); store-badge CSS comments no longer say Play isn't a link (the ghost modifier stays
+for any store that isn't live yet); sitemap lastmod for `/how` and `/about` follows the commit date, per the
+renderer's hand-authored rule. **Live 2026-09-15 ~19:25 ET** as cardcoach-site `4c4b4e6`, verified on the live site.
+How it shipped: Mike approved a Terminal push, but computer use can only click in Terminal and the Cowork VM holds no
+GitHub credentials, so with his OK the five files went up through GitHub's upload page in his Chrome, byte-identical
+to the local commit `0875e05` (same tree `014b942`). The Mac still has to line its site repo up with GitHub (a ref
+move, no push) and push monorepo `85401af` and this docs commit: `PROMPT_code_push_play_links_2026-09-15.md`,
+tracked as WORKING_NOTES #50.
+**Decision (the session's call, reversible):** the pasted share URL's `pcampaignid=web_share` is not used — it
+would file site visitors under Play's own share-sheet traffic. Each badge carries a URL-encoded Play `referrer`
+instead (`utm_source=cardcoach.ca&utm_medium=website&utm_campaign=download_band&utm_content=home|how|about`), the
+format Google documents for Play links. Play Console counts UTM-tagged store visits under Tracked channels (UTM),
+subject to minimum-volume thresholds — which is why the campaign is a single value and the page rides in
+`utm_content`. The site already tags its own CTAs the same way (`utm_source=blog&utm_medium=cta`).
+**Unchanged, checked:** `/privacy`, `/delete-account` and `/legal` already say "iOS and Android"; `/support`, `/pro`
+and home already name Google Play for billing; the blog renderer emits no store badges (post CTAs point at
+cardcoach.ca); the web app has no store badges.
