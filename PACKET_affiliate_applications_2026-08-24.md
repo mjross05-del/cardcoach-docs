@@ -3,6 +3,8 @@
 **Date:** 2026-08-24 · **Owner:** Mike · **Lane:** revenue
 **Status:** ready to submit once the four pre-flight items below are done.
 
+> **SUPERSEDED 2026-09-15** by `PACKET_affiliate_applications_2026-09-15.md` — network list (adds Rakuten, impact.com, Milesopedia Network) and promotion plan (the /best-card gap-finder this packet describes was retired 2026-09-05; sponsored links move to the web app + iOS app). Kept for the record.
+
 The affiliate links have been live since 2026-08-11. What is missing is not
 plumbing — it is a commercial relationship. Every one of the 126 outbound links
 in `apply-links.js` is `network:"direct", sponsored:false`, which means the
